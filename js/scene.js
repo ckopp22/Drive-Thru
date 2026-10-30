@@ -295,13 +295,8 @@ function makeStationViz(type, x, z, billboards) {
   ready.add(glow, item);
   centerGlow(item);
 
-  // Burnt food: charred item with smoke puffs rising.
+  // Burnt food: smoke puffs rising off the charred item on the machine (positioned over it below).
   const burnt = new THREE.Group();
-  burnt.position.y = .45;
-  let charred = makeItem(type);
-  charred.scale.setScalar(1.4);
-  charred.traverse(o => { if (o.isMesh) o.material = M(0x26221f); });
-  burnt.add(charred);
   const puffs = [0, 1, 2].map(() => {
     const p = new THREE.Mesh(G('Sphere', .16, 6, 5), new THREE.MeshBasicMaterial({ color: 0x777777, transparent: true, depthWrite: false }));
     burnt.add(p);
@@ -341,6 +336,7 @@ function makeStationViz(type, x, z, billboards) {
     }
   }
   const surf = itemInfo(type).surf, fxX = surf[0] * Math.sign(-x), fxY = surf[1] - 2.35;
+  burnt.position.set(fxX, fxY + .15, 0);
   const halo = new THREE.Mesh(G('Ring', .3, .4, 20), new THREE.MeshBasicMaterial({ color: 0xffe14a, transparent: true, opacity: .8, depthWrite: false, side: THREE.DoubleSide }));
   halo.rotation.x = -Math.PI / 2;
   halo.position.set(fxX, fxY + .03, 0);
@@ -359,8 +355,7 @@ function makeStationViz(type, x, z, billboards) {
       ready.remove(item); item = makeItem(t); item.scale.setScalar(1.4); item.position.y = -.3; ready.add(item);
       centerGlow(item);
       warnPos();
-      burnt.remove(charred); charred = dark(makeItem(t)); charred.scale.setScalar(1.4); burnt.add(charred);
-      const [vx, vy] = info.surf, v1 = onMachine.visible, v2 = burntOnMachine.visible;
+          const [vx, vy] = info.surf, v1 = onMachine.visible, v2 = burntOnMachine.visible;
       root.remove(onMachine, burntOnMachine);
       onMachine = makeItem(t); onMachine.scale.setScalar(1.3); onMachine.position.set(vx * Math.sign(-x), vy - 2.35, 0); onMachine.visible = v1;
       burntOnMachine = dark(makeItem(t)); burntOnMachine.scale.copy(onMachine.scale); burntOnMachine.position.copy(onMachine.position); burntOnMachine.visible = v2;
