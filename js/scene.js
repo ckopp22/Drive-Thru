@@ -126,6 +126,11 @@ function hospitalItem(type, g) {
 
 export function makeItem(type) {
   const g = new THREE.Group();
+  if (type === 'burnt') { // a charred lump, carried to the bin
+    part(G('Icosahedron', .2, 0), 0x26221f, 0, .2, 0, g).scale.set(1.2, .8, 1);
+    part(G('Icosahedron', .11, 0), 0x4a423d, .1, .3, .05, g);
+    return g;
+  }
   const id = activeShop().id;
   (id === 'pizza' ? pizzaItem : id === 'hospital' ? hospitalItem : id === 'coffee' ? coffeeItem : burgerItem)(type, g);
   return g;

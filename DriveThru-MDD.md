@@ -169,7 +169,7 @@ Each item has its own dedicated button, so one tap always means one specific sta
 - Walks at constant speed along a short path; walking takes ~0.5 to 1 s.
 - Hands carry up to **2 items** (shown as small models in hands). If hands are full, further pickups are blocked (button shakes).
 - Tapping a new button mid-walk redirects to the new station (no queue), keeping it responsive.
-- Production continues at a station while the worker is away (progress bar keeps filling; the finished item waits ready, with a small "ready" ding, until picked up. Food burns if left too long in later levels, optional, see 9).
+- Production continues at a station while the worker is away (progress bar keeps filling; the finished item waits ready, with a small "ready" ding, until picked up. Food burns if left too long in later levels, optional, see 9). Burnt food must be picked up and thrown in the bin; the machine then stays idle until the player taps it again.
 
 ### 5.3 Stations
 | Station | Makes | Time (base) | Notes |

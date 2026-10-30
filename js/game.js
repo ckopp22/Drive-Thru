@@ -47,7 +47,7 @@ export function createLogic(world, hooks, opts = {}) {
       hooks.shake(key);
       return false;
     }
-    if (ITEMS.includes(key) && (st[key].state === 'ready' ? full() : st[key].state !== 'making' && !canStart && !putBack)) {
+    if (ITEMS.includes(key) && (st[key].state === 'ready' || st[key].state === 'burnt' ? full() : st[key].state !== 'making' && !canStart && !putBack)) {
       hooks.shake(key);
       return false;
     }
@@ -69,8 +69,18 @@ export function createLogic(world, hooks, opts = {}) {
         setHeld();
         worker.kick();
         hooks.sfx('pickup');
-      } else if (s.state === 'idle' || s.state === 'burnt') {
-        if (s.state === 'idle' && hands.includes(typeOf(key))) {
+      } else if (s.state === 'burnt') {
+        // Burnt food has to be picked up and binned; the machine then sits idle until you tap it again.
+        if (full()) return hooks.shake(key);
+        hands.push('burnt');
+        s.state = 'idle';
+        s.p = 0;
+        s.t = 0;
+        setHeld();
+        worker.kick();
+        hooks.sfx('pickup');
+      } else if (s.state === 'idle') {
+        if (hands.includes(typeOf(key))) {
           hands.splice(hands.indexOf(typeOf(key)), 1);
           s.state = 'ready';
           s.t = heldAge[typeOf(key)] || 0;
@@ -89,7 +99,6 @@ export function createLogic(world, hooks, opts = {}) {
           hands.splice(hands.indexOf('cup'), 1);
           setHeld();
         } else if (busy()) return hooks.shake(key);
-        if (s.state === 'burnt') hooks.sfx('trash');
         s.state = 'making';
         s.p = 0;
         hooks.sfx('start');
@@ -137,7 +146,7 @@ export function createLogic(world, hooks, opts = {}) {
         worker.setHeld([]);
         hooks.sfx('place');
       } else if (hands.length) {
-        if (hands[0] === 'cup' || (pizza && !hands[0].startsWith('pizza:')) || tray.length >= WORKER.trayCap || away[i]) return;
+        if (hands[0] === 'cup' || hands[0] === 'burnt' || (pizza && !hands[0].startsWith('pizza:')) || tray.length >= WORKER.trayCap || away[i]) return;
         tray.push(hands.shift());
         setHeld();
         world.setTray(i, tray);
@@ -436,7 +445,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   }
 
   // Small icon bubble above the worker showing what they carry (hands, or the items on a carried tray).
-  const HELD_EMOJI = { cup: '🥛', dough: '🍞', sauce: '🥫', cheese: '🧀', pepperoni: '🍕', mushroom: '🍄' };
+  const HELD_EMOJI = { burnt: '🔥', cup: '🥛', dough: '🍞', sauce: '🥫', cheese: '🧀', pepperoni: '🍕', mushroom: '🍄' };
   const heldTag = document.createElement('div');
   heldTag.className = 'held-tag';
   heldTag.hidden = true;

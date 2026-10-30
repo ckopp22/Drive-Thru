@@ -76,15 +76,21 @@ function setup(level) {
   ok(orders.stats.served === 0, 'no order counted as served');
 }
 
-// 4. Burn on level 8 (burn 12): food left sitting burns, burnt machine can be restarted.
+// 4. Burn on level 8 (burn 12): food left sitting burns, burnt food must be picked up and binned before the machine restarts.
 {
   const { logic, step } = setup(8);
   logic.tap('burger'); step(.1); step(7);
   ok(logic.st.burger.state === 'ready', 'burger ready');
   step(13);
   ok(logic.st.burger.state === 'burnt', 'ready food burns after the level burn time');
-  logic.tap('burger'); step(.1);
-  ok(logic.st.burger.state === 'making', 'a burnt machine can be restarted');
+  logic.tap('burger'); step(2);
+  ok(logic.hands.join() === 'burnt' && logic.st.burger.state === 'idle', 'tapping burnt food picks it up and leaves the machine idle');
+  logic.tap('burger'); step(2);
+  ok(logic.st.burger.state === 'idle', 'machine cannot start while carrying burnt food');
+  logic.tap('trash'); step(3);
+  ok(!logic.hands.length && logic.st.burger.state === 'idle', 'binning the burnt food does not restart the machine');
+  logic.tap('burger'); step(2);
+  ok(logic.st.burger.state === 'making', 'tapping the machine again starts the next food');
 }
 
 // 5. Level config sanity.
