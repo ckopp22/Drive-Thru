@@ -33,6 +33,12 @@ export function createHospital(world, cfg, overlay, cb) {
   bar.innerHTML = '<div class="bubble"><span class="slot">💵</span></div><div class="pbar prog"><i></i></div>';
   overlay.appendChild(bar);
   const regFill = bar.querySelector('.pbar i');
+  // Ready badge over the register while the stamped bill waits to be picked up (like the ready food circles).
+  const doneBadge = document.createElement('div');
+  doneBadge.className = 'ready-badge';
+  doneBadge.hidden = true;
+  doneBadge.innerHTML = `<img src="${world.itemIcon('billok')}" alt="">`;
+  overlay.appendChild(doneBadge);
 
   // Badge over the worker's head showing what they're carrying.
   const setHeld = () => worker.setHeld(hands);
@@ -262,6 +268,11 @@ export function createHospital(world, cfg, overlay, cb) {
       regFill.style.transform = `scaleX(${clamp(reg.p, 0, 1)})`;
       const p = world.project(1.1, 2.3, -3.05);
       bar.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, -100%)`;
+    }
+    doneBadge.hidden = reg.state !== 'done';
+    if (!doneBadge.hidden) {
+      const p = world.project(1.1, 2.3, -3.05);
+      doneBadge.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, -100%)`;
     }
     for (const c of [...sides.flatMap(s => s.line), ...leaving]) {
       if (c.tag.hidden || !c.tag.isConnected) continue;
