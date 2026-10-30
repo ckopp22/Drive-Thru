@@ -270,12 +270,13 @@ function makeWarn() {
   return m;
 }
 
+const READY_Y = .3; // height of the food bubble above the station marker (lower = closer to the food)
 function makeStationViz(type, x, z, billboards) {
   const root = new THREE.Group();
   root.position.set(x, 2.35, z);
   const bar = makeBar();
   const ready = new THREE.Group();
-  ready.position.y = .75;
+  ready.position.y = READY_Y;
   ready.scale.setScalar(.7);
   const glow = new THREE.Mesh(G('Circle', .46, 20), glowMat.clone()); // own material: it blinks red when food is about to burn
   // Sits slightly behind the item (away from the camera) so the item draws in front of it.
@@ -317,7 +318,7 @@ function makeStationViz(type, x, z, billboards) {
   check.visible = false;
   const warn = makeWarn();
   // Right over the food icon: same spot as the circle behind it (see the glow placement above).
-  const warnPos = cy => { warn.position.set(0, .75 + (cy - .378) * .7, -.243 * .7); check.position.copy(warn.position); };
+  const warnPos = cy => { warn.position.set(0, READY_Y + (cy - .378) * .7, -.243 * .7); check.position.copy(warn.position); };
   warnPos(cy);
   warn.scale.setScalar(1.2);
   warn.visible = false;
