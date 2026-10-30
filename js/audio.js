@@ -5,7 +5,7 @@ import * as save from './save.js';
 const MUSIC_SRC = './audio/drive-thru-music.mp3';
 const SIZZLE_SRC = './audio/sizzle.mp3', SIZZLE_VOL = .35; // quiet background cooking loop
 let sizzleBuf = null;
-const TRASH_SRC = './audio/trash.mp3', TRASH_VOL = .8;
+const TRASH_SRC = './audio/trash.mp3', TRASH_VOL = 1.6;
 let trashBuf = null, trashOnset = 0; // trashOnset: seconds of leading silence to skip
 const MUSIC_VOL = .55, DUCK_VOL = .25, MAX_VOICES = 10, MAX_LOOPS = 4;
 const GAP = { walk: 260, tick: 400, tap: 30 }; // minimum ms between plays of the same effect (default 25)
