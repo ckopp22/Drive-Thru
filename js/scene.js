@@ -122,14 +122,25 @@ function hospitalItem(type, g) {
       seg(-.04, .14, .1, -.12);
     }
   } else if (type === 'medicine') {
-    part(G('Cylinder', .1, .1, .22, 8), 0xffffff, 0, .11, 0, g);
-    part(G('Cylinder', .105, .105, .06, 8), 0x2c8fd6, 0, .25, 0, g);
-    box(.12, .08, .01, 0xe63946, 0, .12, .1, g);
-  } else if (type === 'id') { // ID card with a photo and text lines
-    box(.36, .02, .24, 0xffffff, 0, .02, 0, g);
-    box(.36, .022, .05, 0x2c8fd6, 0, .02, -.095, g);
-    box(.1, .024, .1, 0xf2b279, -.1, .025, .035, g);
-    [-.01, .05].forEach(z => box(.14, .024, .02, 0x9aa0a6, .08, .025, z, g));
+    // Capsule pill lying on its side: red half and white half with rounded ends.
+    const pill = new THREE.Group();
+    pill.rotation.y = -.5;
+    for (const [sx, c] of [[-1, 0xe63946], [1, 0xffffff]]) {
+      const half = part(G('Cylinder', .12, .12, .2, 8), c, sx * .1, 0, 0, pill);
+      half.rotation.z = Math.PI / 2;
+      part(G('Sphere', .12, 8, 6), c, sx * .2, 0, 0, pill);
+    }
+    pill.position.y = .12;
+    g.add(pill);
+  } else if (type === 'id') { // camera for the ID photo
+    box(.4, .22, .22, 0x2f343a, 0, .11, 0, g);
+    box(.4, .06, .22, 0xc9ced4, 0, .25, 0, g); // silver top plate
+    box(.1, .05, .06, 0xffe08a, -.12, .31, .04, g); // flash
+    box(.07, .04, .07, 0xe63946, .13, .30, 0, g); // shutter button
+    const lens = part(G('Cylinder', .1, .1, .1, 10), 0x1b1e22, 0, .12, .15, g);
+    lens.rotation.x = Math.PI / 2;
+    const glass = part(G('Cylinder', .065, .065, .03, 10), 0x4aa8ff, 0, .12, .205, g);
+    glass.rotation.x = Math.PI / 2;
   } else { // bandage roll
     part(G('Cylinder', .21, .21, .15, 10), 0xf5e6c8, 0, .075, 0, g); // sized up so its icon reads as large as the others
     part(G('Cylinder', .09, .09, .165, 8), 0xffffff, 0, .075, 0, g);
