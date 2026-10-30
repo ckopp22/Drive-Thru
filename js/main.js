@@ -44,3 +44,14 @@ if ('serviceWorker' in navigator) {
     }).catch(() => {});
   });
 }
+
+function setFullH() {
+  const standalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+  if (!standalone) return;
+  const portrait = window.innerHeight >= window.innerWidth;
+  const h = Math.max(window.innerHeight, portrait ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height));
+  document.documentElement.style.setProperty('--full-h', h + 'px');
+}
+setFullH();
+window.addEventListener('resize', setFullH);
+window.addEventListener('orientationchange', setFullH);

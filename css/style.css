@@ -465,3 +465,10 @@ img.slot { width: 56px; height: 56px; display: block; }
 .ready-badge.warn img { animation: jamBlink .45s steps(1) infinite; }
 @keyframes jamBlink { 50% { background: #ff6b60; border-color: #b3150c; } }
 @media (prefers-reduced-motion: reduce) { .ready-badge.warn img { animation: none; background: #ffb3ad; border-color: #b3150c; } }
+
+/* iOS home-screen app: layout viewport can be ~one top-inset short, leaving a bar at the bottom.
+   In standalone, size to the real screen height (--full-h, set from JS in main.js). */
+@media (display-mode: standalone) {
+  html, body { height: var(--full-h, 100dvh); overflow: visible; }
+  #app, .screen { height: var(--full-h, 100dvh); }
+}
