@@ -29,7 +29,7 @@ export function createHospital(world, cfg, overlay, cb) {
   let active = null;
 
   const bar = document.createElement('div');
-  bar.className = 'car-tag';
+  bar.className = 'car-tag small';
   bar.hidden = true;
   bar.innerHTML = `<div class="bubble"><img class="slot" src="${world.itemIcon('bill')}" alt=""></div><div class="pbar prog"><i></i></div>`;
   overlay.appendChild(bar);
