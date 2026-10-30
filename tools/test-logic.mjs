@@ -24,7 +24,7 @@ function setup(level) {
     walkTo(k) { this.target = k; }, kick() {}, setHeld() {}, stateText: () => '',
     update() { if (this.target) { const k = this.target; this.target = null; this.at = k; this.onArrive && this.onArrive(k); } }
   };
-  const world = { worker, viz, setTray() {}, setTrayVisible() {}, binPop() {}, wobble() {}, addCar() {}, removeCar() {}, project: () => ({ x: 0, y: 0 }) };
+  const world = { worker, viz, setTray() {}, setTrayVisible() {}, binPop() {}, wobble() {}, addCar() {}, faceIcon: () => '', removeCar() {}, project: () => ({ x: 0, y: 0 }) };
   const orders = createOrders(world, cfg, el(), { onArrive() {}, onSend: s => log.sent.push(s), onAngry: a => log.angry.push(a) });
   const logic = createLogic(world, { sfx: n => log.sfx.push(n), shake: k => log.shake.push(k), send: i => orders.trySend(i) }, { burn: cfg.burn, trays: cfg.trays });
   const step = (sec) => { for (let t = 0; t < sec; t += .05) { logic.update(.05); orders.update(.05); } };

@@ -21,7 +21,8 @@ export const LEVELS = [
 export const STAR_MULT = [1, 1.4, 1.8];
 // Tuned with tools/sim.mjs: 1 star (the goal) is easy for a slow/young player, 2 stars needs a decent player, 3 stars a near-expert one.
 // A level can set `star2` / `star3` ($) to override its 2- and 3-star amounts.
-export const starsFor = (money, cfg) => [cfg.goal, cfg.star2 || cfg.goal * STAR_MULT[1], cfg.star3 || cfg.goal * STAR_MULT[2]].filter(v => money >= v).length;
+export const starGoals = cfg => [cfg.goal, cfg.star2 || cfg.goal * STAR_MULT[1], cfg.star3 || cfg.goal * STAR_MULT[2]];
+export const starsFor = (money, cfg) => starGoals(cfg).filter(v => money >= v).length;
 
 // Item prices in dollars.
 export const PRICES = { soda: 2, burger: 4, fries: 3 };

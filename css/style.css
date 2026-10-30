@@ -313,7 +313,7 @@ html, body {
 .hud-money { flex: 1 1 auto; min-width: 0; padding: 0 9px; display: flex; flex-direction: column; justify-content: center; gap: 5px; }
 .hud-money .row { white-space: nowrap; line-height: 1; }
 .hud-money .goal { font-size: 12px; opacity: .6; margin-left: 3px; }
-.goalbar { height: 7px; border-radius: 4px; background: rgba(0,0,0,.15); overflow: hidden; }
+.goalbar { position: relative; height: 9px; border-radius: 4px; background: rgba(0,0,0,.15); overflow: hidden; }
 .goalbar i { display: block; height: 100%; width: 0; background: var(--yellow-dark); transition: width .3s; }
 .goalbar.met i { background: var(--green); }
 .hud-money.bump { animation: bump .3s; }
@@ -426,3 +426,7 @@ img.slot { width: 56px; height: 56px; display: block; }
 .car-tag.happy .emote { animation: happyBob .5s ease-in-out infinite; }
 @keyframes happyBob { 50% { transform: translateY(-6px) scale(1.12); } }
 @media (prefers-reduced-motion: reduce) { .car-tag.happy .emote { animation: none; } }
+
+/* Star checkpoints on the goal bar (1, 2 and 3 stars) */
+.goalbar .tick { position: absolute; top: 0; bottom: 0; width: 3px; background: #fff; box-shadow: 0 0 0 1px rgba(0,0,0,.45); }
+.goalbar .tick.got { background: #ffcc00; }

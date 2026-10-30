@@ -1,5 +1,5 @@
 import { createWorld, reducedMotion } from './scene.js';
-import { STATIONS, WORKER, TUNING, ENDLESS, endlessCfg, endlessMusicRate } from './levels.js';
+import { STATIONS, WORKER, TUNING, ENDLESS, starGoals, endlessCfg, endlessMusicRate } from './levels.js';
 import { createOrders } from './orders.js';
 import * as audio from './audio.js';
 import { activeShop, itemInfo, PIZZA_TOPS } from './shops.js';
@@ -221,7 +221,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
       ${endless
         ? `<div class="hud-money"><div class="row">💰 <b class="money">$0</b></div></div>
       <div class="hud-time hud-lives" aria-label="Lives">${'<span class="heart">❤️</span>'.repeat(ENDLESS.lives)}</div>`
-        : `<div class="hud-money"><div class="row">💰 <b class="money">$0</b><span class="goal">/ $${cfg.goal}</span></div><div class="goalbar"><i></i></div></div>
+        : `<div class="hud-money"><div class="row">💰 <b class="money">$0</b><span class="goal">/ $${cfg.goal}</span></div><div class="goalbar"><i></i>${starGoals(cfg).map((v, n) => `<s class="tick" style="left:${Math.min(98.5, v / starGoals(cfg)[2] * 100)}%" data-n="${n}"></s>`).join('')}</div></div>
       <div class="hud-time">⏱️ <b class="time">${mmss(cfg.time)}</b></div>`}
     </div>
     <button class="round-btn pause-btn" aria-label="Pause">⏸</button>
@@ -262,14 +262,19 @@ export function startGame(root, level, levels, cb, opts = {}) {
   const moneyEl = el.querySelector('.money'), timeEl = el.querySelector('.time');
   const timeBox = el.querySelector('.hud-time'), moneyBox = el.querySelector('.hud-money');
   const goalFill = el.querySelector('.goalbar i'), goalBar = el.querySelector('.goalbar');
+  const ticks = [...el.querySelectorAll('.tick')];
   const hearts = [...el.querySelectorAll('.heart')], levelLabel = el.querySelector('.level-label');
   function drawHud() {
     if (money !== shownMoney) {
       if (shownMoney >= 0) { moneyBox.classList.remove('bump'); void moneyBox.offsetWidth; moneyBox.classList.add('bump'); }
       shownMoney = money;
       moneyEl.textContent = `$${money}`;
-      if (!endless) goalFill.style.width = `${Math.min(100, money / cfg.goal * 100)}%`;
-      if (!endless) goalBar.classList.toggle('met', money >= cfg.goal);
+      if (!endless) {
+        const top = starGoals(cfg)[2];
+        goalFill.style.width = `${Math.min(100, money / top * 100)}%`;
+        goalBar.classList.toggle('met', money >= cfg.goal);
+        ticks.forEach((t, n) => t.classList.toggle('got', money >= starGoals(cfg)[n]));
+      }
       if (!endless && money >= cfg.goal && !goalHit) {
         goalHit = true;
         moneyBox.classList.add('goal-pulse');
