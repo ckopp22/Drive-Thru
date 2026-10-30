@@ -164,11 +164,10 @@ export function playSfx(name) {
 // ---- loops while a station is working: kind 'fill' (bubbling) or 'sizzle'; null stops it ----
 function startLoop(kind) {
   const t = ctx.currentTime, s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain(), lfo = ctx.createOscillator(), depth = ctx.createGain();
-  s.buffer = noiseBuf;
+  s.buffer = kind === 'sizzle' && sizzleBuf ? sizzleBuf : noiseBuf; // a source's buffer can only be set once
   s.loop = true;
   lfo.connect(depth);
   if (kind === 'sizzle' && sizzleBuf) {
-    s.buffer = sizzleBuf;
     g.gain.value = .0001; g.gain.linearRampToValueAtTime(SIZZLE_VOL, t + .3);
   } else if (kind === 'fill') {
     f.type = 'bandpass'; f.frequency.value = 700; f.Q.value = 4;
@@ -206,9 +205,11 @@ export function setLoop(id, kind) {
   if (cur && cur.kind === kind) return;
   if (cur) { cur.stop(); loops.delete(id); }
   if (loops.size >= MAX_LOOPS) return;
-  const l = startLoop(kind);
-  l.kind = kind;
-  loops.set(id, l);
+  try {
+    const l = startLoop(kind);
+    l.kind = kind;
+    loops.set(id, l);
+  } catch (e) {} // a sound problem must never stop the game
 }
 
 export function stopLoops() {
