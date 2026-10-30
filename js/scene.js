@@ -131,9 +131,9 @@ function hospitalItem(type, g) {
     box(.1, .024, .1, 0xf2b279, -.1, .025, .035, g);
     [-.01, .05].forEach(z => box(.14, .024, .02, 0x9aa0a6, .08, .025, z, g));
   } else { // bandage roll
-    part(G('Cylinder', .14, .14, .1, 10), 0xf5e6c8, 0, .05, 0, g);
-    part(G('Cylinder', .06, .06, .11, 8), 0xffffff, 0, .05, 0, g);
-    box(.1, .02, .02, 0xe63946, 0, .11, .14, g);
+    part(G('Cylinder', .21, .21, .15, 10), 0xf5e6c8, 0, .075, 0, g); // sized up so its icon reads as large as the others
+    part(G('Cylinder', .09, .09, .165, 8), 0xffffff, 0, .075, 0, g);
+    box(.15, .03, .03, 0xe63946, 0, .165, .21, g);
   }
 }
 
