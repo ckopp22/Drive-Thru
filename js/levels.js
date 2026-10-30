@@ -56,15 +56,17 @@ export const WORKER = { speed: 6, maxHeld: 1, bobRate: 14, trayCap: 4 };
 // Past the last row, patience and the gaps keep shrinking per wave down to their floors.
 // Orders never exceed 4 items (the tray holds 4) and never repeat an item more than twice (doubles), so they stay doable.
 export const ENDLESS = {
-  perWave: 5, lives: 3, firstCarDelay: 1, trays: 3,
+  perWave: 5,        // customers per wave
+  early: [3, 3],     // the first waves are shorter: wave 1 and 2 take 3 customers each
+  lives: 3, firstCarDelay: 1, trays: 3,
   friesWave: 3,   // fryer appears (items become ALL)
   doublesWave: 6, // orders may repeat an item
   extraWave: 8,   // second grill and fryer
   burnWave: 8, burn: 12, // food burns after `burn` s
   rows: [
-    [1, 1, 38, 2.5, 4.5],
-    [2, 2, 36, 2.2, 4],
-    [3, 2, 38, 2, 3.8],
+    [1, 1, 38, 1, 2],
+    [2, 2, 36, 1, 2],
+    [3, 2, 38, 1.2, 2.4],
     [4, 3, 38, 2, 3.6],
     [5, 3, 36, 1.8, 3.4],
     [6, 3, 35, 1.7, 3.2],
@@ -96,3 +98,14 @@ export function endlessCfg(wave, over = {}) {
   };
 }
 export const endlessMusicRate = wave => (ENDLESS.music.filter(r => r[0] <= wave).pop() || [0, 1])[1];
+
+// Wave math: `early` lists the sizes of the first waves, every later wave takes `perWave` customers.
+export const servedFor = wave => { // customers served when `wave` begins
+  const e = ENDLESS.early;
+  return wave <= e.length + 1 ? e.slice(0, wave - 1).reduce((a, b) => a + b, 0) : e.reduce((a, b) => a + b, 0) + (wave - 1 - e.length) * ENDLESS.perWave;
+};
+export const waveFor = served => {
+  let w = 1;
+  while (served >= servedFor(w + 1)) w++;
+  return w;
+};

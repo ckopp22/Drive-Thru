@@ -307,16 +307,16 @@ Wrap reads and writes in try/catch; fall back to defaults.
 - Starts like Level 1 to 2 (soda and burger, 1 item). The fryer is hidden until wave 3, then pops in. The second grill and fryer and food burning arrive at wave 8.
 - One car at the window at a time. After a car leaves (happy or angry) the next arrives after a random gap between `gapMin` and `gapMax`.
 - 3 lives (hearts in the HUD where the timer sits). A customer who drives off angry costs one life (heart breaks, short shake, `heartBreak` sound). Sending an order never costs a life. There is no -$2 penalty in endless. At 0 lives: game over (after a 1.4 s beat).
-- Wave = 1 + customers served / 5. HUD label "Wave N" (top right); a "Wave up!" banner and `waveUp` sound on each change. Music playback rate rises slightly at waves 10 and 15.
+- Waves 1 and 2 take 3 customers each, every later wave takes 5 (`ENDLESS.early`, `ENDLESS.perWave`). HUD label "Wave N" (top right); a "Wave up!" banner and `waveUp` sound on each change. Music playback rate rises slightly at waves 10 and 15.
 - Pause freezes arrivals, patience, station and burn timers. Hiding the app (phone lock, app switch) opens the pause menu, so coming back never costs lives. Restart, Play Again and leaving rebuild or dispose the whole world, so nothing carries over.
 
 **Ramp** (`ENDLESS.rows` in `levels.js`; Coffee Shop patience x1.2)
 
 | Wave | Items | Max items | Doubles | Patience | Gap (random) | Extra |
 |---|---|---|---|---|---|---|
-| 1 | Soda, Burger | 1 | no | 38 s | 2.5-4.5 s | |
-| 2 | Soda, Burger | 2 | no | 36 s | 2.2-4.0 s | |
-| 3 | + Fries | 2 | no | 38 s | 2.0-3.8 s | Fryer pops in |
+| 1 | Soda, Burger | 1 | no | 38 s | 1.0-2.0 s | |
+| 2 | Soda, Burger | 2 | no | 36 s | 1.0-2.0 s | |
+| 3 | + Fries | 2 | no | 38 s | 1.2-2.4 s | Fryer pops in |
 | 4 | Same | 3 | no | 38 s | 2.0-3.6 s | |
 | 5 | Same | 3 | no | 36 s | 1.8-3.4 s | |
 | 6 | Same | 3 | yes | 35 s | 1.7-3.2 s | |

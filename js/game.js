@@ -1,5 +1,5 @@
 import { createWorld, reducedMotion } from './scene.js';
-import { STATIONS, WORKER, TUNING, ENDLESS, starGoals, endlessCfg, endlessMusicRate } from './levels.js';
+import { STATIONS, WORKER, TUNING, ENDLESS, servedFor, waveFor, starGoals, endlessCfg, endlessMusicRate } from './levels.js';
 import { createOrders } from './orders.js';
 import * as audio from './audio.js';
 import { activeShop, itemInfo, PIZZA_TOPS } from './shops.js';
@@ -491,7 +491,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   dbgBox.addEventListener('click', e => {
     const d = e.target.dataset && e.target.dataset.d;
     if (d === 'wave1' || d === 'wave5') {
-      waveOffset += d === 'wave1' ? ENDLESS.perWave : ENDLESS.perWave * 5;
+      waveOffset = servedFor(wave + (d === 'wave1' ? 1 : 5)) - orders.stats.served;
       checkWave();
     }
     else if (d === 'life') { if (!dying) loseLife(); }
@@ -514,7 +514,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
 
   // Endless: wave = 1 + customers served / perWave (debug jumps add to waveOffset).
   function checkWave() {
-    const w = 1 + Math.floor((orders.stats.served + waveOffset) / ENDLESS.perWave);
+    const w = waveFor(orders.stats.served + waveOffset);
     if (w !== wave) setWave(w, true);
   }
 
@@ -575,7 +575,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
         dbg.textContent = `${fps} fps  tris ${r.triangles}  calls ${r.calls}\n${world.worker.stateText()}\nhands: ${logic.hands.join(',') || (logic.carried ? 'tray ' + (logic.carried.from + 1) : '-')}\ntrays: ${logic.trays.map(t => t.join('+') || '-').join(' | ')}\n` +
           ITEMS.map(k => `${k}: ${logic.st[k].state} ${Math.round(logic.st[k].p * 100)}%`).join('\n') +
           (endless
-            ? `\n$${money}  lives ${lives}  wave ${wave}  served ${o.served}  (next wave in ${ENDLESS.perWave - ((o.served + waveOffset) % ENDLESS.perWave)})\nmax ${cfg.maxItems} items  doubles ${cfg.doubles}  extra ${!!cfg.extra}  fries ${cfg.items.includes('fries')}\npatience ${cfg.patience}s  gap ${cfg.gapRange[0].toFixed(1)}-${cfg.gapRange[1].toFixed(1)}s  burn ${cfg.burn}s  music x${endlessMusicRate(wave)}`
+            ? `\n$${money}  lives ${lives}  wave ${wave}  served ${o.served}  (next wave in ${servedFor(wave + 1) - o.served - waveOffset})\nmax ${cfg.maxItems} items  doubles ${cfg.doubles}  extra ${!!cfg.extra}  fries ${cfg.items.includes('fries')}\npatience ${cfg.patience}s  gap ${cfg.gapRange[0].toFixed(1)}-${cfg.gapRange[1].toFixed(1)}s  burn ${cfg.burn}s  music x${endlessMusicRate(wave)}`
             : `\n$${money}/${cfg.goal}  time ${Math.ceil(timeLeft)}s`) +
           `\ncars served ${o.served}  lost ${o.lost}\navg patience at send ${o.served ? Math.round(o.patSum / o.served * 100) + '%' : '-'}`;
       }
