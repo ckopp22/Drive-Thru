@@ -93,10 +93,10 @@ export function createOrders(world, cfg, overlay, cb) {
     c.dur = angry ? TUNING.carLeaveAngry : TUNING.carLeave;
     if (angry) {
       c.tag.className = 'car-tag angry';
-      c.tag.innerHTML = '<div class="emote">😡</div>';
+      c.tag.innerHTML = `<div class="emote"><img src="${world.faceIcon('angry')}" alt="Angry"></div>`;
     } else {
       c.tag.className = 'car-tag happy';
-      c.tag.innerHTML = '<div class="emote">😊</div>';
+      c.tag.innerHTML = `<div class="emote"><img src="${world.faceIcon('happy')}" alt="Happy"></div>`;
     }
     leaving.push(c);
     lane.shift();

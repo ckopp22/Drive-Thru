@@ -1072,24 +1072,8 @@ export function createWorld(canvas) {
   const world = buildWorld();
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
   world.renderer = renderer;
-  // Picture of a food (3D item on a transparent background, seen from the game camera angle), as a data URL.
-  const icons = {};
-  world.itemIcon = type => {
-    if (icons[type]) return icons[type];
-    const N = 160, sc = new THREE.Scene();
-    sc.add(new THREE.AmbientLight(0xffffff, 1.9));
-    const sun = new THREE.DirectionalLight(0xffffff, 1.8);
-    sun.position.set(-4, 8, 6);
-    sc.add(sun);
-    const pitch = 1.0, cy = itemInfo(type).cy;
-    const cam = new THREE.OrthographicCamera(-.5, .5, .5, -.5, .1, 20);
-    cam.position.set(0, cy + Math.sin(pitch) * 8, Math.cos(pitch) * 8);
-    cam.lookAt(0, cy, 0);
-    cam.updateMatrixWorld(true);
-    const item = makeItem(type);
-    item.scale.setScalar(1.4);
-    item.position.y = -.3;
-    sc.add(item);
+  // Renders a scene to a transparent N x N picture (data URL).
+  const snap = (sc, cam, N) => {
     const rt = new THREE.WebGLRenderTarget(N, N);
     const prevClear = renderer.getClearColor(new THREE.Color()), prevAlpha = renderer.getClearAlpha();
     renderer.setRenderTarget(rt);
@@ -1110,8 +1094,54 @@ export function createWorld(canvas) {
       img.data[d] = enc(px[s] / 255); img.data[d + 1] = enc(px[s + 1] / 255); img.data[d + 2] = enc(px[s + 2] / 255); img.data[d + 3] = px[s + 3];
     }
     x.putImageData(img, 0, 0);
-    return (icons[type] = c.toDataURL());
+    return c.toDataURL();
   };
+  // Low-poly customer face ('happy' or 'angry') as a picture, same style as the item icons.
+  world.faceIcon = kind => {
+    if (icons['face:' + kind]) return icons['face:' + kind];
+    const angry = kind === 'angry', sc = new THREE.Scene();
+    sc.add(new THREE.AmbientLight(0xffffff, 1.9));
+    const sun = new THREE.DirectionalLight(0xffffff, 1.8);
+    sun.position.set(-3, 4, 8);
+    sc.add(sun);
+    const g = new THREE.Group();
+    sc.add(g);
+    part(G('Icosahedron', .4, 1), angry ? 0xe8452c : 0xffd23f, 0, 0, 0, g);
+    const dark = 0x2b1a14;
+    for (const sx of [-1, 1]) {
+      box(.08, angry ? .1 : .14, .1, dark, sx * .14, .07, .36, g);
+      if (angry) box(.22, .05, .1, dark, sx * .13, .17, .36, g).rotation.z = -sx * .5; // brows slant down toward the nose
+      else box(.07, .05, .08, 0xff8a7a, sx * .25, -.07, .33, g); // cheeks
+    }
+    const mouth = part(G('Torus', .15, .035, 4, 6, Math.PI), dark, 0, angry ? -.2 : -.02, .36, g);
+    mouth.rotation.z = angry ? 0 : Math.PI; // arc up = frown, arc down = smile
+    const cam = new THREE.OrthographicCamera(-.5, .5, .5, -.5, .1, 20);
+    cam.position.set(0, 0, 8);
+    cam.lookAt(0, 0, 0);
+    cam.updateMatrixWorld(true);
+    return (icons['face:' + kind] = snap(sc, cam, 160));
+  };
+  // Picture of a food (3D item on a transparent background, seen from the game camera angle), as a data URL.
+  const icons = {};
+  world.itemIcon = type => {
+    if (icons[type]) return icons[type];
+    const N = 160, sc = new THREE.Scene();
+    sc.add(new THREE.AmbientLight(0xffffff, 1.9));
+    const sun = new THREE.DirectionalLight(0xffffff, 1.8);
+    sun.position.set(-4, 8, 6);
+    sc.add(sun);
+    const pitch = 1.0, cy = itemInfo(type).cy;
+    const cam = new THREE.OrthographicCamera(-.5, .5, .5, -.5, .1, 20);
+    cam.position.set(0, cy + Math.sin(pitch) * 8, Math.cos(pitch) * 8);
+    cam.lookAt(0, cy, 0);
+    cam.updateMatrixWorld(true);
+    const item = makeItem(type);
+    item.scale.setScalar(1.4);
+    item.position.y = -.3;
+    sc.add(item);
+    return (icons[type] = snap(sc, cam, N));
+  };
+
   const v = new THREE.Vector3();
   let W = 1, H = 1;
   // World point -> pixel position on the canvas (same box as the HTML overlay).
