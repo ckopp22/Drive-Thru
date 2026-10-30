@@ -73,14 +73,15 @@ export const SHOPS = [
     endless: {
       hospital: true, patMult: 1.3, gapMult: 1.6,
       kinds: [[1, ['medicine']], [3, ['medicine', 'bill']], [5, ['medicine', 'bill', 'bandage']], [7, ['medicine', 'bill', 'bandage', 'id']]],
-      queue: [[1, 1], [4, 2]]
+      queue: [[1, 1], [4, 2]],
+      registerWave: 7, jam: 12 // from this wave: a second bill machine, and a stamped bill left 12 s jams its machine
     },
     foods: {}, layout: {},
     // Where the worker stands for each tappable spot.
     spots: {
       ...Object.fromEntries(PAT_ZS.flatMap((z, i) => [['patL' + i, { x: -.85, z, face: -Math.PI / 2 }], ['patR' + i, { x: .85, z, face: Math.PI / 2 }]])),
       medicine: { x: -1.1, z: -2.1, face: Math.PI }, bandage: { x: 0, z: -2.1, face: Math.PI },
-      register: { x: 1.1, z: -2.1, face: Math.PI }, trash: { x: 0, z: 3.6, face: 0 }
+      register: { x: 1.1, z: -2.1, face: Math.PI }, register2: { x: 2.2, z: -2.1, face: Math.PI }, trash: { x: 0, z: 3.6, face: 0 }
     },
     // Same level curve as the burger joint; tasks unlock with the levels, 1-2 patients waiting per side.
     levels: LEVELS.map((l, i) => ({

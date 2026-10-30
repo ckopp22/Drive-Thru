@@ -357,7 +357,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     world.setFries(cfg.items.includes('fries'), announce && !hadFries);
     audio.setMusicRate(endlessMusicRate(w));
     if (!announce) return;
-    const news = [!hadFries && cfg.items.includes('fries') && '🍟 Fries!', !hadExtra && cfg.extra && '🍳 2nd grill & fryer!', !hadBurn && cfg.burn && '🔥 Food burns!', (cfg.kinds || []).length > hadKinds && 'New patient task!'].filter(Boolean).join(' ');
+    const news = [!hadFries && cfg.items.includes('fries') && '🍟 Fries!', !hadExtra && cfg.extra && (activeShop().hospital ? '2nd bill machine! Bills can jam' : '🍳 2nd grill & fryer!'), !hadBurn && cfg.burn && '🔥 Food burns!', (cfg.kinds || []).length > hadKinds && 'New patient task!'].filter(Boolean).join(' ');
     banner(`⬆️ Wave up!${news ? '\n' + news : ''}`, 'wave');
     audio.playSfx('waveUp');
   }

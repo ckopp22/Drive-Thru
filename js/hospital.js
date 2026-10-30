@@ -25,22 +25,26 @@ export function createHospital(world, cfg, overlay, cb) {
   const hands = [];
   const sides = SIDES.map((s, i) => ({ ...s, line: [], gapT: TUNING.firstCarDelay + i * 1.5 }));
   const leaving = [];
-  const reg = { state: 'idle', p: 0 }; // idle | working | done
+  // Bill machines: the first always, a second one in endless from wave 7 (cfg.extra). state: idle | working | done | jammed (a stamped bill left too long jams the machine; clear it into the bin).
+  const REG_X = { register: 1.1, register2: 2.2 };
   let active = null;
   let halted = false; // endless game over: no more patients
 
-  const bar = document.createElement('div');
-  bar.className = 'car-tag small';
-  bar.hidden = true;
-  bar.innerHTML = `<div class="bubble"><img class="slot" src="${world.itemIcon('bill')}" alt=""></div><div class="pbar prog"><i></i></div>`;
-  overlay.appendChild(bar);
-  const regFill = bar.querySelector('.pbar i');
-  // Ready badge over the register while the stamped bill waits to be picked up (like the ready food circles).
-  const doneBadge = document.createElement('div');
-  doneBadge.className = 'ready-badge';
-  doneBadge.hidden = true;
-  doneBadge.innerHTML = `<img src="${world.itemIcon('billok')}" alt="">`;
-  overlay.appendChild(doneBadge);
+  const regs = {};
+  for (const key in REG_X) {
+    const bar = document.createElement('div');
+    bar.className = 'car-tag small';
+    bar.hidden = true;
+    bar.innerHTML = `<div class="bubble"><img class="slot" src="${world.itemIcon('bill')}" alt=""></div><div class="pbar prog"><i></i></div>`;
+    overlay.appendChild(bar);
+    // Badge over the machine while the stamped bill waits to be picked up (like the ready food circles); it turns red when the machine is about to jam.
+    const badge = document.createElement('div');
+    badge.className = 'ready-badge';
+    badge.hidden = true;
+    badge.innerHTML = `<img src="${world.itemIcon('billok')}" alt="">`;
+    overlay.appendChild(badge);
+    regs[key] = { state: 'idle', p: 0, t: 0, x: REG_X[key], bar, fill: bar.querySelector('.pbar i'), badge, img: badge.querySelector('img'), shown: '' };
+  }
 
   // Badge over the worker's head showing what they're carrying.
   const setHeld = () => worker.setHeld(hands);
@@ -123,7 +127,7 @@ export function createHospital(world, cfg, overlay, cb) {
       cb.shake(key);
       return false;
     }
-    if (key === 'register' && !(held === 'bill' || (!held && reg.state === 'done'))) {
+    if (regs[key] && !(held === 'bill' || (!held && (regs[key].state === 'done' || regs[key].state === 'jammed')))) {
       cb.shake(key);
       return false;
     }
@@ -140,9 +144,10 @@ export function createHospital(world, cfg, overlay, cb) {
       setHeld();
       worker.kick();
       cb.sfx('pickup');
-    } else if (key === 'register') {
+    } else if (regs[key]) {
+      const reg = regs[key];
       if (held === 'bill') {
-        if (reg.state === 'working') return cb.shake(key);
+        if (reg.state === 'working' || reg.state === 'jammed') return cb.shake(key);
         // Drop the paper in; if a stamped one was waiting, swap it into your hands.
         hands.length = 0;
         if (reg.state === 'done') hands.push('billok');
@@ -152,6 +157,12 @@ export function createHospital(world, cfg, overlay, cb) {
         cb.sfx('start');
       } else if (!held && reg.state === 'done') {
         hands.push('billok');
+        reg.state = 'idle';
+        setHeld();
+        worker.kick();
+        cb.sfx('pickup');
+      } else if (!held && reg.state === 'jammed') { // burnt paper: take it to the bin, then tap the machine again
+        hands.push('burnt');
         reg.state = 'idle';
         setHeld();
         worker.kick();
@@ -262,20 +273,30 @@ export function createHospital(world, cfg, overlay, cb) {
         leaving.splice(i, 1);
       }
     }
-    if (reg.state === 'working') {
-      reg.p += dt / REG_TIME;
-      if (reg.p >= 1) { reg.state = 'done'; cb.sfx('ready'); }
-    }
-    bar.hidden = reg.state !== 'working';
-    if (!bar.hidden) {
-      regFill.style.transform = `scaleX(${clamp(reg.p, 0, 1)})`;
-      const p = world.project(1.1, 2.3, -3.05);
-      bar.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, -100%)`;
-    }
-    doneBadge.hidden = reg.state !== 'done';
-    if (!doneBadge.hidden) {
-      const p = world.project(1.1, 2.3, -3.05);
-      doneBadge.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, -100%)`;
+    for (const key in regs) {
+      const reg = regs[key], p = world.project(reg.x, 2.3, -3.05);
+      if (reg.state === 'working') {
+        reg.p += dt / REG_TIME;
+        if (reg.p >= 1) { reg.state = 'done'; reg.t = 0; cb.sfx('ready'); }
+      } else if (reg.state === 'done' && cfg.jam && (reg.t += dt) >= cfg.jam) {
+        reg.state = 'jammed';
+        cb.sfx('burn');
+        // The destroyed bill has to be asked for again: free one patient who already handed theirs over.
+        const owner = sides.flatMap(sd => sd.line).find(c => c.kind === 'bill' && c.phase === 1);
+        if (owner) owner.phase = 0;
+      }
+      reg.bar.hidden = reg.state !== 'working';
+      if (!reg.bar.hidden) {
+        reg.fill.style.transform = `scaleX(${clamp(reg.p, 0, 1)})`;
+        reg.bar.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, -100%)`;
+      }
+      reg.badge.hidden = reg.state !== 'done' && reg.state !== 'jammed';
+      if (!reg.badge.hidden) {
+        const jam = reg.state === 'jammed';
+        if (reg.shown !== reg.state) { reg.shown = reg.state; reg.img.src = world.itemIcon(jam ? 'burnt' : 'billok'); }
+        reg.badge.classList.toggle('warn', jam || (!!cfg.jam && reg.t / cfg.jam > .5));
+        reg.badge.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, -100%)`;
+      }
     }
     for (const c of [...sides.flatMap(s => s.line), ...leaving]) {
       if (c.tag.hidden || !c.tag.isConnected) continue;

@@ -101,7 +101,7 @@ export function endlessCfg(wave, over = {}) {
   if (over.hospital) { // patients: tasks (kinds) and line length ramp instead of items; no trays, food or burning
     const at = rows => rows.filter(r => r[0] <= wave).pop()[1], g = over.gapMult || 1;
     Object.assign(cfg, {
-      trays: 0, items: [], extra: false, burn: 0, maxItems: 1, doubles: false,
+      trays: 0, items: [], extra: wave >= over.registerWave, burn: 0, jam: wave >= over.registerWave ? over.jam : 0, maxItems: 1, doubles: false,
       kinds: at(over.kinds), queue: at(over.queue), gapRange: [gapLo * g, gapHi * g], gap: gapHi * g
     });
   }

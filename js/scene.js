@@ -574,7 +574,7 @@ function buildHospital(scene, hit) {
     build(g);
     scene.add(g);
     machines[key] = g;
-    hit(key, 1.0, 1.0, .7, x, 1.55, -3.05);
+    return hit(key, 1.0, 1.0, .7, x, 1.55, -3.05);
   };
   cabinet('medicine', -1.1, 0xf2f6f9, 'MEDICINE', '#2c8fd6', g => {
     box(.3, .08, .02, 0xe63946, 0, .4, .26, g);
@@ -583,10 +583,14 @@ function buildHospital(scene, hit) {
   cabinet('bandage', 0, 0xf4efe0, 'BANDAGES', '#e63946', g => {
     [-.2, 0, .2].forEach(x => part(G('Cylinder', .08, .08, .12, 8), 0xf5e6c8, x, .5, .26, g).rotation.x = Math.PI / 2);
   });
-  cabinet('register', 1.1, 0x555d66, 'PAY HERE', '#2ecc59', g => {
+  const registerLook = g => {
     box(.5, .3, .05, 0x1f2933, 0, .4, .27, g);
     box(.4, .2, .02, 0x9be7ff, 0, .4, .3, g);
-  });
+  };
+  cabinet('register', 1.1, 0x555d66, 'PAY HERE', '#2ecc59', registerLook);
+  // Second bill machine, shown by world.setExtra (endless wave 7+).
+  const register2Hit = cabinet('register2', 2.2, 0x555d66, 'PAY HERE', '#2ecc59', registerLook);
+  machines.register2.visible = false;
   // trash bin (bottom centre)
   const bin = new THREE.Group();
   bin.position.set(0, 0, BIN_Z);
@@ -594,7 +598,7 @@ function buildHospital(scene, hit) {
   const lid = part(G('Cylinder', .42, .42, .08, 8), 0x3f454d, 0, .78, 0, bin);
   scene.add(bin);
   hit('trash', 1.1, 1.1, 1.1, 0, .55, BIN_Z);
-  return { viz: {}, lid, trays: [], machines, signs: [], trayHits: [], extraHits: [], fixtures: {}, tablePlates: {} };
+  return { viz: {}, lid, trays: [], machines, signs: [], trayHits: [], extraHits: [register2Hit], fixtures: {}, tablePlates: {} };
 }
 
 const tub = (g, color) => {
@@ -1022,7 +1026,7 @@ export function buildWorld() {
     },
     // Level setup: show the extra grill and fryer and make them tappable (or hide them).
     setExtra(on) {
-      for (const k of ['burger2', 'fries2']) if (machines[k]) machines[k].visible = viz[k].root.visible = on;
+      for (const k of ['burger2', 'fries2', 'register2']) if (machines[k]) { machines[k].visible = on; if (viz[k]) viz[k].root.visible = on; }
       extraHits.forEach(h => {
         const i = hits.indexOf(h);
         if (on && i < 0) hits.push(h);
