@@ -21,13 +21,13 @@ const HOW_TO = [
   { icons: '🗑️😡', title: 'Mistakes', text: 'Wrong item? Tap the 🗑️ bin. Tap a tray with empty hands to pick its items back up. Don\'t keep customers waiting or they drive off angry.' }
 ];
 
-const screens = { menu, levels, gameplay, results };
+const screens = { menu, levels, gameplay, results, endlessOver };
 let teardown = null;
 
 export function go(name, arg) {
   if (teardown) { teardown(); teardown = null; }
   app.innerHTML = '';
-  audio.duckMusic(name === 'results');
+  audio.duckMusic(name === 'results' || name === 'endlessOver');
   screens[name](arg);
 }
 
@@ -108,6 +108,7 @@ function howTo() {
       <div class="icons"></div>
       <h3></h3>
       <p></p>
+      <div class="endless-hint">∞ Endless mode: serve customers until you miss 3.</div>
       <div class="dots"></div>
       <div class="nav">
         <button class="btn" id="back">Back</button>
@@ -136,7 +137,8 @@ function levels() {
   const shop = curShop(), LEVELS = shop.levels, MAX = LEVELS.length;
   const { highestUnlocked, bestMoney, stars } = save.shop(shop.id);
   const starRow = n => '★'.repeat(stars[n] || 0) + '☆'.repeat(3 - (stars[n] || 0));
-  const s = el(`<h2>${shop.name}</h2><div class="grid"></div><button class="btn" id="back">Back</button>`, 'screen levels');
+  const best = shop.endless ? save.endless(shop.id) : null;
+  const s = el(`<h2>${shop.name}</h2><div class="grid${best ? ' has-endless' : ''}"></div><button class="btn" id="back">Back</button>`, 'screen levels');
   const grid = s.querySelector('.grid');
   for (let n = 1; n <= MAX; n++) {
     const done = n < highestUnlocked || (n === MAX && bestMoney[n] > 0);
@@ -153,16 +155,48 @@ function levels() {
     if (!locked) b.addEventListener('click', () => go('gameplay', n));
     grid.appendChild(b);
   }
+  // Endless mode: always open, after the last level.
+  if (best) {
+    const b = document.createElement('button');
+    b.className = 'tile endless';
+    b.innerHTML = `<span class="num">∞ ENDLESS</span><span class="sub">${best.bestMoney ? `Best $${best.bestMoney} · Wave ${best.bestWave}` : 'Never locked'}</span>`;
+    b.addEventListener('click', () => go('gameplay', 'endless'));
+    grid.appendChild(b);
+  }
   on(s, '#back', () => go('menu'));
 }
 
 function gameplay(level) {
   useShop(curShop());
-  teardown = startGame(app, level, curShop().levels, {
+  const endless = level === 'endless';
+  teardown = startGame(app, endless ? 0 : level, curShop().levels, {
     exit: () => go('levels'),
     restart: () => go('gameplay', level),
-    finish: r => go('results', r)
-  });
+    finish: r => go(r.endless ? 'endlessOver' : 'results', r)
+  }, { endless });
+}
+
+function endlessOver({ money, served, wave }) {
+  const shop = curShop();
+  const old = { ...save.endless(shop.id) };
+  const beat = save.recordEndless(shop.id, money, served, wave);
+  const row = (label, v, prev, isNew, fmt = x => x) =>
+    `<div class="best-row"><span>${label}</span><b>${fmt(v)}</b>${isNew ? '<em class="new-best">New best!</em>' : `<small>Best ${fmt(prev)}</small>`}</div>`;
+  const s = el(`
+    <h2>Shop Closed!</h2>
+    <div class="stats endless-stats">
+      ${row('Money', money, old.bestMoney, beat.money, x => '$' + x)}
+      ${row('Customers', served, old.bestServed, beat.served)}
+      ${row('Wave', wave, old.bestWave, beat.wave)}
+    </div>
+    <div class="stack">
+      <button class="btn yellow wide" id="again">Play Again</button>
+      <button class="btn wide" id="levels">Level Select</button>
+      <button class="btn wide" id="menu">Main Menu</button>
+    </div>`, 'screen center fail');
+  on(s, '#again', () => go('gameplay', 'endless'));
+  on(s, '#levels', () => go('levels'));
+  on(s, '#menu', () => go('menu'));
 }
 
 function results({ level, pass, money, served, lost }) {

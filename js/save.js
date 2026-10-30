@@ -1,5 +1,6 @@
 const KEY = 'drive-thru-save';
-const freshShop = () => ({ highestUnlocked: 1, bestMoney: { 1: 0 }, stars: {} });
+const freshEndless = () => ({ bestMoney: 0, bestServed: 0, bestWave: 0 });
+const freshShop = () => ({ highestUnlocked: 1, bestMoney: { 1: 0 }, stars: {}, endless: freshEndless() });
 const defaults = () => ({ version: 1, shop: 'burger', shops: { burger: freshShop() }, sound: true, music: true });
 
 const isObj = v => !!v && typeof v === 'object' && !Array.isArray(v);
@@ -12,8 +13,17 @@ function cleanShop(p) {
   return {
     highestUnlocked: Number.isInteger(p.highestUnlocked) ? Math.max(1, Math.min(99, p.highestUnlocked)) : 1,
     bestMoney: { ...f.bestMoney, ...num(p.bestMoney, 1e6) },
-    stars: num(p.stars, 3)
+    stars: num(p.stars, 3),
+    endless: cleanEndless(p.endless)
   };
+}
+
+// Endless high scores; missing or corrupt fields fall back to 0 (old saves have none).
+function cleanEndless(e) {
+  const f = freshEndless();
+  if (!isObj(e)) return f;
+  for (const k in f) if (Number.isFinite(e[k])) f[k] = Math.max(0, Math.min(1e6, Math.floor(e[k])));
+  return f;
 }
 
 function load() {
@@ -58,4 +68,18 @@ export function completeLevel(shopId, level, money, maxLevel, stars = 1) {
   p.stars[level] = Math.max(p.stars[level] || 0, stars);
   if (level === p.highestUnlocked && level < maxLevel) p.highestUnlocked = level + 1;
   persist();
+}
+
+// Endless bests of one shop: { bestMoney, bestServed, bestWave }.
+export const endless = id => { const p = shop(id); return p.endless || (p.endless = freshEndless()); };
+
+// Saves an endless run and returns which bests it beat: { money, served, wave }.
+export function recordEndless(shopId, money, served, wave) {
+  const e = endless(shopId);
+  const beat = { money: money > e.bestMoney, served: served > e.bestServed, wave: wave > e.bestWave };
+  e.bestMoney = Math.max(e.bestMoney, money);
+  e.bestServed = Math.max(e.bestServed, served);
+  e.bestWave = Math.max(e.bestWave, wave);
+  persist();
+  return beat;
 }

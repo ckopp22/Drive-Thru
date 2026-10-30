@@ -1,5 +1,5 @@
 import { createWorld, reducedMotion } from './scene.js';
-import { STATIONS, WORKER, TUNING } from './levels.js';
+import { STATIONS, WORKER, TUNING, ENDLESS, endlessCfg, endlessMusicRate } from './levels.js';
 import { createOrders } from './orders.js';
 import * as audio from './audio.js';
 import { activeShop, itemInfo, PIZZA_TOPS } from './shops.js';
@@ -203,8 +203,11 @@ const mmss = t => `${Math.floor(t / 60)}:${String(t % 60).padStart(2, '0')}`;
 
 // Builds the gameplay screen into root. Returns a teardown function.
 // cb: { exit(), restart(), finish({ level, pass, money, served, lost }) }
-export function startGame(root, level, levels, cb) {
-  const cfg = levels[level - 1];
+// opts.endless: endless mode (level is 0; cfg comes from endlessCfg and changes every wave). Finish gets { endless, money, served, wave }.
+export function startGame(root, level, levels, cb, opts = {}) {
+  const endless = !!opts.endless;
+  const over = activeShop().endless || {};
+  const cfg = endless ? endlessCfg(1, over) : levels[level - 1];
   const foods = activeShop().foods;
   const ICON = Object.fromEntries(Object.entries(foods).map(([k, f]) => [k, f.icon]));
   const MACHINE = Object.fromEntries(Object.entries(foods).map(([k, f]) => [k, f.machine]));
@@ -215,14 +218,19 @@ export function startGame(root, level, levels, cb) {
     <canvas></canvas>
     <div class="overlay"></div>
     <div class="hud">
-      <div class="hud-money"><div class="row">💰 <b class="money">$0</b><span class="goal">/ $${cfg.goal}</span></div><div class="goalbar"><i></i></div></div>
-      <div class="hud-time">⏱️ <b class="time">${mmss(cfg.time)}</b></div>
+      ${endless
+        ? `<div class="hud-money"><div class="row">💰 <b class="money">$0</b></div></div>
+      <div class="hud-time hud-lives" aria-label="Lives">${'<span class="heart">❤️</span>'.repeat(ENDLESS.lives)}</div>`
+        : `<div class="hud-money"><div class="row">💰 <b class="money">$0</b><span class="goal">/ $${cfg.goal}</span></div><div class="goalbar"><i></i></div></div>
+      <div class="hud-time">⏱️ <b class="time">${mmss(cfg.time)}</b></div>`}
     </div>
     <button class="round-btn pause-btn" aria-label="Pause">⏸</button>
-    <div class="level-label">Level ${level}</div>
+    <div class="level-label">${endless ? 'Wave 1' : 'Level ' + level}</div>
     <div class="debug" hidden>
       <pre></pre>
-      <div class="dbtns"><button class="btn small green" data-d="pass">Pass</button><button class="btn small" data-d="fail">Fail</button><button class="btn small yellow" data-d="speed">x1</button></div>
+      <div class="dbtns">${endless
+        ? '<button class="btn small green" data-d="wave1">Wave +1</button><button class="btn small green" data-d="wave5">Wave +5</button><button class="btn small" data-d="life">-Life</button><button class="btn small" data-d="cash">+$50</button><button class="btn small yellow" data-d="speed">x1</button>'
+        : '<button class="btn small green" data-d="pass">Pass</button><button class="btn small" data-d="fail">Fail</button><button class="btn small yellow" data-d="speed">x1</button>'}</div>
     </div>
     <div class="hint" hidden></div>
     <div class="bar">${Array.from({ length: cfg.trays }, (_, i) => `<button class="act" data-k="${i}"><b>${i + 1}</b><span class="mini"></span></button>`).join('')}</div>`;
@@ -231,6 +239,7 @@ export function startGame(root, level, levels, cb) {
   const world = createWorld(el.querySelector('canvas'));
   world.setTrayCount(cfg.trays);
   world.setExtra(!!cfg.extra);
+  if (endless) world.setFries(false);
   if (cfg.workerSpeed) world.worker.speed = cfg.workerSpeed;
   if (activeShop().pizza) world.setFixtures(['dough', ...cfg.toppings]);
   const overlay = el.querySelector('.overlay');
@@ -246,20 +255,22 @@ export function startGame(root, level, levels, cb) {
   let paused = false, running = true, ended = false, raf = 0, last = 0, clock = 0;
   let frames = 0, fpsT = 0, fps = 0, debug = false, speed = 1;
   let goalHit = false;
+  let lives = ENDLESS.lives, wave = 1, waveOffset = 0, dying = 0, over_ = false; // endless state (dying: s left before the game over screen)
   let money = 0, timeLeft = cfg.time, lastSec = Math.ceil(timeLeft), shownMoney = -1, shownSec = -1;
 
   // HUD
   const moneyEl = el.querySelector('.money'), timeEl = el.querySelector('.time');
   const timeBox = el.querySelector('.hud-time'), moneyBox = el.querySelector('.hud-money');
   const goalFill = el.querySelector('.goalbar i'), goalBar = el.querySelector('.goalbar');
+  const hearts = [...el.querySelectorAll('.heart')], levelLabel = el.querySelector('.level-label');
   function drawHud() {
     if (money !== shownMoney) {
       if (shownMoney >= 0) { moneyBox.classList.remove('bump'); void moneyBox.offsetWidth; moneyBox.classList.add('bump'); }
       shownMoney = money;
       moneyEl.textContent = `$${money}`;
-      goalFill.style.width = `${Math.min(100, money / cfg.goal * 100)}%`;
-      goalBar.classList.toggle('met', money >= cfg.goal);
-      if (money >= cfg.goal && !goalHit) {
+      if (!endless) goalFill.style.width = `${Math.min(100, money / cfg.goal * 100)}%`;
+      if (!endless) goalBar.classList.toggle('met', money >= cfg.goal);
+      if (!endless && money >= cfg.goal && !goalHit) {
         goalHit = true;
         moneyBox.classList.add('goal-pulse');
         const b = document.createElement('div');
@@ -270,6 +281,7 @@ export function startGame(root, level, levels, cb) {
         audio.playSfx('ready');
       }
     }
+    if (endless) return;
     const sec = Math.ceil(timeLeft);
     if (sec !== shownSec) {
       shownSec = sec;
@@ -310,6 +322,48 @@ export function startGame(root, level, levels, cb) {
     }
   }
 
+  // Centered banner (goal reached, wave up) that removes itself.
+  function banner(text, cls = '') {
+    const b = document.createElement('div');
+    b.className = 'goal-banner ' + cls;
+    b.textContent = text;
+    el.appendChild(b);
+    setTimeout(() => b.remove(), 2200);
+  }
+
+  // Endless: apply a wave's settings to the live cfg (orders and the logic read it as they go).
+  const lopts = { burn: cfg.burn, trays: cfg.trays };
+  function setWave(w, announce) {
+    const hadFries = cfg.items.includes('fries'), hadExtra = !!cfg.extra, hadBurn = cfg.burn > 0;
+    wave = w;
+    Object.assign(cfg, endlessCfg(w, over));
+    lopts.burn = cfg.burn;
+    levelLabel.textContent = `Wave ${w}`;
+    world.setExtra(!!cfg.extra);
+    world.setFries(cfg.items.includes('fries'), announce && !hadFries);
+    audio.setMusicRate(endlessMusicRate(w));
+    if (!announce) return;
+    const news = [!hadFries && cfg.items.includes('fries') && '🍟 Fries!', !hadExtra && cfg.extra && '🍳 2nd grill & fryer!', !hadBurn && cfg.burn && '🔥 Food burns!'].filter(Boolean).join(' ');
+    banner(`⬆️ Wave up!${news ? '\n' + news : ''}`, 'wave');
+    audio.playSfx('waveUp');
+  }
+  function loseLife() {
+    if (lives <= 0) return;
+    const h = hearts[--lives];
+    h.textContent = '🖤';
+    h.classList.add('broke');
+    const box = h.parentNode;
+    box.classList.remove('hit');
+    void box.offsetWidth;
+    box.classList.add('hit');
+    audio.playSfx('heartBreak');
+    buzz([40, 30, 60]);
+    if (lives <= 0) {
+      dying = 1.4; // let the last heart break and the car drive off before the screen changes
+      orders.halt();
+    }
+  }
+
   // Level 1 tutorial hints: each shown once per attempt, dismissible.
   const hintEl = el.querySelector('.hint');
   const shownHints = new Set();
@@ -341,7 +395,8 @@ export function startGame(root, level, levels, cb) {
       buzz([15, 40, 15]);
     },
     onAngry: ({ pos }) => {
-      const lost = Math.min(money, TUNING.penalty);
+      if (endless) loseLife(); // the only penalty in endless
+      const lost = endless ? 0 : Math.min(money, TUNING.penalty);
       money -= lost;
       if (lost) floatText(`-$${lost}`, pos, 'neg');
       hintEl.hidden = true;
@@ -372,13 +427,13 @@ export function startGame(root, level, levels, cb) {
       },
       shake: k => world.wobble(k),
       send: items => orders.trySend(items)
-    }, { burn: cfg.burn, trays: cfg.trays });
+    }, lopts);
   }
 
   // Tap machines, trays and the bin in the 3D scene.
   el.querySelector('canvas').addEventListener('pointerdown', e => {
     e.preventDefault();
-    if (paused || ended) return;
+    if (paused || ended || dying) return;
     const k = world.pick(e.clientX, e.clientY);
     if (!k || (ITEMS.includes(k) && !(STATIONS[k].type ? cfg.extra : cfg.items.includes(k)))) return;
     logic.tap(k);
@@ -388,7 +443,7 @@ export function startGame(root, level, levels, cb) {
   // Bottom buttons 1-3 send that tray.
   btns.forEach((b, i) => b.addEventListener('pointerdown', e => {
     e.preventDefault();
-    if (paused || ended) return;
+    if (paused || ended || dying) return;
     if (!logic.sendTray(i)) shake(b);
   }));
 
@@ -408,24 +463,42 @@ export function startGame(root, level, levels, cb) {
   // Debug Pass/Fail end the shift right now through the normal results flow.
   dbgBox.addEventListener('click', e => {
     const d = e.target.dataset && e.target.dataset.d;
-    if (d === 'pass') { money = Math.max(money, cfg.goal); timeLeft = 0; }
+    if (d === 'wave1' || d === 'wave5') {
+      waveOffset += d === 'wave1' ? ENDLESS.perWave : ENDLESS.perWave * 5;
+      checkWave();
+    }
+    else if (d === 'life') { if (!dying) loseLife(); }
+    else if (d === 'cash') money += 50;
+    else if (d === 'pass') { money = Math.max(money, cfg.goal); timeLeft = 0; }
     else if (d === 'fail') { money = 0; timeLeft = 0; }
     else if (d === 'speed') { speed = speed === 1 ? 4 : speed === 4 ? 10 : 1; e.target.textContent = 'x' + speed; }
   });
 
   function finish() {
     ended = true;
+    if (endless) {
+      audio.playSfx('levelFail');
+      return cb.finish({ endless: true, money, served: orders.stats.served, lost: orders.stats.lost, wave });
+    }
     const pass = money >= cfg.goal;
     audio.playSfx(pass ? 'levelPass' : 'levelFail');
     cb.finish({ level, pass, money, served: orders.stats.served, lost: orders.stats.lost });
   }
 
+  // Endless: wave = 1 + customers served / perWave (debug jumps add to waveOffset).
+  function checkWave() {
+    const w = 1 + Math.floor((orders.stats.served + waveOffset) / ENDLESS.perWave);
+    if (w !== wave) setWave(w, true);
+  }
+
   function tick(step) {
-    timeLeft -= step;
+    if (endless) {
+      if (dying && (dying -= step) <= 0) { dying = 0; over_ = true; }
+    } else timeLeft -= step;
     const sec = Math.ceil(timeLeft);
     if (sec !== lastSec) {
       lastSec = sec;
-      if (sec <= 10 && sec > 0) audio.playSfx('tick');
+      if (!endless && sec <= 10 && sec > 0) audio.playSfx('tick');
     }
     logic.update(step);
     orders.update(step);
@@ -435,7 +508,10 @@ export function startGame(root, level, levels, cb) {
     if (logic.hands.length) { endHint('make'); if (!activeShop().hospital) showHint('tray', 'Tap a numbered tray to set it down'); }
     const m = logic.trays.findIndex(t => orders.matches(t));
     if (m >= 0) { endHint('tray'); showHint('send', `Order ready! Press ${m + 1} below`); }
-    if (timeLeft <= 0) { timeLeft = 0; finish(); }
+    if (endless) {
+      if (!dying) checkWave();
+      if (over_) finish();
+    } else if (timeLeft <= 0) { timeLeft = 0; finish(); }
   }
 
   function frame(now) {
@@ -470,14 +546,20 @@ export function startGame(root, level, levels, cb) {
         const r = world.renderer.info.render, o = orders.stats;
         dbg.textContent = `${fps} fps  tris ${r.triangles}  calls ${r.calls}\n${world.worker.stateText()}\nhands: ${logic.hands.join(',') || (logic.carried ? 'tray ' + (logic.carried.from + 1) : '-')}\ntrays: ${logic.trays.map(t => t.join('+') || '-').join(' | ')}\n` +
           ITEMS.map(k => `${k}: ${logic.st[k].state} ${Math.round(logic.st[k].p * 100)}%`).join('\n') +
-          `\n$${money}/${cfg.goal}  time ${Math.ceil(timeLeft)}s\ncars served ${o.served}  lost ${o.lost}\navg patience at send ${o.served ? Math.round(o.patSum / o.served * 100) + '%' : '-'}`;
+          (endless
+            ? `\n$${money}  lives ${lives}  wave ${wave}  served ${o.served}  (next wave in ${ENDLESS.perWave - ((o.served + waveOffset) % ENDLESS.perWave)})\nmax ${cfg.maxItems} items  doubles ${cfg.doubles}  extra ${!!cfg.extra}  fries ${cfg.items.includes('fries')}\npatience ${cfg.patience}s  gap ${cfg.gapRange[0].toFixed(1)}-${cfg.gapRange[1].toFixed(1)}s  burn ${cfg.burn}s  music x${endlessMusicRate(wave)}`
+            : `\n$${money}/${cfg.goal}  time ${Math.ceil(timeLeft)}s`) +
+          `\ncars served ${o.served}  lost ${o.lost}\navg patience at send ${o.served ? Math.round(o.patSum / o.served * 100) + '%' : '-'}`;
       }
     }
   }
 
   const start = () => { last = performance.now(); raf = requestAnimationFrame(frame); };
   const onVisibility = () => {
-    if (document.hidden) cancelAnimationFrame(raf);
+    if (document.hidden) {
+      cancelAnimationFrame(raf);
+      if (endless) pauseMenu(); // coming back shows the pause menu instead of costing lives
+    }
     else if (running) start();
   };
   const onResize = () => { if (running) world.resize(); }; // the delayed rotate handler can fire after teardown
@@ -518,6 +600,7 @@ export function startGame(root, level, levels, cb) {
     running = false;
     audio.setGamePaused(false);
     audio.stopLoops();
+    if (endless) audio.setMusicRate(1);
     cancelAnimationFrame(raf);
     document.removeEventListener('visibilitychange', onVisibility);
     window.removeEventListener('resize', onResize);

@@ -44,7 +44,8 @@ export function createOrders(world, cfg, overlay, cb) {
   const stats = { served: 0, lost: 0, patSum: 0 };
   const leaving = [];
   const lane = []; // cars in line; lane[0] is at the window
-  let gapT = TUNING.firstCarDelay;
+  let gapT = cfg.firstCarDelay || TUNING.firstCarDelay;
+  let halted = false; // endless game over: no more cars
   let lastVariant = -1, lastColor = -1;
 
   const pick = (n, last) => { let i; do i = rnd(n); while (i === last && n > 1); return i; };
@@ -70,7 +71,7 @@ export function createOrders(world, cfg, overlay, cb) {
     tag.innerHTML = `<div class="bubble">${slots.map(t => activeShop().itemIcons ? `<img class="slot" src="${world.itemIcon(t)}" alt="">` : `<span class="slot">${itemInfo(t).icon}</span>`).join('')}</div><div class="pbar"><i></i></div>`;
     overlay.appendChild(tag);
     const c = {
-      group, tag, slots, state: 'moving', t: 0, pat: cfg.patience, angry: false, x0: START_X, tx: 0, dur: 1,
+      group, tag, slots, state: 'moving', t: 0, pat: cfg.patience, maxPat: cfg.patience, angry: false, x0: START_X, tx: 0, dur: 1,
       bar: tag.querySelector('.pbar'), fill: tag.querySelector('.pbar i'), band: ''
     };
     moveTo(c, -SPACING * lane.length);
@@ -103,7 +104,7 @@ export function createOrders(world, cfg, overlay, cb) {
 
   function send(c) {
     if (c !== lane[0] || c.state !== 'waiting') return;
-    const frac = c.pat / cfg.patience;
+    const frac = c.pat / c.maxPat;
     const base = orderValue(c.slots);
     const tip = tipFor(base, frac);
     stats.served++;
@@ -128,9 +129,12 @@ export function createOrders(world, cfg, overlay, cb) {
   }
 
   function update(dt) {
-    if (lane.length < 1 + (cfg.queue || 0)) {
+    if (!halted && lane.length < 1 + (cfg.queue || 0)) {
       gapT -= dt;
-      if (gapT <= 0) { spawn(); gapT = cfg.gap; }
+      if (gapT <= 0) {
+        spawn();
+        gapT = cfg.gapRange ? cfg.gapRange[0] + Math.random() * (cfg.gapRange[1] - cfg.gapRange[0]) : cfg.gap;
+      }
     }
     for (const c of [...lane]) {
       c.t += dt;
@@ -162,7 +166,7 @@ export function createOrders(world, cfg, overlay, cb) {
         }
       } else if (c.state === 'waiting') {
         c.pat -= dt;
-        const frac = clamp(c.pat / cfg.patience, 0, 1);
+        const frac = clamp(c.pat / c.maxPat, 0, 1);
         c.fill.style.transform = `scaleX(${frac})`;
         const band = frac > TUNING.patGreen ? 'g' : frac > TUNING.patRed ? 'y' : 'r';
         if (band !== c.band) { c.band = band; c.bar.className = 'pbar ' + band; }
@@ -215,5 +219,5 @@ export function createOrders(world, cfg, overlay, cb) {
     }
   }
 
-  return { update, matches, trySend, stats, get car() { return lane[0] || null; } };
+  return { update, matches, trySend, stats, halt: () => { halted = true; }, get car() { return lane[0] || null; } };
 }

@@ -945,7 +945,7 @@ export function buildWorld() {
     scene.add(npc.group);
   }
 
-  let binT = 0;
+  let binT = 0, friesPop = 0, friesHit = null;
   const wob = {};
   return {
     scene, camera, worker, viz, billboards, hits,
@@ -975,6 +975,20 @@ export function buildWorld() {
         else if (!on && i >= 0) hits.splice(i, 1);
       });
     },
+    // Endless mode: the fryer (fries/tea kettle) appears at a later wave, popping in when `pop` is set.
+    setFries(on, pop) {
+      if (!machines.fries) return;
+      machines.fries.visible = on;
+      if (viz.fries) viz.fries.root.visible = on;
+      if (!friesHit) friesHit = hits.find(x => x.userData.key === 'fries');
+      if (friesHit) {
+        const j = hits.indexOf(friesHit);
+        if (on && j < 0) hits.push(friesHit);
+        else if (!on && j >= 0) hits.splice(j, 1);
+      }
+      friesPop = on && pop && !reducedMotion() ? .45 : 0;
+      machines.fries.scale.setScalar(on ? (friesPop ? .01 : 1) : 1);
+    },
     // Pizza shop: show only the ingredient stations this level uses (tables always stay).
     setFixtures(keys) {
       for (const k in fixtures) {
@@ -997,6 +1011,11 @@ export function buildWorld() {
     removeCar(c) { scene.remove(c); },
     binPop() { binT = .3; },
     update(dt, t) {
+      if (friesPop > 0) { // pop-in with a little overshoot
+        friesPop = Math.max(0, friesPop - dt);
+        const u = 1 - friesPop / .45, c = 1.70158;
+        machines.fries.scale.setScalar(1 + (c + 1) * (u - 1) ** 3 + c * (u - 1) ** 2);
+      }
       for (const k in wob) {
         if (wob[k] > 0) wob[k] = Math.max(0, wob[k] - dt);
         const m = machines[k];

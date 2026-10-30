@@ -85,6 +85,11 @@ export function setGamePaused(on) {
   apply();
 }
 
+// Music tempo (endless mode speeds up in later waves); 1 = normal.
+export function setMusicRate(r) {
+  if (music) music.playbackRate = r;
+}
+
 // Lower the music a little (Results screen).
 export function duckMusic(on) {
   ducked = on;
@@ -133,6 +138,8 @@ const SFX = {
   cash: () => { tone(1568, 1568, .1, 'square', .1); tone(2093, 2093, .1, 'square', .1, .08); tone(2637, 2637, .35, 'square', .1, .16); },
   angry: () => { tone(330, 300, .3, 'square', .16); tone(392, 350, .3, 'square', .12); },
   tick: () => tone(1100, 1100, .03, 'square', .12),
+  heartBreak: () => { noise(.08, 'highpass', 3000, .2); tone(520, 180, .35, 'sawtooth', .16); tone(260, 90, .4, 'triangle', .14, .08); },
+  waveUp: () => [523, 659, 880].forEach((f, i) => tone(f, f * 1.02, .14, 'triangle', .26, i * .08)),
   levelPass: () => {
     [523, 659, 784, 1047].forEach((f, i) => tone(f, f, .28, 'triangle', .28, i * .13));
     [523, 659, 784].forEach(f => tone(f, f, .7, 'triangle', .14, .55));

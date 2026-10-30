@@ -242,7 +242,7 @@ All generated with WebAudio (no files needed), with simple on/off for each:
 ## 9. Optional / Future
 
 - Burn timer on food (Level 8+), "ready" glow.
-- Stars per level, daily challenge, endless mode.
+- Stars per level, daily challenge. (Endless mode is built, see section 13.)
 - Customer variety (impatient, big tipper).
 - Extra items (shake, nuggets) with a station swap button.
 - Haptics via `navigator.vibrate` where supported.
@@ -295,3 +295,48 @@ Wrap reads and writes in try/catch; fall back to defaults.
 - [ ] Level ends at timer; pass/fail correct against the money goal.
 - [ ] Works offline after the first load.
 - [ ] Holds ~60 fps on a modern iPhone; no console errors.
+
+---
+
+## 13. Endless Mode
+
+**Always available.** Never locked and independent of level progress. Each shop that lists `endless: {}` in `shops.js` (Burger Joint, Coffee Shop) gets a purple "∞ ENDLESS" tile on its Level Select screen, after Level 10 (full-width last row, no scrolling). The tile shows the shop's best money and wave once there is one. Pizza Place and Hospital have different mechanics and no endless tile yet.
+
+**Rules**
+- Same scene, controls, stations, orders, prices and tip system as the levels. No timer, no money goal.
+- Starts like Level 1 to 2 (soda and burger, 1 item). The fryer is hidden until wave 3, then pops in. The second grill and fryer and food burning arrive at wave 8.
+- One car at the window at a time. After a car leaves (happy or angry) the next arrives after a random gap between `gapMin` and `gapMax`.
+- 3 lives (hearts in the HUD where the timer sits). A customer who drives off angry costs one life (heart breaks, short shake, `heartBreak` sound). Sending an order never costs a life. There is no -$2 penalty in endless. At 0 lives: game over (after a 1.4 s beat).
+- Wave = 1 + customers served / 5. HUD label "Wave N" (top right); a "Wave up!" banner and `waveUp` sound on each change. Music playback rate rises slightly at waves 10 and 15.
+- Pause freezes arrivals, patience, station and burn timers. Hiding the app (phone lock, app switch) opens the pause menu, so coming back never costs lives. Restart, Play Again and leaving rebuild or dispose the whole world, so nothing carries over.
+
+**Ramp** (`ENDLESS.rows` in `levels.js`; Coffee Shop patience x1.2)
+
+| Wave | Items | Max items | Doubles | Patience | Gap (random) | Extra |
+|---|---|---|---|---|---|---|
+| 1 | Soda, Burger | 1 | no | 38 s | 2.5-4.5 s | |
+| 2 | Soda, Burger | 2 | no | 36 s | 2.2-4.0 s | |
+| 3 | + Fries | 2 | no | 38 s | 2.0-3.8 s | Fryer pops in |
+| 4 | Same | 3 | no | 38 s | 2.0-3.6 s | |
+| 5 | Same | 3 | no | 36 s | 1.8-3.4 s | |
+| 6 | Same | 3 | yes | 35 s | 1.7-3.2 s | |
+| 7 | Same | 3 | yes | 34 s | 1.6-3.0 s | |
+| 8 | Same | 4 | yes | 34 s | 1.5-2.8 s | 2nd grill + fryer, food burns after 12 s |
+| 9 | Same | 4 | yes | 33 s | 1.4-2.6 s | |
+| 10 | Same | 4 | yes | 32 s | 1.3-2.4 s | |
+| 11+ | Same | 4 | yes | -1.2 s per wave, floor 18 s | gaps shrink 0.05 / 0.08 per wave, floors 0.8 / 1.6 s | |
+
+Orders never exceed 4 items (the tray holds 4) and an item repeats at most twice, so the worst order (for example 2 burgers, 2 fries) is about 13 s of work with two grills and two fryers; the 18 s patience floor keeps every order possible. Station times are unchanged. Roughly wave 15 to 20 (patience 20 to 26 s) is very hard for a good player.
+
+**Scoring and game over**
+- A run tracks money earned, customers served and wave reached.
+- "Shop Closed!" screen: this run's three numbers, the previous best for each (or a "New best!" badge when beaten), and buttons Play Again, Level Select, Main Menu.
+
+**Save data** (per shop id, inside `shops[id]`; missing fields default to 0, so old saves keep working)
+
+```json
+"shops": { "burger": { "highestUnlocked": 3, "bestMoney": {}, "stars": {},
+  "endless": { "bestMoney": 120, "bestServed": 31, "bestWave": 7 } } }
+```
+
+**Debug panel** (triple-tap the "Wave N" label): shows lives, wave, served, customers until the next wave, and the live ramp values (max items, doubles, patience, gap, burn). Buttons: Wave +1, Wave +5 (jumps ahead), -Life, +$50, speed.

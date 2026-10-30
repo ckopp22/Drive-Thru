@@ -49,3 +49,49 @@ export const STATIONS = {
   fries2:  { time: 6.5, burns: true, type: 'fries' }
 };
 export const WORKER = { speed: 6, maxHeld: 1, bobRate: 14, trayCap: 4 };
+
+// Endless mode (MDD "Endless Mode"). Always available; ramps by customers served, 1 wave = `perWave` customers.
+// rows: [fromWave, maxItems, patience s, gapMin s, gapMax s]. A row applies until the next row's wave.
+// Past the last row, patience and the gaps keep shrinking per wave down to their floors.
+// Orders never exceed 4 items (the tray holds 4) and never repeat an item more than twice (doubles), so they stay doable.
+export const ENDLESS = {
+  perWave: 5, lives: 3, firstCarDelay: 1, trays: 3,
+  friesWave: 3,   // fryer appears (items become ALL)
+  doublesWave: 6, // orders may repeat an item
+  extraWave: 8,   // second grill and fryer
+  burnWave: 8, burn: 12, // food burns after `burn` s
+  rows: [
+    [1, 1, 38, 2.5, 4.5],
+    [2, 2, 36, 2.2, 4],
+    [3, 2, 38, 2, 3.8],
+    [4, 3, 38, 2, 3.6],
+    [5, 3, 36, 1.8, 3.4],
+    [6, 3, 35, 1.7, 3.2],
+    [7, 3, 34, 1.6, 3],
+    [8, 4, 34, 1.5, 2.8],
+    [9, 4, 33, 1.4, 2.6],
+    [10, 4, 32, 1.3, 2.4]
+  ],
+  patDecay: 1.2, minPatience: 18,   // per wave past the last row
+  gapDecay: [.05, .08], minGap: [.8, 1.6],
+  music: [[10, 1.06], [15, 1.12]]   // [fromWave, music playback rate]
+};
+
+// Level-style config for an endless wave. over: per-shop overrides ({ patMult }).
+export function endlessCfg(wave, over = {}) {
+  const E = ENDLESS, last = E.rows[E.rows.length - 1];
+  const row = E.rows.filter(r => r[0] <= wave).pop() || E.rows[0];
+  const extra = Math.max(0, wave - last[0]);
+  const m = over.patMult || 1;
+  const gapLo = Math.max(E.minGap[0], row[3] - extra * E.gapDecay[0]);
+  const gapHi = Math.max(E.minGap[1], row[4] - extra * E.gapDecay[1]);
+  return {
+    endless: true, wave, trays: E.trays, queue: 0, time: 0,
+    items: wave >= E.friesWave ? ALL : SB,
+    maxItems: row[1], doubles: wave >= E.doublesWave, extra: wave >= E.extraWave,
+    burn: wave >= E.burnWave ? E.burn : 0,
+    patience: Math.round(Math.max(E.minPatience, row[2] - extra * E.patDecay) * m),
+    gapRange: [gapLo, gapHi], gap: gapHi
+  };
+}
+export const endlessMusicRate = wave => (ENDLESS.music.filter(r => r[0] <= wave).pop() || [0, 1])[1];

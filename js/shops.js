@@ -10,6 +10,7 @@ export const PIZZA_TOPS = ['sauce', 'cheese', 'pepperoni', 'mushroom'];
 export const SHOPS = [
   {
     id: 'burger', name: 'Burger Joint', icon: '🍔', levels: LEVELS,
+    endless: {}, // endless mode overrides (see levels.js ENDLESS); shops without this have no endless tile
     foods: {
       soda:   { icon: '🥤', machine: 'soda machine', price: 2, cy: .05,  surf: [.45, .56] },
       burger: { icon: '🍔', machine: 'grill',        price: 4, cy: -.09, surf: [0, .9] },
@@ -23,6 +24,7 @@ export const SHOPS = [
   },
   {
     id: 'coffee', name: 'Coffee Shop', icon: '☕', levels: LEVELS.map(l => ({ ...l })),
+    endless: { patMult: 1.2 }, // cups add walking, so a little more patience
     itemIcons: true, // customer bubbles show the 3D food pictures instead of emoji
     cups: true, // every drink needs a cup from the cabinet before a machine will start
     foods: {

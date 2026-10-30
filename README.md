@@ -50,9 +50,13 @@ If you add or remove a file, also add or remove it from the `ASSETS` list in `sw
 
 Station make times and the worker's speed are in the same file (`STATIONS`, `WORKER`). `node tools/sim.mjs` runs a bot on the Burger Joint levels and prints the average money and pass rate at different skill levels (efficiency 1 = a perfect bot, 0.5 = slow), which is how the goals were set: 1 star is easy for a young player, 3 stars needs a very sharp one.
 
+## Tune endless mode
+
+`ENDLESS` in `js/levels.js` is all data. `rows` is `[fromWave, maxItems, patience, gapMin, gapMax]`; each row applies until the next one. Past the last row, patience drops `patDecay` per wave to `minPatience`, and the gaps shrink by `gapDecay` to `minGap`. `friesWave`, `doublesWave`, `extraWave`, `burnWave` set when each mechanic switches on, `perWave` is customers per wave, `lives` the hearts, and `music` the playback-rate steps. A shop opts in with `endless: {}` in `js/shops.js` (`patMult` scales patience). Keep `maxItems` at 4 or less (the tray holds 4). Use the debug panel's Wave +1 / +5 buttons to test a wave. High scores are saved per shop id in `shops[id].endless`.
+
 ## Debug and secret tools
 
-- **Debug overlay:** triple-tap the "Level N" label in a game. It shows fps and state, plus **Pass**, **Fail** and a **x1/x4/x10** speed button.
+- **Debug overlay:** triple-tap the "Level N" (or "Wave N" in endless) label in a game. It shows fps and state, plus **Pass**, **Fail** and a **x1/x4/x10** speed button.
 - **Unlock everything:** on the main menu, tap the "DRIVE THRU" title 5 times.
 - **Checks:** `node tools/test-logic.mjs` (game rules, headless), `node tools/check-pwa.mjs` (PWA files and manifest).
 - **Icons:** `python3 tools/make-icons.py` redraws the icons in `icons/` (needs Pillow).
