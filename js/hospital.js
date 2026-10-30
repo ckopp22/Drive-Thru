@@ -13,7 +13,7 @@ const KIND = {
 };
 const REG_TIME = 3;
 const SIDES = [{ key: 'patL', sd: -1 }, { key: 'patR', sd: 1 }];
-const X = 2.35, ZS = PAT_ZS, START_Z = 5.5, END_X = 8, WALK = 2.6;
+const X = 2.35, ZS = PAT_ZS, START_Z = 7.5, END_X = 8, WALK = 2.6;
 const SHIRTS = [0x6ec6ff, 0xffb3c7, 0xb8e986, 0xffd77a, 0xc9a7ff];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const rnd = n => Math.floor(Math.random() * n);

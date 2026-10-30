@@ -28,6 +28,9 @@ const FIT_POINTS = [
   [-3.2, 0, 3.5], [3.2, 0, 3.5], [-3.2, 2, 3.5], [3.2, 2, 3.5],
   [-EQUIP_X, 3.6, -1.2], [EQUIP_X, 3.6, -1.2], [-EQUIP_X, 3.6, 1.6]
 ].map(p => new THREE.Vector3(...p));
+// The hospital room runs 1.5 further toward the player (room for the bin at the bottom centre), so the camera frames that too.
+const HOSPITAL_EXT = 1.5;
+const FIT_HOSPITAL = FIT_POINTS.map(p => (p.z === 3.5 ? new THREE.Vector3(p.x, p.y, 3.5 + HOSPITAL_EXT) : p));
 
 const mats = new Map();
 const geos = new Map();
@@ -547,6 +550,7 @@ function labelPlane(text, bg, w = .8) {
 }
 
 // Hospital: a counter down each side (patients line up outside them), cabinets and a register on the back counter.
+const BIN_Z = 4.4;
 function buildHospital(scene, hit) {
   const machines = {};
   [-1, 1].forEach(sd => {
@@ -583,13 +587,13 @@ function buildHospital(scene, hit) {
     box(.5, .3, .05, 0x1f2933, 0, .4, .27, g);
     box(.4, .2, .02, 0x9be7ff, 0, .4, .3, g);
   });
-  // trash bin (back right)
+  // trash bin (bottom centre)
   const bin = new THREE.Group();
-  bin.position.set(2.5, 0, -2.5);
+  bin.position.set(0, 0, BIN_Z);
   part(G('Cylinder', .38, .3, .75, 8), 0x6f7782, 0, .375, 0, bin);
   const lid = part(G('Cylinder', .42, .42, .08, 8), 0x3f454d, 0, .78, 0, bin);
   scene.add(bin);
-  hit('trash', 1.1, 1.1, 1.1, 2.5, .55, -2.5);
+  hit('trash', 1.1, 1.1, 1.1, 0, .55, BIN_Z);
   return { viz: {}, lid, trays: [], machines, signs: [], trayHits: [], extraHits: [], fixtures: {}, tablePlates: {} };
 }
 
@@ -632,16 +636,17 @@ function buildKitchen(scene, billboards, hits) {
   scene.add(part(G('Plane', 80, 80), 0x7ed957, 0, -.02, 0).rotateX(-Math.PI / 2));
 
   // floor
-  const floor = new THREE.Mesh(G('Box', 6, .2, 7), new THREE.MeshLambertMaterial({ map: checker }));
-  floor.position.set(0, -.1, 0);
+  const ext = activeShop().hospital ? HOSPITAL_EXT : 0; // hospital: the room extends toward the player
+  const floor = new THREE.Mesh(G('Box', 6, .2, 7 + ext), new THREE.MeshLambertMaterial({ map: checker }));
+  floor.position.set(0, -.1, ext / 2);
   scene.add(floor);
 
   const { wall: wallC, trim: trimC } = activeShop().colors;
   // side walls (cutaway height so equipment stays visible)
-  box(.3, 2.0, 7.3, wallC, -3.15, 1.0, 0, scene);
-  box(.3, 2.0, 7.3, wallC, 3.15, 1.0, 0, scene);
-  box(.34, .16, 7.3, trimC, -3.15, 2.0, 0, scene);
-  box(.34, .16, 7.3, trimC, 3.15, 2.0, 0, scene);
+  box(.3, 2.0, 7.3 + ext, wallC, -3.15, 1.0, ext / 2, scene);
+  box(.3, 2.0, 7.3 + ext, wallC, 3.15, 1.0, ext / 2, scene);
+  box(.34, .16, 7.3 + ext, trimC, -3.15, 2.0, ext / 2, scene);
+  box(.34, .16, 7.3 + ext, trimC, 3.15, 2.0, ext / 2, scene);
 
   // back wall with window opening (x -1.6..1.6, y 1.0..1.9)
   const wz = -3.5;
@@ -929,7 +934,7 @@ export function fitCamera(camera, aspect) {
       camera.updateMatrixWorld(true);
       camera.updateProjectionMatrix();
       let x0 = 9, x1 = -9, y0 = 9, y1 = -9;
-      for (const p of FIT_POINTS) {
+      for (const p of activeShop().hospital ? FIT_HOSPITAL : FIT_POINTS) {
         v.copy(p).project(camera);
         x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x);
         y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y);
