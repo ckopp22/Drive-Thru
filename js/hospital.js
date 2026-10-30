@@ -95,6 +95,9 @@ export function createHospital(world, cfg, overlay, cb) {
     if (c.kind === 'id') { // photo taken: camera flash
       const f = document.createElement('div');
       f.className = 'photo-flash';
+      const fp = world.project(c.group.position.x, 1.0, c.group.position.z);
+      f.style.left = fp.x + 'px';
+      f.style.top = fp.y + 'px';
       f.addEventListener('animationend', () => f.remove());
       setTimeout(() => f.remove(), 800);
       overlay.appendChild(f);
