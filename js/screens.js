@@ -1,5 +1,5 @@
 import * as save from './save.js';
-import { LEVELS } from './levels.js';
+import { LEVELS, starsFor } from './levels.js';
 import { startGame } from './game.js';
 
 const app = document.getElementById('app');
@@ -7,9 +7,9 @@ const MAX = LEVELS.length;
 
 const HOW_TO = [
   { icons: '🚗💬', title: 'Customers arrive', text: 'A car pulls up and shows its order above it.' },
-  { icons: '🥤🍔🍟', title: 'Make items', text: 'Tap an item button to walk to that station and start making it. Wait for the progress bar, then tap the same button again to pick it up.' },
-  { icons: '🚗✅', title: 'Deliver', text: 'Tap 🚗 to bring items to the car, then tap the order bubble to send it out.' },
-  { icons: '🗑️😡', title: 'Mistakes', text: 'Wrong item? Tap 🗑️. Don\'t keep customers waiting or they drive off angry.' }
+  { icons: '🥤🍔🍟', title: 'Make items', text: 'Tap a machine (soda machine, grill, fryer) to start making. Wait for the progress bar, then tap it again to pick up.' },
+  { icons: '1️⃣2️⃣3️⃣', title: 'Fill a tray', text: 'Tap a numbered tray on the window to set down what you carry. When it matches the order exactly, press that number at the bottom to send it.' },
+  { icons: '🗑️😡', title: 'Mistakes', text: 'Wrong item? Tap the 🗑️ bin. Tap a tray with empty hands to pick its items back up. Don\'t keep customers waiting or they drive off angry.' }
 ];
 
 const screens = { menu, levels, gameplay, results };
@@ -73,7 +73,8 @@ function howTo() {
 }
 
 function levels() {
-  const { highestUnlocked, bestMoney } = save.get();
+  const { highestUnlocked, bestMoney, stars } = save.get();
+  const starRow = n => '★'.repeat(stars[n] || 0) + '☆'.repeat(3 - (stars[n] || 0));
   const s = el(`<h2>Select Level</h2><div class="grid"></div><button class="btn" id="back">Back</button>`, 'screen levels');
   const grid = s.querySelector('.grid');
   for (let n = 1; n <= MAX; n++) {
@@ -86,7 +87,7 @@ function levels() {
     b.innerHTML = locked
       ? `<span class="num">🔒</span><span class="sub">Level ${n}</span>`
       : done
-        ? `<span class="num">✓ ${n}</span><span class="sub">Best $${bestMoney[n] || 0}</span>`
+        ? `<span class="num">✓ ${n}</span><span class="sub">${starRow(n)}</span>`
         : `<span class="num">${n}</span><span class="sub">Goal $${LEVELS[n - 1].goal}</span>`;
     if (!locked) b.addEventListener('click', () => go('gameplay', n));
     grid.appendChild(b);
@@ -95,31 +96,30 @@ function levels() {
 }
 
 function gameplay(level) {
-  const goal = LEVELS[level - 1].goal;
   teardown = startGame(app, level, {
     exit: () => go('levels'),
     restart: () => go('gameplay', level),
-    // Test-only until Stage 3 adds real win/lose.
-    debugResult: pass => go('results', pass
-      ? { level, pass, money: goal + 5, served: 8, lost: 1 }
-      : { level, pass, money: Math.floor(goal / 2), served: 3, lost: 4 })
+    finish: r => go('results', r)
   });
 }
 
 function results({ level, pass, money, served, lost }) {
   const goal = LEVELS[level - 1].goal;
-  if (pass) save.completeLevel(level, money, MAX);
+  const stars = pass ? starsFor(money, goal) : 0;
+  if (pass) save.completeLevel(level, money, MAX, stars);
   const hasNext = pass && level < MAX;
   const s = el(pass ? `
     <h2>Level Complete!</h2>
-    <div class="stats">Earnings: $${money}<br>Orders served: ${served}<br>Orders lost: ${lost}</div>
+    <div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
+    <div class="stats">Earnings: $${money}<br>Goal: $${goal}<br>Orders served: ${served}<br>Orders lost: ${lost}</div>
+    ${level === MAX ? '<p>You finished every shift! 🎉</p>' : ''}
     <div class="stack">
       ${hasNext ? '<button class="btn yellow wide" id="next">Next Level</button>' : ''}
       <button class="btn green wide" id="again">Replay</button>
       <button class="btn wide" id="levels">Level Select</button>
     </div>` : `
     <h2>Shift Over</h2>
-    <div class="stats">Earnings: $${money}<br>Goal: $${goal}</div>
+    <div class="stats">Earnings: $${money}<br>Goal: $${goal}<br>Orders served: ${served}<br>Orders lost: ${lost}</div>
     <div class="stack">
       <button class="btn yellow wide" id="again">Try Again</button>
       <button class="btn wide" id="levels">Level Select</button>

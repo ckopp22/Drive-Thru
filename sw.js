@@ -1,4 +1,4 @@
-const CACHE = 'drive-thru-v3';
+const CACHE = 'drive-thru-v5';
 const ASSETS = [
   './',
   './index.html',
@@ -9,6 +9,7 @@ const ASSETS = [
   './js/screens.js',
   './js/game.js',
   './js/scene.js',
+  './js/orders.js',
   './js/audio.js',
   './js/save.js',
   './js/levels.js',
