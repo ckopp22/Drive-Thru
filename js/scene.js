@@ -317,7 +317,7 @@ function makeStationViz(type, x, z, billboards) {
   check.visible = false;
   const warn = makeWarn();
   // Right over the food icon: same spot as the circle behind it (see the glow placement above).
-  const warnPos = cy => warn.position.set(0, .75 + (cy - .378) * .7, -.243 * .7);
+  const warnPos = cy => { warn.position.set(0, .75 + (cy - .378) * .7, -.243 * .7); check.position.copy(warn.position); };
   warnPos(cy);
   warn.scale.setScalar(1.2);
   warn.visible = false;
