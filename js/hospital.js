@@ -57,7 +57,7 @@ export function createHospital(world, cfg, overlay, cb) {
     pm.group.position.set(side.sd * X, 0, START_Z);
     world.addCar(pm.group);
     const tag = document.createElement('div');
-    tag.className = 'car-tag';
+    tag.className = 'car-tag small';
     tag.hidden = true;
     tag.innerHTML = `<div class="bubble"><img class="slot" src="${world.itemIcon(kind)}" alt=""></div><div class="pbar"><i></i></div><div class="pbar prog" hidden><i></i></div>`;
     overlay.appendChild(tag);
