@@ -451,7 +451,6 @@ export function startGame(root, level, levels, cb, opts = {}) {
   overlay.appendChild(heldTag);
   let heldKey = '';
   function drawHeld() {
-    if (activeShop().hospital) return;
     const items = logic.carried ? logic.carried.items : logic.hands;
     heldTag.classList.toggle('on-tray', !!logic.carried);
     const key = items.join();

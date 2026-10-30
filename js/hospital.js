@@ -35,13 +35,6 @@ export function createHospital(world, cfg, overlay, cb) {
   const regFill = bar.querySelector('.pbar i');
 
   // Badge over the worker's head showing what they're carrying.
-  const HELD_ICON = { bill: '📄 Bill', billok: '✅ Paid bill', medicine: '💊', bandage: '🩹' };
-  const heldTag = document.createElement('div');
-  heldTag.className = 'car-tag';
-  heldTag.hidden = true;
-  heldTag.innerHTML = '<div class="bubble"><span class="slot"></span></div>';
-  overlay.appendChild(heldTag);
-  const heldSlot = heldTag.querySelector('.slot');
   const setHeld = () => worker.setHeld(hands);
   const tagPos = c => world.project(c.group.position.x, 2.1, c.group.position.z);
 
@@ -263,12 +256,6 @@ export function createHospital(world, cfg, overlay, cb) {
     if (reg.state === 'working') {
       reg.p += dt / REG_TIME;
       if (reg.p >= 1) { reg.state = 'done'; cb.sfx('ready'); }
-    }
-    heldTag.hidden = !hands.length;
-    if (hands.length) {
-      if (heldSlot.textContent !== HELD_ICON[hands[0]]) heldSlot.textContent = HELD_ICON[hands[0]];
-      const wp = world.project(worker.group.position.x, 2.3, worker.group.position.z);
-      heldTag.style.transform = `translate(${wp.x.toFixed(1)}px, ${wp.y.toFixed(1)}px) translate(-50%, -100%)`;
     }
     bar.hidden = reg.state !== 'working';
     if (!bar.hidden) {
