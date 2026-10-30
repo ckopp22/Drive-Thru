@@ -1,9 +1,10 @@
+import { PAT_ZS } from './shops.js';
 import { makePatient } from './scene.js';
 import { TUNING } from './levels.js';
 import { tipFor } from './orders.js';
 
 // Hospital game mode: a patient line at each counter, one task each. Exposes the same shape as createLogic/createOrders
-// so startGame can drive it: { logic, orders }. Keys: patL/patR (the patient at that counter), medicine, bandage, register, trash.
+// so startGame can drive it: { logic, orders }. Keys: patL0-2 / patR0-2 (the patient at that place in the left/right line), medicine, bandage, register, trash.
 const KIND = {
   medicine: { base: 4 },
   bill: { base: 6 },
@@ -12,7 +13,7 @@ const KIND = {
 };
 const REG_TIME = 3;
 const SIDES = [{ key: 'patL', sd: -1 }, { key: 'patR', sd: 1 }];
-const X = 2.35, ZS = [-.2, 1.3, 2.8], START_Z = 5.5, END_X = 8, WALK = 2.6;
+const X = 2.35, ZS = PAT_ZS, START_Z = 5.5, END_X = 8, WALK = 2.6;
 const SHIRTS = [0x6ec6ff, 0xffb3c7, 0xb8e986, 0xffd77a, 0xc9a7ff];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const rnd = n => Math.floor(Math.random() * n);
@@ -56,7 +57,7 @@ export function createHospital(world, cfg, overlay, cb) {
     pm.group.position.set(side.sd * X, 0, START_Z);
     world.addCar(pm.group);
     const tag = document.createElement('div');
-    tag.className = 'car-tag queued';
+    tag.className = 'car-tag';
     tag.hidden = true;
     tag.innerHTML = `<div class="bubble"><img class="slot" src="${world.itemIcon(kind)}" alt=""></div><div class="pbar"><i></i></div><div class="pbar prog" hidden><i></i></div>`;
     overlay.appendChild(tag);
@@ -73,8 +74,9 @@ export function createHospital(world, cfg, overlay, cb) {
   }
 
   function leave(c, angry) {
-    const side = c.side;
-    side.line.shift();
+    const side = c.side, gone = side.line.indexOf(c);
+    const wi = worker.at && worker.at.startsWith(side.key) && !worker.target ? +worker.at.slice(4) : -1;
+    side.line.splice(gone, 1);
     c.state = 'leaving';
     c.t = 0;
     c.angry = angry;
@@ -84,6 +86,8 @@ export function createHospital(world, cfg, overlay, cb) {
     } else c.tag.remove();
     leaving.push(c);
     advance(side);
+    // The worker stays with the patient they were helping when the line shuffles forward.
+    if (wi > gone && side.line[wi - 1] && side.line[wi - 1].started) worker.walkTo(side.key + (wi - 1));
   }
 
   function complete(c) {
@@ -105,8 +109,9 @@ export function createHospital(world, cfg, overlay, cb) {
     cb.onSend({ base, tip, total: base + tip, frac, pos });
   }
 
-  const first = key => {
-    const s = sides.find(x => x.key === key), c = s && s.line[0];
+  // The waiting patient at a line place (key like 'patL1').
+  const patientAt = key => {
+    const s = sides.find(x => key.startsWith(x.key)), c = s && s.line[+key.slice(4)];
     return c && c.state === 'waiting' ? c : null;
   };
 
@@ -151,8 +156,8 @@ export function createHospital(world, cfg, overlay, cb) {
         worker.kick();
         cb.sfx('pickup');
       } else cb.shake(key);
-    } else if (key === 'patL' || key === 'patR') {
-      const c = first(key);
+    } else if (key.startsWith('pat')) {
+      const c = patientAt(key);
       if (!c) return cb.shake(key);
       if (c.kind === 'medicine') {
         if (held !== 'medicine') return cb.shake(key);
@@ -215,11 +220,8 @@ export function createHospital(world, cfg, overlay, cb) {
             c.legs[0].rotation.x = c.legs[1].rotation.x = 0;
             c.group.rotation.y = -c.side.sd * Math.PI / 2;
             c.tag.hidden = false;
-            if (side.line[0] === c) {
-              c.state = 'waiting';
-              c.tag.classList.remove('queued');
-              cb.onArrive([c.kind]);
-            } else c.state = 'queued';
+            c.state = 'waiting';
+            cb.onArrive([c.kind]);
           }
         } else if (c.state === 'waiting') {
           c.pat -= dt;
@@ -229,7 +231,7 @@ export function createHospital(world, cfg, overlay, cb) {
           if (band !== c.band) { c.band = band; c.bar.className = 'pbar ' + band; c.tag.classList.toggle('urgent', band === 'r'); }
           const work = KIND[c.kind].work;
           // Bandage / ID bars only fill while the worker stands at this counter.
-          if (work && c.started && worker.at === side.key && !worker.target) {
+          if (work && c.started && worker.at === side.key + side.line.indexOf(c) && !worker.target) {
             c.progress += dt / work;
             if (c.progress >= 1) { complete(c); continue; }
           }

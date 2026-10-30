@@ -1,6 +1,6 @@
 import * as THREE from '../lib/three.module.min.js';
 import { WORKER, STATIONS } from './levels.js';
-import { activeShop, itemInfo, PIZZA_TOPS, useShop } from './shops.js';
+import { activeShop, itemInfo, PIZZA_TOPS, useShop, PAT_ZS } from './shops.js';
 
 // World layout. x: right, y: up, z: toward the camera (bottom of screen).
 // Room x -3..3, z -3.5..3.5, open toward the camera. Back wall (top of screen) has the window; the lane runs along x beyond it.
@@ -544,8 +544,10 @@ function buildHospital(scene, hit) {
     box(.62, .1, 3.62, 0x2c8fd6, sd * 1.55, .85, 1.1, scene);
     box(.7, .02, 3.8, 0xcfe8f3, sd * 2.35, .01, 1.2, scene); // where the line stands
   });
-  hit('patL', 1.8, 1.8, 1.2, -2.0, .9, -.2);
-  hit('patR', 1.8, 1.8, 1.2, 2.0, .9, -.2);
+  PAT_ZS.forEach((z, i) => { // every place in each patient line can be tapped
+    hit('patL' + i, 1.8, 1.8, 1.2, -2.0, .9, z);
+    hit('patR' + i, 1.8, 1.8, 1.2, 2.0, .9, z);
+  });
   const cabinet = (key, x, body, label, bg, build) => {
     const g = new THREE.Group();
     g.position.set(x, 1.05, -3.05);

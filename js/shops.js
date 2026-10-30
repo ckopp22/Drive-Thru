@@ -2,6 +2,9 @@ import { LEVELS } from './levels.js';
 
 export const PIZZA_TOPS = ['sauce', 'cheese', 'pepperoni', 'mushroom'];
 
+// Hospital: z of each place in a patient line (front first). Every place is tappable: spots patL0..2 / patR0..2.
+export const PAT_ZS = [-.2, 1.3, 2.8];
+
 // Restaurants in unlock order. Beating every level of one unlocks the next. `levels: null` = content not built yet.
 // Station slots are fixed (soda / burger / fries = drink, cooked item, fried item); each shop re-skins them:
 //   foods[slot]: icon, machine name, price, cy (glow offset behind the item), surf [x toward room, y] where the finished item sits on its machine.
@@ -69,7 +72,7 @@ export const SHOPS = [
     foods: {}, layout: {},
     // Where the worker stands for each tappable spot.
     spots: {
-      patL: { x: -.85, z: -.2, face: -Math.PI / 2 }, patR: { x: .85, z: -.2, face: Math.PI / 2 },
+      ...Object.fromEntries(PAT_ZS.flatMap((z, i) => [['patL' + i, { x: -.85, z, face: -Math.PI / 2 }], ['patR' + i, { x: .85, z, face: Math.PI / 2 }]])),
       medicine: { x: -1.1, z: -2.1, face: Math.PI }, bandage: { x: 0, z: -2.1, face: Math.PI },
       register: { x: 1.1, z: -2.1, face: Math.PI }, trash: { x: 1.9, z: -2.5, face: Math.PI / 2 }
     },
