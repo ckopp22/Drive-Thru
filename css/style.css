@@ -419,5 +419,5 @@ img.slot { width: 56px; height: 56px; display: block; }
 }
 
 /* Icon of what the worker is carrying */
-.held-tag { position: absolute; left: 0; top: 0; display: flex; gap: 2px; align-items: center; padding: 2px 6px; background: rgba(255,255,255,.95); border: 2px solid var(--ink); border-radius: 12px; box-shadow: 0 2px 0 rgba(0,0,0,.25); will-change: transform; pointer-events: none; }
-.held-tag .slot { font-size: 20px; width: 22px; height: 22px; object-fit: contain; }
+.held-tag { position: absolute; left: 0; top: 0; display: flex; gap: 2px; align-items: center; will-change: transform; pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0,0,0,.4)); }
+.held-tag .slot { font-size: 28px; width: 30px; height: 30px; object-fit: contain; }
