@@ -553,7 +553,7 @@ function buildHospital(scene, hit) {
     box(.6, 1.0, 3.6, 0xdfe9ef, sd * 1.55, .5, 1.1, scene);
     box(.7, .06, 3.7, 0xffffff, sd * 1.55, 1.03, 1.1, scene);
     box(.62, .1, 3.62, 0x2c8fd6, sd * 1.55, .85, 1.1, scene);
-    box(.7, .02, 3.8, 0xcfe8f3, sd * 2.35, .01, 1.2, scene); // where the line stands
+    box(.7, .02, 4.2, 0xcfe8f3, sd * 2.35, .01, 1.4, scene); // where the line stands
   });
   PAT_ZS.forEach((z, i) => { // every place in each patient line can be tapped
     hit('patL' + i, 1.8, 1.8, 1.2, -2.0, .9, z);

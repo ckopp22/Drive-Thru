@@ -3,7 +3,7 @@ import { LEVELS } from './levels.js';
 export const PIZZA_TOPS = ['sauce', 'cheese', 'pepperoni', 'mushroom'];
 
 // Hospital: z of each place in a patient line (front first). Every place is tappable: spots patL0..2 / patR0..2.
-export const PAT_ZS = [-.2, 1.3, 2.8];
+export const PAT_ZS = [-.5, 1.3, 3.1];
 
 // Restaurants in unlock order. Beating every level of one unlocks the next. `levels: null` = content not built yet.
 // Station slots are fixed (soda / burger / fries = drink, cooked item, fried item); each shop re-skins them:

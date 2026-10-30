@@ -457,6 +457,6 @@ img.slot { width: 56px; height: 56px; display: block; }
 .inline-icon { height: 1.7em; width: 1.7em; vertical-align: middle; margin: -4px 0; }
 
 /* Hospital patients: smaller order bubbles */
-.car-tag.small .bubble { min-height: 32px; padding: 3px 6px; border-width: 2px; border-radius: 12px; }
-.car-tag.small img.slot { width: 34px; height: 34px; }
-.car-tag.small .pbar { height: 8px; }
+.car-tag.small .bubble { min-height: 26px; padding: 2px 4px; border-width: 2px; border-radius: 10px; }
+.car-tag.small img.slot { width: 26px; height: 26px; }
+.car-tag.small .pbar { height: 6px; border-width: 1.5px; }
