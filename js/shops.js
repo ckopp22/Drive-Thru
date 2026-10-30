@@ -77,7 +77,7 @@ export const SHOPS = [
     levels: LEVELS.map((l, i) => ({
       ...l, trays: 0, items: [], extra: false, burn: 0, queue: i >= 3 || i === 0 ? 2 : 1,
       patience: Math.round(l.patience * 1.3), gap: i === 0 ? 3.5 : l.gap * 1.6, maxItems: 1, doubles: false,
-      ...(i === 0 ? { workerSpeed: 3.5, goal: 40 } : {}),
+      ...(i === 0 ? { workerSpeed: 3.5, goal: 40, star2: 52, star3: 64 } : {}),
       kinds: i === 0 ? ['medicine'] : i === 1 ? ['medicine', 'bill'] : i === 2 ? ['medicine', 'bill', 'bandage'] : ['medicine', 'bill', 'bandage', 'id']
     })),
     colors: { wall: 0xeef6fa, trim: 0x2c8fd6, tileA: '#ffffff', tileB: '#cfe8f3' }

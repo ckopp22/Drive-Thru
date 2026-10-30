@@ -1,8 +1,9 @@
 import * as save from './save.js';
+import * as audio from './audio.js';
 import { starsFor } from './levels.js';
 import { SHOPS, shopById, useShop } from './shops.js';
 import { startGame } from './game.js';
-import { shopSnapshot } from './scene.js';
+import { createMenuScene } from './scene.js';
 
 const app = document.getElementById('app');
 const curShop = () => shopById(save.get().shop);
@@ -26,6 +27,7 @@ let teardown = null;
 export function go(name, arg) {
   if (teardown) { teardown(); teardown = null; }
   app.innerHTML = '';
+  audio.duckMusic(name === 'results');
   screens[name](arg);
 }
 
@@ -41,7 +43,7 @@ const on = (root, sel, fn) => root.querySelector(sel).addEventListener('click', 
 
 function menu() {
   const s = el(`
-    <div class="menu-bg"></div>
+    <canvas class="menu-bg"></canvas>
     <h1 class="title">DRIVE<br>THRU</h1>
     <div class="shop-pick">
       <button class="round-btn" id="prevShop" aria-label="Previous restaurant">‹</button>
@@ -52,8 +54,9 @@ function menu() {
     <button class="btn wide" id="how">HOW TO PLAY</button>`, 'screen menu');
   const card = s.querySelector('.shop-card'), play = s.querySelector('#play');
   const prevB = s.querySelector('#prevShop'), nextB = s.querySelector('#nextShop');
-  const bg = s.querySelector('.menu-bg');
-  let bgTimer = 0;
+  let bg = s.querySelector('.menu-bg'), bgTimer = 0, menuScene = null;
+  // Leaving the menu must stop the live backdrop (and any pending start) so nothing keeps rendering during play.
+  teardown = () => { clearTimeout(bgTimer); if (menuScene) menuScene.stop(); menuScene = null; };
   let idx = Math.max(0, SHOPS.indexOf(curShop()));
   if (!shopUnlocked(idx)) idx = 0;
   const render = () => {
@@ -64,10 +67,18 @@ function menu() {
     prevB.disabled = idx === 0;
     nextB.disabled = idx === SHOPS.length - 1;
     if (open) save.set({ shop: sh.id });
-    // Blurred picture of the selected shop behind the menu (drawn after the card so switching stays snappy).
+    // Live, blurred 3D room of the selected shop behind the menu (a lost WebGL canvas can't be reused, so each shop gets a fresh one).
     bg.classList.toggle('locked', !open);
     clearTimeout(bgTimer);
-    bgTimer = setTimeout(() => { bg.style.backgroundImage = `url(${shopSnapshot(sh)})`; }, 30);
+    bgTimer = setTimeout(() => {
+      if (menuScene) menuScene.stop();
+      menuScene = null;
+      const fresh = document.createElement('canvas');
+      fresh.className = bg.className;
+      bg.replaceWith(fresh);
+      bg = fresh;
+      try { menuScene = createMenuScene(bg, sh); } catch (e) {}
+    }, 150);
   };
   // Hidden dev unlock: tap the title 5 times to open every shop and level.
   let titleTaps = 0;

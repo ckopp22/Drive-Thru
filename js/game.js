@@ -1,4 +1,4 @@
-import { createWorld } from './scene.js';
+import { createWorld, reducedMotion } from './scene.js';
 import { STATIONS, WORKER, TUNING } from './levels.js';
 import { createOrders } from './orders.js';
 import * as audio from './audio.js';
@@ -11,6 +11,8 @@ const HOSPITAL_HINT = {
   bandage: 'Tap the BANDAGES cabinet, then the patient. Stay with them while it loads',
   id: 'Tap the patient and stay there while the photo loads'
 };
+const reduced = reducedMotion();
+const buzz = p => { try { if (!reduced) navigator.vibrate && navigator.vibrate(p); } catch (e) {} }; // optional haptics, no-op where unsupported
 const ITEMS = Object.keys(STATIONS);
 const typeOf = k => STATIONS[k].type || k; // item a station makes (extra machines make burger/fries)
 
@@ -243,6 +245,7 @@ export function startGame(root, level, levels, cb) {
 
   let paused = false, running = true, ended = false, raf = 0, last = 0, clock = 0;
   let frames = 0, fpsT = 0, fps = 0, debug = false, speed = 1;
+  let goalHit = false;
   let money = 0, timeLeft = cfg.time, lastSec = Math.ceil(timeLeft), shownMoney = -1, shownSec = -1;
 
   // HUD
@@ -256,6 +259,16 @@ export function startGame(root, level, levels, cb) {
       moneyEl.textContent = `$${money}`;
       goalFill.style.width = `${Math.min(100, money / cfg.goal * 100)}%`;
       goalBar.classList.toggle('met', money >= cfg.goal);
+      if (money >= cfg.goal && !goalHit) {
+        goalHit = true;
+        moneyBox.classList.add('goal-pulse');
+        const b = document.createElement('div');
+        b.className = 'goal-banner';
+        b.textContent = '⭐ Goal reached!';
+        el.appendChild(b);
+        setTimeout(() => b.remove(), 2200); // play continues until the timer ends
+        audio.playSfx('ready');
+      }
     }
     const sec = Math.ceil(timeLeft);
     if (sec !== shownSec) {
@@ -273,17 +286,25 @@ export function startGame(root, level, levels, cb) {
     f.style.left = pos.x + 'px';
     f.style.top = pos.y + 'px';
     f.addEventListener('animationend', () => f.remove());
+    if (reduced) setTimeout(() => f.remove(), 900);
     overlay.appendChild(f);
   }
+  // Coins pop up from the order and fly to the money counter.
   function coins(pos) {
+    if (reduced) return;
+    const o = overlay.getBoundingClientRect(), m = moneyBox.getBoundingClientRect();
+    const tx = m.left + m.width * .2 - o.left - pos.x, ty = m.top + m.height / 2 - o.top - pos.y;
     for (let i = 0; i < 6; i++) {
       const c = document.createElement('div');
       c.className = 'coin';
       c.textContent = '🪙';
       c.style.left = pos.x + 'px';
       c.style.top = pos.y + 'px';
-      c.style.setProperty('--dx', (Math.random() * 120 - 60) + 'px');
-      c.style.setProperty('--dy', (-30 - Math.random() * 70) + 'px');
+      c.style.setProperty('--ox', (Math.random() * 90 - 45) + 'px');
+      c.style.setProperty('--oy', (-20 - Math.random() * 50) + 'px');
+      c.style.setProperty('--dx', (tx + Math.random() * 16 - 8) + 'px');
+      c.style.setProperty('--dy', ty + 'px');
+      c.style.animationDelay = (i * 45) + 'ms';
       c.addEventListener('animationend', () => c.remove());
       overlay.appendChild(c);
     }
@@ -314,7 +335,10 @@ export function startGame(root, level, levels, cb) {
       endHint('send');
       floatText(`+$${total}`, pos, 'pos');
       coins(pos);
+      audio.playSfx('deliver');
       audio.playSfx('cash');
+      world.worker.bounce();
+      buzz([15, 40, 15]);
     },
     onAngry: ({ pos }) => {
       const lost = Math.min(money, TUNING.penalty);
@@ -323,6 +347,7 @@ export function startGame(root, level, levels, cb) {
       hintEl.hidden = true;
       hintNow = null;
       audio.playSfx('angry');
+      buzz(70);
     }
   };
 
@@ -340,7 +365,11 @@ export function startGame(root, level, levels, cb) {
   } else {
     orders = createOrders(world, cfg, overlay, ordersCb);
     logic = createLogic(world, {
-      sfx: n => audio.playSfx(n),
+      sfx: n => {
+        audio.playSfx(n);
+        if (n === 'pickup') buzz(12);
+        else if (n === 'place') world.worker.hop();
+      },
       shake: k => world.wobble(k),
       send: items => orders.trySend(items)
     }, { burn: cfg.burn, trays: cfg.trays });
@@ -400,6 +429,8 @@ export function startGame(root, level, levels, cb) {
     }
     logic.update(step);
     orders.update(step);
+    if (world.worker.moving) audio.playSfx('walk');
+    for (const k of ITEMS) audio.setLoop('st' + k, logic.st[k].state === 'making' ? (k.startsWith('soda') || activeShop().id === 'coffee' ? 'fill' : 'sizzle') : null);
     world.update(step, clock);
     if (logic.hands.length) { endHint('make'); if (!activeShop().hospital) showHint('tray', 'Tap a numbered tray to set it down'); }
     const m = logic.trays.findIndex(t => orders.matches(t));
@@ -449,7 +480,7 @@ export function startGame(root, level, levels, cb) {
     if (document.hidden) cancelAnimationFrame(raf);
     else if (running) start();
   };
-  const onResize = () => world.resize();
+  const onResize = () => { if (running) world.resize(); }; // the delayed rotate handler can fire after teardown
   const onOrient = () => setTimeout(onResize, 250);
   document.addEventListener('visibilitychange', onVisibility);
   window.addEventListener('resize', onResize);
@@ -458,6 +489,7 @@ export function startGame(root, level, levels, cb) {
   function pauseMenu() {
     if (paused || ended) return;
     paused = true;
+    audio.setGamePaused(true);
     el.classList.add('paused');
     const m = document.createElement('div');
     m.className = 'modal';
@@ -472,7 +504,7 @@ export function startGame(root, level, levels, cb) {
       </div>`;
     el.appendChild(m);
     const q = s => m.querySelector(s);
-    q('#resume').addEventListener('click', () => { m.remove(); paused = false; el.classList.remove('paused'); });
+    q('#resume').addEventListener('click', () => { m.remove(); paused = false; audio.setGamePaused(false); el.classList.remove('paused'); });
     q('#restart').addEventListener('click', () => cb.restart());
     q('#quit').addEventListener('click', () => cb.exit());
   }
@@ -484,6 +516,8 @@ export function startGame(root, level, levels, cb) {
 
   return () => {
     running = false;
+    audio.setGamePaused(false);
+    audio.stopLoops();
     cancelAnimationFrame(raf);
     document.removeEventListener('visibilitychange', onVisibility);
     window.removeEventListener('resize', onResize);

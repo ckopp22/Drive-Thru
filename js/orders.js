@@ -1,10 +1,13 @@
-import { makeCar, CAR_VARIANTS, CAR_COLORS, LANE_Z } from './scene.js';
+import * as THREE from '../lib/three.module.min.js';
+import { makeCar, setBrake, reducedMotion, CAR_VARIANTS, CAR_COLORS, LANE_Z } from './scene.js';
 import { TUNING } from './levels.js';
 import { activeShop, itemInfo } from './shops.js';
 
 const ORDER = ['soda', 'burger', 'fries'];
 const START_X = -7.5, END_X = 8, SPACING = 2.4;
 const TAG_Y = 1.0; // anchor height above the lane for the order bubble
+const reduced = reducedMotion();
+const puffGeo = new THREE.SphereGeometry(.1, 5, 4);
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const rnd = n => Math.floor(Math.random() * n);
 
@@ -82,6 +85,9 @@ export function createOrders(world, cfg, overlay, cb) {
     c.state = 'leaving';
     c.t = 0;
     c.angry = angry;
+    setBrake(c.group, false);
+    c.puffs = [];
+    c.puffT = 0;
     c.x0 = c.group.position.x;
     c.dur = angry ? TUNING.carLeaveAngry : TUNING.carLeave;
     if (angry) {
@@ -128,11 +134,23 @@ export function createOrders(world, cfg, overlay, cb) {
     }
     for (const c of [...lane]) {
       c.t += dt;
+      if (c.bounceT > 0) { // suspension settles after stopping
+        c.bounceT = Math.max(0, c.bounceT - dt);
+        const k = c.bounceT / .5, body = c.group.userData.body;
+        body.rotation.z = -.05 * Math.cos((1 - k) * 18) * k;
+        body.position.y = Math.abs(Math.sin((1 - k) * 18)) * .03 * k;
+      }
       if (c.state === 'moving') {
         const u = Math.min(1, c.t / c.dur);
         c.group.position.x = c.x0 + (c.tx - c.x0) * (1 - (1 - u) ** 3);
         c.group.position.y = u < 1 ? Math.abs(Math.sin(c.t * 22)) * .02 : 0;
+        const body = c.group.userData.body;
+        if (u < 1) {
+          setBrake(c.group, u > .7);
+          if (!reduced) body.rotation.z = u > .7 ? -.05 * (u - .7) / .3 : 0; // nose dips while slowing
+        }
         if (u >= 1) {
+          c.bounceT = reduced ? 0 : .5;
           c.tag.hidden = false;
           if (c.tx === 0) {
             c.state = 'waiting';
@@ -163,7 +181,27 @@ export function createOrders(world, cfg, overlay, cb) {
       c.group.position.x = c.x0 + (END_X - c.x0) * u * u;
       c.group.position.y = Math.abs(Math.sin(c.t * 26)) * .02;
       c.group.rotation.y = c.angry ? Math.sin(c.t * 40) * .05 : 0;
+      if (!reduced) {
+        c.puffT -= dt;
+        if (c.puffT <= 0 && u < .8) { // little exhaust puff out the back
+          c.puffT = .12;
+          const p = new THREE.Mesh(puffGeo, new THREE.MeshBasicMaterial({ color: 0xcfcfcf, transparent: true, depthWrite: false }));
+          p.position.set(c.group.position.x - c.group.userData.len / 2 - .1, .3, LANE_Z + .2);
+          p.age = 0;
+          world.addCar(p);
+          c.puffs.push(p);
+        }
+      }
+      for (let j = c.puffs.length - 1; j >= 0; j--) {
+        const p = c.puffs[j];
+        p.age += dt;
+        p.position.y = .3 + p.age * .5;
+        p.scale.setScalar(.6 + p.age * 2.2);
+        p.material.opacity = Math.max(0, .5 - p.age * .9);
+        if (p.age > .55) { world.removeCar(p); p.material.dispose(); c.puffs.splice(j, 1); }
+      }
       if (u >= 1) {
+        c.puffs.forEach(p => { world.removeCar(p); p.material.dispose(); });
         world.removeCar(c.group);
         c.tag.remove();
         leaving.splice(i, 1);

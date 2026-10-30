@@ -20,6 +20,8 @@ const SPOTS = {
 export { SPOTS };
 const EQUIP_X = 2.55;
 
+export const reducedMotion = () => typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+
 const FOV = 38;
 const FIT_POINTS = [
   [-3.3, 0, -7.2], [3.3, 0, -7.2], [-3.3, 2.4, -3.6], [3.3, 2.4, -3.6],
@@ -134,6 +136,13 @@ export const LANE_Z = -6;
 export const CAR_VARIANTS = 4;
 export const CAR_COLORS = [0x3b82f6, 0x2ecc71, 0xff8c42, 0xb06cff, 0xf2f2f2, 0xffd23f];
 
+// Brake lights: brighter and a little bigger while braking.
+export function setBrake(g, on) {
+  if (g.userData.brake === on) return;
+  g.userData.brake = on;
+  g.userData.tails.forEach(m => { m.material = M(on ? 0xff3030 : 0xd62828); m.scale.set(1, on ? 1.5 : 1, on ? 1.4 : 1); });
+}
+
 export function makeCar(variant, color) {
   const g = new THREE.Group();
   const body = new THREE.Group();
@@ -163,9 +172,10 @@ export function makeCar(variant, color) {
   [.46, -.46].forEach(z => [len * .32, -len * .32].forEach(x => {
     part(G('Cylinder', .2, .2, .16, 8), 0x2a2a2a, x, .2, z, g).rotation.x = Math.PI / 2;
   }));
+  const tails = [];
   [.28, -.28].forEach(z => {
     box(.05, .1, .16, 0xfff0a0, len / 2, .42, z, body);
-    box(.05, .1, .16, 0xd62828, -len / 2, .42, z, body);
+    tails.push(box(.05, .1, .16, 0xd62828, -len / 2, .42, z, body));
   });
   const shadow = new THREE.Mesh(G('Circle', 1, 12), new THREE.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: .22, depthWrite: false }));
   shadow.rotation.x = -Math.PI / 2;
@@ -173,6 +183,8 @@ export function makeCar(variant, color) {
   shadow.position.y = .03;
   g.add(shadow);
   g.userData.body = body;
+  g.userData.len = len;
+  g.userData.tails = tails;
   return g;
 }
 
@@ -301,7 +313,24 @@ function makeStationViz(type, x, z, billboards) {
   const warn = makeWarn();
   warn.position.set(.6, 1.35, 0);
   warn.visible = false;
-  let burnFrac = 0, blink = 0, lastT = 0;
+  let burnFrac = 0, blink = 0, lastT = 0, making = false, isReady = false;
+  // Steam / smoke puffs (food) or bubbles (drinks) while making; a pulsing ring on the machine when ready.
+  const reduced = reducedMotion();
+  const fx = [];
+  if (!reduced) {
+    for (let i = 0; i < 5; i++) {
+      const m = new THREE.Mesh(G('Sphere', type === 'soda' ? .05 : .09, 5, 4), new THREE.MeshBasicMaterial({ color: type === 'soda' ? 0xbfe9ff : 0xffffff, transparent: true, depthWrite: false }));
+      m.visible = false;
+      root.add(m);
+      fx.push(m);
+    }
+  }
+  const surf = itemInfo(type).surf, fxX = surf[0] * Math.sign(-x), fxY = surf[1] - 2.35;
+  const halo = new THREE.Mesh(G('Ring', .3, .4, 20), new THREE.MeshBasicMaterial({ color: 0xffe14a, transparent: true, opacity: .8, depthWrite: false, side: THREE.DoubleSide }));
+  halo.rotation.x = -Math.PI / 2;
+  halo.position.set(fxX, fxY + .03, 0);
+  halo.visible = false;
+  root.add(halo);
   root.add(bar, ready, burnt, check, warn);
   billboards.push(bar, glow, check, warn);
   bar.visible = ready.visible = burnt.visible = onMachine.visible = burntOnMachine.visible = false;
@@ -326,6 +355,8 @@ function makeStationViz(type, x, z, billboards) {
     // burn: 0..1 of the way to burning (ready items only); the ! flashes faster as it grows.
     set(state, p, burn = 0) {
       burnFrac = state === 'ready' ? burn : 0;
+      making = state === 'making';
+      isReady = state === 'ready';
       bar.visible = state === 'making';
       ready.visible = onMachine.visible = state === 'ready';
       burntOnMachine.visible = state === 'burnt';
@@ -335,6 +366,21 @@ function makeStationViz(type, x, z, billboards) {
     update(t) {
       const dt = Math.min(.1, Math.max(0, t - lastT));
       lastT = t;
+      fx.forEach((m, i) => {
+        m.visible = making;
+        if (!making) return;
+        const ph = (t * (type === 'soda' ? 1.4 : .8) + i / 5) % 1, h = type === 'soda' ? .5 : .9;
+        m.position.set(fxX + Math.sin(t * 3 + i * 2) * .1, fxY + .15 + ph * h, Math.cos(t * 2 + i) * .08);
+        m.scale.setScalar(type === 'soda' ? 1 : .6 + ph * 1.1);
+        m.material.opacity = (type === 'soda' ? .8 : .55) * (1 - ph);
+      });
+      halo.visible = isReady;
+      if (isReady) {
+        const pulse = 1 + (reduced ? 0 : Math.sin(t * 5) * .12);
+        halo.scale.setScalar(pulse);
+        halo.material.opacity = .55 + (reduced ? .2 : Math.sin(t * 5) * .25);
+        if (!reduced) ready.scale.setScalar(.7 * (1 + Math.sin(t * 5) * .04));
+      }
       if (burnFrac > .35) {
         blink += dt * (3 + 14 * ((burnFrac - .35) / .65) ** 2) * Math.PI * 2;
         warn.visible = Math.sin(blink) > -.2;
@@ -737,11 +783,13 @@ function turn(cur, want, maxStep) {
 function makeWorker() {
   const { group, body, legs, arms } = buildWorker();
   group.position.set(0, 0, .5);
-  let faceWant = 0, bobT = 0, kick = 0;
+  let faceWant = 0, bobT = 0, kick = 0, hopT = 0, hopN = 1;
   const w = {
     group, target: null, at: null, moving: false, held: [], onArrive: null,
     walkTo(key) { w.target = key; w.at = null; },
     kick() { kick = .3; },
+    hop() { hopT = .35; hopN = 1; },
+    bounce() { hopT = .6; hopN = 2; },
     setHeld(types, asTray) {
       w.held = asTray ? ['tray'] : types.slice();
       for (let i = body.children.length - 1; i >= 0; i--) if (body.children[i].userData.item) body.remove(body.children[i]);
@@ -794,6 +842,12 @@ function makeWorker() {
       if (w.moving && dt > 0) bobT += dt * WORKER.bobRate;
       const sw = w.moving ? Math.sin(bobT) : 0;
       body.position.y = w.moving ? Math.abs(sw) * .08 : body.position.y * .8;
+      // A hop (handing over) or two happy bounces (order sent).
+      if (hopT > 0) {
+        const len = hopN === 2 ? .6 : .35;
+        hopT = Math.max(0, hopT - dt);
+        group.position.y = Math.abs(Math.sin(Math.PI * hopN * (1 - hopT / len))) * (hopN === 2 ? .22 : .3);
+      } else group.position.y = 0;
       legs[0].rotation.x = sw * .7;
       legs[1].rotation.x = -sw * .7;
       if (kick > 0) kick = Math.max(0, kick - dt);
@@ -1069,31 +1123,59 @@ export function createWorld(canvas) {
   return world;
 }
 
-// A still picture (data URL) of a shop's room, for the main menu backdrop. Cached per shop.
-const snapshots = {};
-export function shopSnapshot(shop) {
-  if (snapshots[shop.id]) return snapshots[shop.id];
+// Live backdrop for the main menu: the shop's room with the worker pacing and cars looping past the window. Returns { stop() }.
+export function createMenuScene(canvas, shop) {
   const prev = activeShop();
+  let world;
   try {
     useShop(shop);
-    const canvas = document.createElement('canvas');
-    const w = 360, h = Math.round(360 * window.innerHeight / window.innerWidth) || 640;
-    const world = createWorld(canvas);
-    world.renderer.setPixelRatio(1);
-    world.renderer.setSize(w, h, false);
-    fitCamera(world.camera, w / h);
-    world.billboards.forEach(b => b.quaternion.copy(world.camera.quaternion));
-    world.setTrayCount(shop.levels ? shop.levels[0].trays : 1);
-    world.setExtra(false);
-    if (shop.pizza) world.setFixtures(['dough', ...PIZZA_TOPS]);
-    world.update(0, 0);
-    world.render();
-    snapshots[shop.id] = canvas.toDataURL('image/jpeg', .75);
-    world.dispose();
-  } catch (e) {
-    snapshots[shop.id] = '';
+    world = createWorld(canvas);
   } finally {
     useShop(prev);
   }
-  return snapshots[shop.id];
+  world.renderer.setPixelRatio(1);
+  world.resize();
+  world.setTrayCount(shop.levels && shop.levels[0].trays ? Math.min(3, shop.levels[0].trays) : 1);
+  world.setExtra(false);
+  if (shop.pizza) world.setFixtures(['dough', ...PIZZA_TOPS]);
+  const cars = [];
+  let raf = 0, last = performance.now(), acc = 0, t = 0, carT = 0, walkT = 0, side = 0;
+  const reduced = reducedMotion();
+  const frame = now => {
+    raf = requestAnimationFrame(frame);
+    const dt = Math.min((now - last) / 1000, .1);
+    last = now;
+    acc += dt;
+    if (acc < 1 / 30) return; // 30 fps is plenty behind a blur
+    const step = acc;
+    acc = 0;
+    t += step;
+    walkT -= step;
+    if (walkT <= 0) { world.worker.walkTo(side++ % 2 ? 'trash' : 'tray0'); walkT = 3.5; }
+    world.worker.update(step);
+    world.update(step, t);
+    carT -= step;
+    if (carT <= 0 && !reduced) {
+      const g = makeCar(Math.floor(Math.random() * CAR_VARIANTS), CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)]);
+      g.position.set(-9, 0, LANE_Z);
+      world.addCar(g);
+      cars.push(g);
+      carT = 4.5;
+    }
+    for (let i = cars.length - 1; i >= 0; i--) {
+      const c = cars[i];
+      c.position.x += 2.6 * step;
+      c.position.y = Math.abs(Math.sin(t * 20 + i)) * .02;
+      if (c.position.x > 9) { world.removeCar(c); cars.splice(i, 1); }
+    }
+    world.render();
+  };
+  raf = requestAnimationFrame(frame);
+  return {
+    stop() {
+      cancelAnimationFrame(raf);
+      cars.forEach(c => world.removeCar(c));
+      world.dispose();
+    }
+  };
 }

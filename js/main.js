@@ -9,7 +9,7 @@ document.addEventListener('touchmove', e => {
 }, { passive: false });
 
 // First tap anywhere unlocks audio (iOS).
-document.addEventListener('pointerdown', audio.unlock, { once: true });
+document.addEventListener('pointerdown', audio.unlock);
 
 audio.initToggles();
 go('menu');

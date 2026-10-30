@@ -331,8 +331,7 @@ html, body {
 .float { position: absolute; font-weight: 900; font-size: 26px; color: #fff; text-shadow: 0 2px 0 #1d7040, 0 0 6px rgba(0,0,0,.35); animation: floatUp 1.1s ease-out forwards; }
 .float.neg { color: #ff4d4d; text-shadow: 0 2px 0 #7a0f0f, 0 0 6px rgba(0,0,0,.35); }
 @keyframes floatUp { from { opacity: 0; transform: translate(-50%, -50%); } 15% { opacity: 1; } to { opacity: 0; transform: translate(-50%, calc(-50% - 70px)); } }
-.coin { position: absolute; font-size: 22px; animation: coinPop .9s ease-out forwards; }
-@keyframes coinPop { from { opacity: 1; transform: translate(-50%, -50%) scale(.5); } to { opacity: 0; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(1); } }
+.coin { position: absolute; font-size: 22px; }
 .hint { position: absolute; left: 0; right: 0; margin: 0 auto; width: max-content; bottom: calc(var(--pad-bottom) + 100px); padding: 7px 12px; border-radius: 14px; background: rgba(30,16,18,.88); color: #fff; font-weight: 800; font-size: 14px; white-space: nowrap; animation: bubbleIn .35s; }
 .game.paused .overlay *, .game.paused .hud-time { animation-play-state: paused; }
 
@@ -355,7 +354,7 @@ img.slot { width: 56px; height: 56px; display: block; }
 .act .mini img { width: 18px; height: 18px; vertical-align: middle; }
 .pbar.prog i { background: #4cb8ff; transform-origin: left; transform: scaleX(0); }
 
-.menu-bg { position: absolute; inset: -30px; z-index: 0; background-size: cover; background-position: center; filter: blur(9px) saturate(1.1); transition: background-image .2s; }
+.menu-bg { position: absolute; left: -24px; top: -24px; width: calc(100% + 48px); height: calc(100% + 48px); z-index: 0; filter: blur(5px) saturate(1.1); }
 .menu-bg.locked { filter: blur(9px) grayscale(1) brightness(.8); }
 .screen.menu > :not(.menu-bg) { position: relative; z-index: 1; }
 .screen.menu { overflow: hidden; }
@@ -375,3 +374,28 @@ img.slot { width: 56px; height: 56px; display: block; }
 
 .update-banner { position: fixed; left: 50%; top: calc(var(--pad-top, 0px) + 8px); transform: translateX(-50%); z-index: 200; appearance: none; border: 3px solid #fff; border-radius: 999px; padding: 10px 22px; background: var(--yellow); color: var(--ink); font: inherit; font-weight: 900; font-size: 18px; box-shadow: 0 5px 0 var(--yellow-dark), 0 8px 14px rgba(0,0,0,.3); animation: bob 1.4s ease-in-out infinite; }
 @keyframes bob { 50% { transform: translateX(-50%) translateY(4px); } }
+
+/* Screen transitions (kept under 250 ms) */
+.screen { animation: screenIn .2s ease-out; }
+@keyframes screenIn { from { opacity: 0; transform: translateY(10px); } }
+
+/* Coins fly from the order to the money counter */
+.coin { animation: coinFly .8s ease-in forwards; opacity: 0; }
+@keyframes coinFly {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.5); }
+  15% { opacity: 1; transform: translate(calc(-50% + var(--ox)), calc(-50% + var(--oy))) scale(1); }
+  100% { opacity: .9; transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) scale(.5); }
+}
+
+/* Goal reached: banner and a pulsing money bar (play continues) */
+.goal-banner { position: absolute; left: 50%; top: 22%; transform: translateX(-50%); z-index: 60; padding: 10px 22px; border: 3px solid #fff; border-radius: 999px; background: var(--green); color: #fff; font-weight: 900; font-size: 24px; white-space: nowrap; box-shadow: 0 5px 0 #1d7040; animation: goalBanner 2.2s ease-out forwards; pointer-events: none; }
+@keyframes goalBanner { 0% { opacity: 0; transform: translateX(-50%) scale(.5); } 12% { opacity: 1; transform: translateX(-50%) scale(1.12); } 22% { transform: translateX(-50%) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateX(-50%) translateY(-20px); } }
+.hud-money.goal-pulse { animation: goalPulse 1.2s ease-in-out 3; }
+@keyframes goalPulse { 50% { transform: scale(1.08); box-shadow: 0 0 0 4px rgba(76,217,100,.7), 0 3px 0 rgba(0,0,0,.2); } }
+
+/* Respect reduced motion: no transitions, pulses or banners moving around */
+@media (prefers-reduced-motion: reduce) {
+  .screen, .goal-banner, .hud-money.goal-pulse, .update-banner, .hud-money.bump { animation: none; }
+  .goal-banner { opacity: 1; }
+  .goalbar i { transition: none; }
+}
