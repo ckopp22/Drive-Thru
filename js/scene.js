@@ -1,21 +1,24 @@
 import * as THREE from '../lib/three.module.min.js';
 import { WORKER } from './levels.js';
 
-// World layout. x: right, y: up, z: toward the camera. Kitchen floor x -3..3, z -4.5..4.5; lane beyond the right wall.
-export const SPOTS = {
-  soda:   { x: -2.0, z: -2.6, face: Math.PI },
-  burger: { x: 0.2,  z: -2.6, face: Math.PI },
-  fries:  { x: 1.9,  z: -2.6, face: Math.PI },
-  car:    { x: 1.4,  z: 0,    face: Math.PI / 2 },
-  trash:  { x: -1.4, z: 3.0,  face: -Math.PI / 2 }
+// World layout. x: right, y: up, z: toward the camera (bottom of screen).
+// Room x -3..3, z -3.5..3.5, open toward the camera. Back wall (top of screen) has the window; the lane runs along x beyond it.
+const SPOTS = {
+  soda:   { x: -1.9, z: -1.2, face: -Math.PI / 2 },
+  burger: { x: 1.9,  z: -1.2, face: Math.PI / 2 },
+  fries:  { x: -1.9, z: 1.6,  face: -Math.PI / 2 },
+  trash:  { x: 1.9,  z: 1.6,  face: Math.PI / 2 },
+  car:    { x: 0,    z: -2.1, face: Math.PI }
 };
-const STATION_Z = -3.8;
+export { SPOTS };
+const EQUIP_X = 2.55;
+const VIZ_POS = { soda: [-EQUIP_X, -1.2], burger: [EQUIP_X, -1.2], fries: [-EQUIP_X, 1.6] };
 
 const FOV = 38;
 const FIT_POINTS = [
-  [-3, 0, -4.5], [6, 0, -4.5], [-3, 0, 4.5], [6, 0, 4.5],
-  [-3, 2.6, -4.7], [3.3, 2.6, -4.7], [3.3, 2.4, 4.5],
-  [-2, 3.6, STATION_Z], [1.9, 3.6, STATION_Z]
+  [-3.3, 0, -7.2], [3.3, 0, -7.2], [-3.3, 2.4, -3.6], [3.3, 2.4, -3.6],
+  [-3.2, 0, 3.5], [3.2, 0, 3.5], [-3.2, 2, 3.5], [3.2, 2, 3.5],
+  [-EQUIP_X, 3.6, -1.2], [EQUIP_X, 3.6, -1.2], [-EQUIP_X, 3.6, 1.6]
 ].map(p => new THREE.Vector3(...p));
 
 const mats = new Map();
@@ -71,9 +74,9 @@ function makeBar() {
 
 const glowMat = new THREE.MeshBasicMaterial({ color: 0xffe14d, transparent: true, opacity: .6, depthTest: false });
 
-function makeStationViz(type, x, billboards) {
+function makeStationViz(type, x, z, billboards) {
   const root = new THREE.Group();
-  root.position.set(x, 2.35, STATION_Z);
+  root.position.set(x, 2.35, z);
   const bar = makeBar();
   const ready = new THREE.Group();
   ready.position.y = .75;
@@ -105,38 +108,41 @@ function buildKitchen(scene, billboards) {
   scene.add(part(G('Plane', 80, 80), 0x7ed957, 0, -.02, 0).rotateX(-Math.PI / 2));
 
   // floor
-  const floor = new THREE.Mesh(G('Box', 6, .2, 9), new THREE.MeshLambertMaterial({ map: checker }));
+  const floor = new THREE.Mesh(G('Box', 6, .2, 7), new THREE.MeshLambertMaterial({ map: checker }));
   floor.position.set(0, -.1, 0);
   scene.add(floor);
 
-  // back wall + stripe
-  box(6.3, 2.6, .3, 0xfff1b8, .15, 1.3, -4.65, scene);
-  box(6.3, .18, .34, 0xe63946, .15, 2.5, -4.65, scene);
+  // side walls (cutaway height so equipment stays visible)
+  box(.3, 2.0, 7.3, 0xfff1b8, -3.15, 1.0, 0, scene);
+  box(.3, 2.0, 7.3, 0xfff1b8, 3.15, 1.0, 0, scene);
+  box(.34, .16, 7.3, 0xe63946, -3.15, 2.0, 0, scene);
+  box(.34, .16, 7.3, 0xe63946, 3.15, 2.0, 0, scene);
 
-  // right wall with window opening (z -1.6..1.6, y 1.0..1.9)
-  const wx = 3.15;
-  box(.3, 2.2, 2.9, 0xfff1b8, wx, 1.1, -3.05, scene);
-  box(.3, 2.2, 2.9, 0xfff1b8, wx, 1.1, 3.05, scene);
-  box(.3, 1.0, 3.2, 0xfff1b8, wx, .5, 0, scene);
-  box(.3, .3, 3.2, 0xfff1b8, wx, 2.05, 0, scene);
-  box(.4, .12, 3.4, 0xe63946, wx, 1.0, 0, scene);
-  box(.4, .12, 3.4, 0xe63946, wx, 1.9, 0, scene);
-  box(.4, .9, .12, 0xe63946, wx, 1.45, -1.6, scene);
-  box(.4, .9, .12, 0xe63946, wx, 1.45, 1.6, scene);
-  for (let i = 0; i < 5; i++) box(.9, .08, .64, i % 2 ? 0xffffff : 0xe63946, 3.75, 2.3, -1.28 + i * .64, scene);
+  // back wall with window opening (x -1.6..1.6, y 1.0..1.9)
+  const wz = -3.5;
+  box(1.7, 2.2, .3, 0xfff1b8, -2.45, 1.1, wz, scene);
+  box(1.7, 2.2, .3, 0xfff1b8, 2.45, 1.1, wz, scene);
+  box(3.2, 1.0, .3, 0xfff1b8, 0, .5, wz, scene);
+  box(3.2, .3, .3, 0xfff1b8, 0, 2.05, wz, scene);
+  box(3.4, .12, .4, 0xe63946, 0, 1.0, wz, scene);
+  box(3.4, .12, .4, 0xe63946, 0, 1.9, wz, scene);
+  box(.12, .9, .4, 0xe63946, -1.6, 1.45, wz, scene);
+  box(.12, .9, .4, 0xe63946, 1.6, 1.45, wz, scene);
+  for (let i = 0; i < 5; i++) box(.64, .08, .9, i % 2 ? 0xffffff : 0xe63946, -1.28 + i * .64, 2.3, -4.1, scene);
 
   // counter along the window
-  box(.9, 1.0, 4, 0xc9863f, 2.5, .5, 0, scene);
-  box(1.0, .06, 4.1, 0xf2f2f2, 2.5, 1.02, 0, scene);
+  box(4, 1.0, .9, 0xc9863f, 0, .5, -3.0, scene);
+  box(4.1, .06, 1.0, 0xf2f2f2, 0, 1.02, -3.0, scene);
 
-  // lane: curb, road, dashes
-  box(.3, .08, 18, 0xd9d9d9, 3.45, .04, 0, scene);
-  box(2.4, .02, 18, 0x555a64, 4.8, .01, 0, scene);
-  for (let z = -8; z <= 8; z += 2) box(.12, .025, .8, 0xffc828, 4.8, .022, z, scene);
+  // lane above the room: curb, road, dashes (cars drive along x)
+  box(18, .08, .3, 0xd9d9d9, 0, .04, -4.75, scene);
+  box(18, .02, 2.4, 0x555a64, 0, .01, -6.0, scene);
+  for (let x = -8; x <= 8; x += 2) box(.8, .025, .12, 0xffc828, x, .022, -6.0, scene);
 
-  // soda machine
+  // soda machine (left wall)
   const soda = new THREE.Group();
-  soda.position.set(SPOTS.soda.x, 0, STATION_Z);
+  soda.position.set(-EQUIP_X, 0, -1.2);
+  soda.rotation.y = Math.PI / 2;
   box(1.1, 1.8, .9, 0xe63946, 0, .9, 0, soda);
   box(1.1, .2, .9, 0xffffff, 0, 1.9, 0, soda);
   box(.9, .9, .05, 0xffffff, 0, 1.15, .47, soda);
@@ -145,37 +151,36 @@ function buildKitchen(scene, billboards) {
   box(.6, .06, .35, 0x9a9a9a, 0, .5, .45, soda);
   scene.add(soda);
 
-  // grill
+  // grill (right wall)
   const grill = new THREE.Group();
-  grill.position.set(SPOTS.burger.x, 0, STATION_Z);
+  grill.position.set(EQUIP_X, 0, -1.2);
+  grill.rotation.y = -Math.PI / 2;
   box(1.4, .75, 1.0, 0x8b5a2b, 0, .375, 0, grill);
   box(1.4, .12, 1.0, 0x3a3a3f, 0, .81, 0, grill);
   box(1.2, .02, .8, 0xff7a2f, 0, .88, 0, grill);
   box(1.4, 1.0, .1, 0x9a9a9a, 0, 1.3, -.45, grill);
   scene.add(grill);
 
-  // fryer
+  // fryer (left wall, front)
   const fryer = new THREE.Group();
-  fryer.position.set(SPOTS.fries.x, 0, STATION_Z);
+  fryer.position.set(-EQUIP_X, 0, 1.6);
+  fryer.rotation.y = Math.PI / 2;
   box(1.2, .8, 1.0, 0xb8bcc4, 0, .4, 0, fryer);
   box(1.0, .04, .8, 0xffc828, 0, .82, 0, fryer);
   box(.08, .08, .6, 0x333333, 0, .95, .5, fryer);
   box(.08, .5, .08, 0x333333, .45, 1.05, .25, fryer);
   scene.add(fryer);
 
-  // trash bin
+  // trash bin (right wall, front)
   const bin = new THREE.Group();
-  bin.position.set(-2.1, 0, 3.0);
+  bin.position.set(2.6, 0, 1.6);
   part(G('Cylinder', .38, .3, .75, 8), 0x6f7782, 0, .375, 0, bin);
   const lid = part(G('Cylinder', .42, .42, .08, 8), 0x3f454d, 0, .78, 0, bin);
   part(G('Cylinder', .1, .1, .06, 6), 0x3f454d, 0, .88, 0, lid);
   scene.add(bin);
 
-  const viz = {
-    soda: makeStationViz('soda', SPOTS.soda.x, billboards),
-    burger: makeStationViz('burger', SPOTS.burger.x, billboards),
-    fries: makeStationViz('fries', SPOTS.fries.x, billboards)
-  };
+  const viz = {};
+  for (const k in VIZ_POS) viz[k] = makeStationViz(k, VIZ_POS[k][0], VIZ_POS[k][1], billboards);
   return { viz, lid };
 }
 
@@ -189,7 +194,7 @@ function checkerTexture() {
   t.magFilter = THREE.NearestFilter;
   t.minFilter = THREE.NearestFilter;
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
-  t.repeat.set(3, 4.5);
+  t.repeat.set(3, 3.5);
   t.colorSpace = THREE.SRGBColorSpace;
   return t;
 }
@@ -234,7 +239,7 @@ function turn(cur, want, maxStep) {
 
 function makeWorker() {
   const { group, body, legs, arms } = buildWorker();
-  group.position.set(.3, 0, -.5);
+  group.position.set(0, 0, .5);
   let faceWant = 0, bobT = 0, kick = 0;
   const w = {
     group, target: null, at: null, moving: false, held: [], onArrive: null,
@@ -298,14 +303,14 @@ export function fitCamera(camera, aspect) {
   camera.fov = FOV;
   camera.near = 1;
   camera.far = 200;
-  const yaw = .32, pitch = 1.0;
+  const yaw = 0, pitch = 1.0;
   const dir = new THREE.Vector3(-Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch));
   const tanH = Math.tan(FOV * Math.PI / 360);
   const target = new THREE.Vector3();
   const v = new THREE.Vector3(), right = new THREE.Vector3(), up = new THREE.Vector3();
 
   function measure(d) {
-    target.set(.8, .3, -.2);
+    target.set(0, .3, -1.5);
     let r;
     for (let i = 0; i < 4; i++) {
       camera.position.copy(target).addScaledVector(dir, d);
@@ -351,7 +356,7 @@ export function buildWorld() {
   scene.add(worker.group);
 
   const ledge = new THREE.Group();
-  ledge.position.set(2.5, 1.05, 0);
+  ledge.position.set(0, 1.05, -3.0);
   scene.add(ledge);
 
   let binT = 0;
@@ -362,7 +367,7 @@ export function buildWorld() {
       types.forEach((t, i) => {
         const it = makeItem(t);
         it.scale.setScalar(1.1);
-        it.position.z = (i - (types.length - 1) / 2) * .6;
+        it.position.x = (i - (types.length - 1) / 2) * .6;
         ledge.add(it);
       });
     },
