@@ -44,7 +44,7 @@ export function createHospital(world, cfg, overlay, cb) {
 
   // Badge over the worker's head showing what they're carrying.
   const setHeld = () => worker.setHeld(hands);
-  const tagPos = c => world.project(c.group.position.x, 2.1, c.group.position.z);
+  const tagPos = c => world.project(c.group.position.x, 1.75, c.group.position.z);
 
   function moveTo(c, tx, tz) {
     c.x0 = c.group.position.x; c.z0 = c.group.position.z; c.tx = tx; c.tz = tz; c.t = 0;
