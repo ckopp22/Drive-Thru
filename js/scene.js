@@ -112,7 +112,15 @@ function hospitalItem(type, g) {
   if (type === 'bill' || type === 'billok') {
     box(.3, .02, .38, 0xffffff, 0, .02, 0, g);
     [-.1, 0, .1].forEach(z => box(.2, .005, .02, 0x9aa0a6, 0, .035, z, g));
-    if (type === 'billok') box(.12, .01, .12, 0x2ecc59, .06, .04, .1, g);
+    if (type === 'billok') { // big green check mark on the paper
+      const seg = (x1, z1, x2, z2) => {
+        const len = Math.hypot(x2 - x1, z2 - z1);
+        const m = box(len + .03, .014, .045, 0x2ecc59, (x1 + x2) / 2, .04, (z1 + z2) / 2, g);
+        m.rotation.y = -Math.atan2(z2 - z1, x2 - x1);
+      };
+      seg(-.1, .02, -.04, .14);
+      seg(-.04, .14, .1, -.12);
+    }
   } else if (type === 'medicine') {
     part(G('Cylinder', .1, .1, .22, 8), 0xffffff, 0, .11, 0, g);
     part(G('Cylinder', .105, .105, .06, 8), 0x2c8fd6, 0, .25, 0, g);
