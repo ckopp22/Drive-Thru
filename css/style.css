@@ -34,7 +34,7 @@ html, body {
   height: 100vh;
   height: -webkit-fill-available;
   height: 100dvh;
-  background: var(--red);
+  background: #ffe38a;
   font-family: -apple-system, "SF Pro Rounded", "Segoe UI", Roboto, sans-serif;
   color: var(--ink);
 }
