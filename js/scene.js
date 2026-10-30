@@ -257,10 +257,10 @@ function makeWarn() {
     const c = document.createElement('canvas');
     c.width = c.height = 64;
     const x = c.getContext('2d');
-    x.fillStyle = '#ff3b30'; x.beginPath(); x.arc(32, 32, 29, 0, Math.PI * 2); x.fill();
-    x.lineWidth = 4; x.strokeStyle = '#fff'; x.stroke();
-    x.fillStyle = '#fff'; x.font = 'bold 44px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
-    x.fillText('!', 32, 35);
+    // Just a red "!" with a white outline (no circle behind it).
+    x.font = 'bold 60px sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.lineJoin = 'round';
+    x.lineWidth = 9; x.strokeStyle = '#fff'; x.strokeText('!', 32, 35);
+    x.fillStyle = '#ff3b30'; x.fillText('!', 32, 35);
     const t = new THREE.CanvasTexture(c);
     t.colorSpace = THREE.SRGBColorSpace;
     warnMat = new THREE.MeshBasicMaterial({ map: t, transparent: true, depthTest: false });
@@ -277,7 +277,7 @@ function makeStationViz(type, x, z, billboards) {
   const ready = new THREE.Group();
   ready.position.y = .75;
   ready.scale.setScalar(.7);
-  const glow = new THREE.Mesh(G('Circle', .46, 20), glowMat);
+  const glow = new THREE.Mesh(G('Circle', .46, 20), glowMat.clone()); // own material: it blinks red when food is about to burn
   // Sits slightly behind the item (away from the camera) so the item draws in front of it.
   // Placed along the camera's view ray from the item's visual center (pitch 1.0), so it looks centered.
   const cy = itemInfo(type).cy;
@@ -390,6 +390,7 @@ function makeStationViz(type, x, z, billboards) {
         blink += dt * (3 + 14 * ((burnFrac - .35) / .65) ** 2) * Math.PI * 2;
         warn.visible = Math.sin(blink) > -.2;
       } else warn.visible = false;
+      glow.material.color.setHex(warn.visible ? 0xff3b30 : 0xffffff);
       if (pinged) { pinged = false; pingAt = t; check.visible = true; }
       if (check.visible) {
         const age = t - pingAt;
