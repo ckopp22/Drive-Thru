@@ -423,7 +423,7 @@ img.slot { width: 56px; height: 56px; display: block; }
 
 /* Icon of what the worker is carrying */
 .held-tag { position: absolute; left: 0; top: 0; display: flex; gap: 2px; align-items: center; will-change: transform; pointer-events: none; filter: drop-shadow(0 2px 2px rgba(0,0,0,.4)); }
-.held-tag .slot { font-size: 28px; width: 30px; height: 30px; object-fit: contain; }
+.held-tag .slot { width: 38px; height: 38px; object-fit: contain; }
 
 .car-tag.happy .emote { animation: happyBob .5s ease-in-out infinite; }
 @keyframes happyBob { 50% { transform: translateY(-6px) scale(1.12); } }

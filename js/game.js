@@ -445,7 +445,6 @@ export function startGame(root, level, levels, cb, opts = {}) {
   }
 
   // Small icon bubble above the worker showing what they carry (hands, or the items on a carried tray).
-  const HELD_EMOJI = { burnt: '🔥', cup: '🥛', dough: '🍞', sauce: '🥫', cheese: '🧀', pepperoni: '🍕', mushroom: '🍄' };
   const heldTag = document.createElement('div');
   heldTag.className = 'held-tag';
   heldTag.hidden = true;
@@ -459,8 +458,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     if (key !== heldKey) {
       heldKey = key;
       heldTag.hidden = !items.length;
-      heldTag.innerHTML = items.map(x => HELD_EMOJI[x] ? `<span class="slot">${HELD_EMOJI[x]}</span>` : x.startsWith('plate:') ? '<span class="slot">🍕</span>'
-        : activeShop().itemIcons ? `<img class="slot" src="${world.itemIcon(x)}" alt="">` : `<span class="slot">${ICON[x] || itemInfo(x).icon}</span>`).join('');
+      heldTag.innerHTML = items.map(x => `<img class="slot" src="${world.itemIcon(x)}" alt="">`).join('');
     }
     if (heldTag.hidden) return;
     const p = world.project(world.worker.group.position.x, 2.15, world.worker.group.position.z);

@@ -1171,15 +1171,18 @@ export function createWorld(canvas) {
     const sun = new THREE.DirectionalLight(0xffffff, 1.8);
     sun.position.set(-4, 8, 6);
     sc.add(sun);
-    const pitch = 1.0, cy = itemInfo(type).cy;
-    const cam = new THREE.OrthographicCamera(-.5, .5, .5, -.5, .1, 20);
-    cam.position.set(0, cy + Math.sin(pitch) * 8, Math.cos(pitch) * 8);
-    cam.lookAt(0, cy, 0);
-    cam.updateMatrixWorld(true);
     const item = makeItem(type);
     item.scale.setScalar(1.4);
     item.position.y = -.3;
     sc.add(item);
+    // Foods use their tuned centre; other carried things (cup, dough, plate, burnt lump) are centred by their size.
+    const fi = activeShop(), known = fi.foods[type] || (fi.pizza && type.startsWith('pizza:'));
+    sc.updateMatrixWorld(true);
+    const pitch = 1.0, cy = known ? itemInfo(type).cy : new THREE.Box3().setFromObject(item).getCenter(new THREE.Vector3()).y;
+    const cam = new THREE.OrthographicCamera(-.5, .5, .5, -.5, .1, 20);
+    cam.position.set(0, cy + Math.sin(pitch) * 8, Math.cos(pitch) * 8);
+    cam.lookAt(0, cy, 0);
+    cam.updateMatrixWorld(true);
     return (icons[type] = snap(sc, cam, N));
   };
 
