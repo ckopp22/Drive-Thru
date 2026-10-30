@@ -193,10 +193,16 @@ export function makeCar(variant, color) {
   return g;
 }
 
-// Serving tray: red base with a pale mat. Items are laid out 2x2 on top (children from index 2).
+// Serving tray: red plate with a raised rim, dark handle slots in the short ends and a pale mat. Items are laid out on top (children from index TRAY_PARTS).
+const TRAY_PARTS = 8;
 function makeTrayBase(g) {
-  box(.95, .06, .72, 0xe63946, 0, .03, 0, g);
-  box(.85, .04, .62, 0xffe08a, 0, .07, 0, g);
+  box(.95, .05, .72, 0xe63946, 0, .025, 0, g);
+  box(.8, .03, .58, 0xffe08a, 0, .065, 0, g);
+  for (const s of [-1, 1]) {
+    box(.95, .1, .06, 0xc92d3a, 0, .075, s * .33, g); // long sides
+    box(.06, .1, .6, 0xc92d3a, s * .445, .075, 0, g); // short ends
+    box(.07, .104, .22, 0x3a1015, s * .445, .077, 0, g); // handle slot
+  }
 }
 // Items sit centred when alone and shrink to fit as more are added (up to 4).
 const TRAY_LAYOUT_ITEMS = [
@@ -206,7 +212,7 @@ const TRAY_LAYOUT_ITEMS = [
   { s: .55, p: [[-.22, -.16], [.22, -.16], [-.22, .14], [.22, .14]] }
 ];
 function layItems(g, types) {
-  for (let j = g.children.length - 1; j >= 2; j--) g.remove(g.children[j]);
+  for (let j = g.children.length - 1; j >= TRAY_PARTS; j--) g.remove(g.children[j]);
   const lay = TRAY_LAYOUT_ITEMS[types.length - 1];
   types.forEach((t, j) => {
     const it = makeItem(t);
