@@ -1,15 +1,23 @@
 import { makeCar, CAR_VARIANTS, CAR_COLORS, LANE_Z } from './scene.js';
-import { PRICES, TUNING } from './levels.js';
+import { TUNING } from './levels.js';
+import { activeShop, itemInfo } from './shops.js';
 
-const ICON = { soda: '🥤', burger: '🍔', fries: '🍟' };
 const ORDER = ['soda', 'burger', 'fries'];
-const START_X = -7.5, END_X = 8;
+const START_X = -7.5, END_X = 8, SPACING = 2.4;
 const TAG_Y = 1.0; // anchor height above the lane for the order bubble
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const rnd = n => Math.floor(Math.random() * n);
 
 // Order = list of item slots, e.g. ['soda', 'burger', 'burger'].
 export function makeOrder(cfg) {
+  if (activeShop().pizza) {
+    // Each pizza is a random non-empty set of the level's toppings, written as a sorted signature.
+    return Array.from({ length: 1 + rnd(cfg.maxItems) }, () => {
+      const pool = cfg.toppings.slice(), tops = [];
+      for (let n = 1 + rnd(Math.min(cfg.maxToppings, pool.length)); n > 0; n--) tops.push(pool.splice(rnd(pool.length), 1)[0]);
+      return 'pizza:' + cfg.toppings.filter(t => tops.includes(t)).join('+');
+    }).sort();
+  }
   const size = 1 + rnd(cfg.maxItems);
   const slots = [];
   while (slots.length < size) {
@@ -19,7 +27,7 @@ export function makeOrder(cfg) {
   return slots.sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
 }
 
-export const orderValue = slots => slots.reduce((n, t) => n + PRICES[t], 0);
+export const orderValue = slots => slots.reduce((n, t) => n + itemInfo(t).price, 0);
 
 // Tip in whole dollars: full at/above tipFullAt patience left, none at/below patRed, linear between.
 export function tipFor(base, frac) {
@@ -32,11 +40,19 @@ export function tipFor(base, frac) {
 export function createOrders(world, cfg, overlay, cb) {
   const stats = { served: 0, lost: 0, patSum: 0 };
   const leaving = [];
-  let car = null;
+  const lane = []; // cars in line; lane[0] is at the window
   let gapT = TUNING.firstCarDelay;
   let lastVariant = -1, lastColor = -1;
 
   const pick = (n, last) => { let i; do i = rnd(n); while (i === last && n > 1); return i; };
+
+  function moveTo(c, tx) {
+    c.x0 = c.group.position.x;
+    c.tx = tx;
+    c.t = 0;
+    c.dur = TUNING.carArrive * clamp(Math.abs(tx - c.x0) / 7.5, .35, 1);
+    c.state = 'moving';
+  }
 
   function spawn() {
     lastVariant = pick(CAR_VARIANTS, lastVariant);
@@ -46,15 +62,16 @@ export function createOrders(world, cfg, overlay, cb) {
     world.addCar(group);
     const slots = makeOrder(cfg);
     const tag = document.createElement('div');
-    tag.className = 'car-tag';
+    tag.className = 'car-tag queued';
     tag.hidden = true;
-    tag.innerHTML = `<div class="bubble">${slots.map(t => `<span class="slot">${ICON[t]}</span>`).join('')}</div><div class="pbar"><i></i></div>`;
+    tag.innerHTML = `<div class="bubble">${slots.map(t => activeShop().itemIcons ? `<img class="slot" src="${world.itemIcon(t)}" alt="">` : `<span class="slot">${itemInfo(t).icon}</span>`).join('')}</div><div class="pbar"><i></i></div>`;
     overlay.appendChild(tag);
     const c = {
-      group, tag, slots, state: 'arriving', t: 0, pat: cfg.patience, angry: false, x0: START_X, dur: 1,
+      group, tag, slots, state: 'moving', t: 0, pat: cfg.patience, angry: false, x0: START_X, tx: 0, dur: 1,
       bar: tag.querySelector('.pbar'), fill: tag.querySelector('.pbar i'), band: ''
     };
-    car = c;
+    moveTo(c, -SPACING * lane.length);
+    lane.push(c);
   }
 
   function tagPos(c) {
@@ -74,12 +91,12 @@ export function createOrders(world, cfg, overlay, cb) {
       c.tag.remove();
     }
     leaving.push(c);
-    car = null;
-    gapT = cfg.gap;
+    lane.shift();
+    lane.forEach((q, i) => moveTo(q, -SPACING * i));
   }
 
   function send(c) {
-    if (c !== car || c.state !== 'waiting') return;
+    if (c !== lane[0] || c.state !== 'waiting') return;
     const frac = c.pat / cfg.patience;
     const base = orderValue(c.slots);
     const tip = tipFor(base, frac);
@@ -92,6 +109,7 @@ export function createOrders(world, cfg, overlay, cb) {
 
   // True when `items` is exactly what the waiting car ordered.
   function matches(items) {
+    const car = lane[0];
     return !!car && car.state === 'waiting' && items.length === car.slots.length &&
       [...items].sort().join() === [...car.slots].sort().join();
   }
@@ -99,26 +117,30 @@ export function createOrders(world, cfg, overlay, cb) {
   // Sends a tray: pays out and the car leaves if it matches exactly. Returns whether it was sent.
   function trySend(items) {
     if (!matches(items)) return false;
-    send(car);
+    send(lane[0]);
     return true;
   }
 
   function update(dt) {
-    if (!car) {
+    if (lane.length < 1 + (cfg.queue || 0)) {
       gapT -= dt;
-      if (gapT <= 0) spawn();
+      if (gapT <= 0) { spawn(); gapT = cfg.gap; }
     }
-    if (car) {
-      const c = car;
+    for (const c of [...lane]) {
       c.t += dt;
-      if (c.state === 'arriving') {
-        const u = Math.min(1, c.t / TUNING.carArrive);
-        c.group.position.x = START_X + (0 - START_X) * (1 - (1 - u) ** 3);
+      if (c.state === 'moving') {
+        const u = Math.min(1, c.t / c.dur);
+        c.group.position.x = c.x0 + (c.tx - c.x0) * (1 - (1 - u) ** 3);
         c.group.position.y = u < 1 ? Math.abs(Math.sin(c.t * 22)) * .02 : 0;
         if (u >= 1) {
-          c.state = 'waiting';
           c.tag.hidden = false;
-          cb.onArrive(c.slots);
+          if (c.tx === 0) {
+            c.state = 'waiting';
+            c.tag.classList.remove('queued');
+            cb.onArrive(c.slots);
+          } else {
+            c.state = 'queued';
+          }
         }
       } else if (c.state === 'waiting') {
         c.pat -= dt;
@@ -147,12 +169,13 @@ export function createOrders(world, cfg, overlay, cb) {
         leaving.splice(i, 1);
       }
     }
-    for (const c of [car, ...leaving]) {
-      if (!c || c.tag.hidden || !c.tag.isConnected) continue;
+    for (const c of [...lane, ...leaving]) {
+      if (c.tag.hidden || !c.tag.isConnected) continue;
       const p = tagPos(c);
       c.tag.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, -100%)`;
+      c.tag.style.visibility = p.x < 30 ? 'hidden' : '';
     }
   }
 
-  return { update, matches, trySend, stats, get car() { return car; } };
+  return { update, matches, trySend, stats, get car() { return lane[0] || null; } };
 }

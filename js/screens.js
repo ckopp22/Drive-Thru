@@ -1,9 +1,17 @@
 import * as save from './save.js';
-import { LEVELS, starsFor } from './levels.js';
+import { starsFor } from './levels.js';
+import { SHOPS, shopById, useShop } from './shops.js';
 import { startGame } from './game.js';
+import { shopSnapshot } from './scene.js';
 
 const app = document.getElementById('app');
-const MAX = LEVELS.length;
+const curShop = () => shopById(save.get().shop);
+// A shop is open once every level of the one before it has been passed.
+const shopUnlocked = i => {
+  if (i === 0) return true;
+  const prev = SHOPS[i - 1];
+  return !!prev.levels && save.shop(prev.id).stars[prev.levels.length] > 0;
+};
 
 const HOW_TO = [
   { icons: '🚗💬', title: 'Customers arrive', text: 'A car pulls up and shows its order above it.' },
@@ -33,9 +41,50 @@ const on = (root, sel, fn) => root.querySelector(sel).addEventListener('click', 
 
 function menu() {
   const s = el(`
+    <div class="menu-bg"></div>
     <h1 class="title">DRIVE<br>THRU</h1>
+    <div class="shop-pick">
+      <button class="round-btn" id="prevShop" aria-label="Previous restaurant">‹</button>
+      <div class="shop-card"></div>
+      <button class="round-btn" id="nextShop" aria-label="Next restaurant">›</button>
+    </div>
     <button class="btn yellow big" id="play">PLAY</button>
     <button class="btn wide" id="how">HOW TO PLAY</button>`, 'screen menu');
+  const card = s.querySelector('.shop-card'), play = s.querySelector('#play');
+  const prevB = s.querySelector('#prevShop'), nextB = s.querySelector('#nextShop');
+  const bg = s.querySelector('.menu-bg');
+  let bgTimer = 0;
+  let idx = Math.max(0, SHOPS.indexOf(curShop()));
+  if (!shopUnlocked(idx)) idx = 0;
+  const render = () => {
+    const sh = SHOPS[idx], open = shopUnlocked(idx);
+    card.innerHTML = `<span class="shop-icon">${open ? sh.icon : '🔒'}</span><b>${sh.name}</b><span class="sub">${
+      !open ? `Beat ${SHOPS[idx - 1].name} to unlock` : sh.levels ? '' : 'Coming soon'}</span>`;
+    play.disabled = !open || !sh.levels;
+    prevB.disabled = idx === 0;
+    nextB.disabled = idx === SHOPS.length - 1;
+    if (open) save.set({ shop: sh.id });
+    // Blurred picture of the selected shop behind the menu (drawn after the card so switching stays snappy).
+    bg.classList.toggle('locked', !open);
+    clearTimeout(bgTimer);
+    bgTimer = setTimeout(() => { bg.style.backgroundImage = `url(${shopSnapshot(sh)})`; }, 30);
+  };
+  // Hidden dev unlock: tap the title 5 times to open every shop and level.
+  let titleTaps = 0;
+  s.querySelector('.title').addEventListener('click', () => {
+    if (++titleTaps < 5) return;
+    titleTaps = 0;
+    for (const sh of SHOPS) if (sh.levels) {
+      const p = save.shop(sh.id), n = sh.levels.length;
+      p.highestUnlocked = n;
+      p.stars[n] = p.stars[n] || 1;
+    }
+    save.set({});
+    render();
+  });
+  prevB.addEventListener('click', () => { idx--; render(); });
+  nextB.addEventListener('click', () => { idx++; render(); });
+  render();
   on(s, '#play', () => go('levels'));
   on(s, '#how', howTo);
 }
@@ -73,9 +122,10 @@ function howTo() {
 }
 
 function levels() {
-  const { highestUnlocked, bestMoney, stars } = save.get();
+  const shop = curShop(), LEVELS = shop.levels, MAX = LEVELS.length;
+  const { highestUnlocked, bestMoney, stars } = save.shop(shop.id);
   const starRow = n => '★'.repeat(stars[n] || 0) + '☆'.repeat(3 - (stars[n] || 0));
-  const s = el(`<h2>Select Level</h2><div class="grid"></div><button class="btn" id="back">Back</button>`, 'screen levels');
+  const s = el(`<h2>${shop.name}</h2><div class="grid"></div><button class="btn" id="back">Back</button>`, 'screen levels');
   const grid = s.querySelector('.grid');
   for (let n = 1; n <= MAX; n++) {
     const done = n < highestUnlocked || (n === MAX && bestMoney[n] > 0);
@@ -96,7 +146,8 @@ function levels() {
 }
 
 function gameplay(level) {
-  teardown = startGame(app, level, {
+  useShop(curShop());
+  teardown = startGame(app, level, curShop().levels, {
     exit: () => go('levels'),
     restart: () => go('gameplay', level),
     finish: r => go('results', r)
@@ -104,15 +155,17 @@ function gameplay(level) {
 }
 
 function results({ level, pass, money, served, lost }) {
+  const shop = curShop(), LEVELS = shop.levels, MAX = LEVELS.length;
   const goal = LEVELS[level - 1].goal;
-  const stars = pass ? starsFor(money, goal) : 0;
-  if (pass) save.completeLevel(level, money, MAX, stars);
+  const stars = pass ? starsFor(money, LEVELS[level - 1]) : 0;
+  if (pass) save.completeLevel(shop.id, level, money, MAX, stars);
+  const unlocked = pass && level === MAX && SHOPS[SHOPS.indexOf(shop) + 1];
   const hasNext = pass && level < MAX;
   const s = el(pass ? `
     <h2>Level Complete!</h2>
     <div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
     <div class="stats">Earnings: $${money}<br>Goal: $${goal}<br>Orders served: ${served}<br>Orders lost: ${lost}</div>
-    ${level === MAX ? '<p>You finished every shift! 🎉</p>' : ''}
+    ${level === MAX ? `<p>You finished every shift! 🎉${unlocked ? `<br>${unlocked.icon} ${unlocked.name} unlocked!` : ''}</p>` : ''}
     <div class="stack">
       ${hasNext ? '<button class="btn yellow wide" id="next">Next Level</button>' : ''}
       <button class="btn green wide" id="again">Replay</button>

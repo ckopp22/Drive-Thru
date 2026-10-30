@@ -15,5 +15,32 @@ audio.initToggles();
 go('menu');
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+  let updating = false;
+  // A new version is installed and waiting: offer a banner; tapping it activates it and reloads.
+  const offerUpdate = worker => {
+    if (document.querySelector('.update-banner')) return;
+    const b = document.createElement('button');
+    b.className = 'update-banner';
+    b.textContent = '⬆️ Tap to Update';
+    b.addEventListener('click', () => {
+      updating = true;
+      b.textContent = 'Updating…';
+      worker.postMessage('skip');
+    });
+    document.body.appendChild(b);
+  };
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (updating) location.reload(); });
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').then(reg => {
+      if (reg.waiting && navigator.serviceWorker.controller) offerUpdate(reg.waiting);
+      reg.addEventListener('updatefound', () => {
+        const w = reg.installing;
+        w.addEventListener('statechange', () => {
+          if (w.state === 'installed' && navigator.serviceWorker.controller) offerUpdate(w);
+        });
+      });
+      // The home-screen app rarely reloads, so look for a new version whenever it comes back to the foreground.
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+    }).catch(() => {});
+  });
 }

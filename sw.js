@@ -1,4 +1,4 @@
-const CACHE = 'drive-thru-v5';
+const CACHE = 'drive-thru-v27';
 const ASSETS = [
   './',
   './index.html',
@@ -13,6 +13,8 @@ const ASSETS = [
   './js/audio.js',
   './js/save.js',
   './js/levels.js',
+  './js/shops.js',
+  './js/hospital.js',
   './icons/icon-180.png',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -20,7 +22,12 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS)));
+});
+
+// A new version waits until the player taps "Tap to Update" in the app.
+self.addEventListener('message', e => {
+  if (e.data === 'skip') self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {
