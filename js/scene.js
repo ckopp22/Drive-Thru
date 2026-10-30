@@ -279,15 +279,21 @@ function makeStationViz(type, x, z, billboards) {
   ready.position.y = READY_Y;
   ready.scale.setScalar(.7);
   const glow = new THREE.Mesh(G('Circle', .46, 20), glowMat.clone()); // own material: it blinks red when food is about to burn
-  // Sits slightly behind the item (away from the camera) so the item draws in front of it.
-  // Placed along the camera's view ray from the item's visual center (pitch 1.0), so it looks centered.
-  const cy = itemInfo(type).cy;
-  glow.position.set(0, cy - .378, -.243);
+  // The circle sits slightly behind the item (away from the camera) so the item draws in front of it, centered on the item's real bounding box (so every food is centered), pushed back along the camera's view ray (pitch 1.0).
+  const bbox = new THREE.Box3(), mid = new THREE.Vector3();
+  const centerGlow = it => {
+    const c = it.clone(), tmp = new THREE.Group();
+    tmp.add(c);
+    tmp.updateMatrixWorld(true);
+    bbox.setFromObject(c).getCenter(mid);
+    glow.position.set(mid.x, mid.y - Math.sin(1) * .45, mid.z - Math.cos(1) * .45);
+  };
   glow.add(new THREE.Mesh(G('Ring', .46, .52, 24), ringMat));
   let item = makeItem(type);
   item.scale.setScalar(1.4);
   item.position.y = -.3;
   ready.add(glow, item);
+  centerGlow(item);
 
   // Burnt food: charred item with smoke puffs rising.
   const burnt = new THREE.Group();
@@ -318,8 +324,8 @@ function makeStationViz(type, x, z, billboards) {
   check.visible = false;
   const warn = makeWarn();
   // Right over the food icon: same spot as the circle behind it (see the glow placement above).
-  const warnPos = cy => { warn.position.set(0, READY_Y + (cy - .378) * .7, -.243 * .7); check.position.copy(warn.position); };
-  warnPos(cy);
+  const warnPos = () => { warn.position.set(glow.position.x * .7, READY_Y + glow.position.y * .7, glow.position.z * .7); check.position.copy(warn.position); };
+  warnPos();
   warn.scale.setScalar(1.2);
   warn.visible = false;
   let burnFrac = 0, blink = 0, lastT = 0, making = false, isReady = false;
@@ -350,9 +356,9 @@ function makeStationViz(type, x, z, billboards) {
     setType(t) {
       const dark = m => { m.traverse(o => { if (o.isMesh) o.material = M(0x26221f); }); return m; };
       const info = itemInfo(t);
-      glow.position.y = info.cy - .378;
-      warnPos(info.cy);
       ready.remove(item); item = makeItem(t); item.scale.setScalar(1.4); item.position.y = -.3; ready.add(item);
+      centerGlow(item);
+      warnPos();
       burnt.remove(charred); charred = dark(makeItem(t)); charred.scale.setScalar(1.4); burnt.add(charred);
       const [vx, vy] = info.surf, v1 = onMachine.visible, v2 = burntOnMachine.visible;
       root.remove(onMachine, burntOnMachine);
