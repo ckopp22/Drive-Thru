@@ -1,4 +1,4 @@
-const CACHE = 'drive-thru-v48';
+const CACHE = 'drive-thru-v49';
 const ASSETS = [
   './',
   './index.html',
