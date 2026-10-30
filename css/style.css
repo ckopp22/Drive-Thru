@@ -437,3 +437,8 @@ img.slot { width: 56px; height: 56px; display: block; }
 .car-tag.urgent .bubble { animation: urgentBlink .45s steps(1) infinite; }
 @keyframes urgentBlink { 50% { background: #ff6b60; border-color: #b3150c; } }
 @media (prefers-reduced-motion: reduce) { .car-tag.urgent .bubble { animation: none; background: #ffb3ad; border-color: #b3150c; } }
+
+/* Carrying a whole tray: the icons sit on a little red tray with handle slots */
+.held-tag.on-tray { padding: 0 10px 9px; }
+.held-tag.on-tray::before { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 13px; border-radius: 7px; background: #e63946; border: 2px solid #b02633; box-shadow: inset 0 3px 0 rgba(255,255,255,.28); }
+.held-tag.on-tray::after { content: ''; position: absolute; left: 7px; right: 7px; bottom: 5px; height: 3px; border-radius: 2px; background: #3a1015; opacity: .55; }

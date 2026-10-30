@@ -454,6 +454,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   function drawHeld() {
     if (activeShop().hospital) return;
     const items = logic.carried ? logic.carried.items : logic.hands;
+    heldTag.classList.toggle('on-tray', !!logic.carried);
     const key = items.join();
     if (key !== heldKey) {
       heldKey = key;
