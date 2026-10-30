@@ -92,6 +92,13 @@ export function createHospital(world, cfg, overlay, cb) {
     stats.served++;
     stats.patSum += frac;
     const pos = tagPos(c);
+    if (c.kind === 'id') { // photo taken: camera flash
+      const f = document.createElement('div');
+      f.className = 'photo-flash';
+      f.addEventListener('animationend', () => f.remove());
+      setTimeout(() => f.remove(), 800);
+      overlay.appendChild(f);
+    }
     leave(c, false);
     cb.onSend({ base, tip, total: base + tip, frac, pos });
   }
