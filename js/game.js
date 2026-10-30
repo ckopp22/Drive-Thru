@@ -430,6 +430,28 @@ export function startGame(root, level, levels, cb, opts = {}) {
     }, lopts);
   }
 
+  // Small icon bubble above the worker showing what they carry (hands, or the items on a carried tray).
+  const HELD_EMOJI = { cup: '🥛', dough: '🍞', sauce: '🥫', cheese: '🧀', pepperoni: '🍕', mushroom: '🍄' };
+  const heldTag = document.createElement('div');
+  heldTag.className = 'held-tag';
+  heldTag.hidden = true;
+  overlay.appendChild(heldTag);
+  let heldKey = '';
+  function drawHeld() {
+    if (activeShop().hospital) return;
+    const items = logic.carried ? logic.carried.items : logic.hands;
+    const key = items.join();
+    if (key !== heldKey) {
+      heldKey = key;
+      heldTag.hidden = !items.length;
+      heldTag.innerHTML = items.map(x => HELD_EMOJI[x] ? `<span class="slot">${HELD_EMOJI[x]}</span>` : x.startsWith('plate:') ? '<span class="slot">🍕</span>'
+        : activeShop().itemIcons ? `<img class="slot" src="${world.itemIcon(x)}" alt="">` : `<span class="slot">${ICON[x] || itemInfo(x).icon}</span>`).join('');
+    }
+    if (heldTag.hidden) return;
+    const p = world.project(world.worker.group.position.x, 2.15, world.worker.group.position.z);
+    heldTag.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, -100%)`;
+  }
+
   // Tap machines, trays and the bin in the 3D scene.
   el.querySelector('canvas').addEventListener('pointerdown', e => {
     e.preventDefault();
@@ -527,6 +549,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     if (ended || !running) return;
     drawHud();
     world.render();
+    drawHeld();
 
     logic.trays.forEach((t, i) => {
       const key = t.join();
