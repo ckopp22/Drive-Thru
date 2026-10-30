@@ -3,6 +3,8 @@
 import * as save from './save.js';
 
 const MUSIC_SRC = './audio/drive-thru-music.mp3';
+const SIZZLE_SRC = './audio/sizzle.mp3', SIZZLE_VOL = .1; // quiet background cooking loop
+let sizzleBuf = null;
 const MUSIC_VOL = .55, DUCK_VOL = .25, MAX_VOICES = 10, MAX_LOOPS = 4;
 const GAP = { walk: 260, tick: 400, tap: 30 }; // minimum ms between plays of the same effect (default 25)
 
@@ -36,6 +38,8 @@ function ensure() {
     noiseBuf = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
     const d = noiseBuf.getChannelData(0);
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+    // Decode the cooking recording; until it's ready (or if it fails) the synthesized sizzle plays.
+    fetch(SIZZLE_SRC).then(r => r.arrayBuffer()).then(b => ctx.decodeAudioData(b)).then(buf => { sizzleBuf = buf; }).catch(() => {});
   } catch (e) { ctx = null; }
   return ctx;
 }
@@ -163,7 +167,10 @@ function startLoop(kind) {
   s.buffer = noiseBuf;
   s.loop = true;
   lfo.connect(depth);
-  if (kind === 'fill') {
+  if (kind === 'sizzle' && sizzleBuf) {
+    s.buffer = sizzleBuf;
+    g.gain.value = .0001; g.gain.linearRampToValueAtTime(SIZZLE_VOL, t + .3);
+  } else if (kind === 'fill') {
     f.type = 'bandpass'; f.frequency.value = 700; f.Q.value = 4;
     lfo.frequency.value = 5; depth.gain.value = 350; depth.connect(f.frequency);
     g.gain.value = .0001; g.gain.linearRampToValueAtTime(.16, t + .1);
@@ -172,8 +179,10 @@ function startLoop(kind) {
     lfo.type = 'square'; lfo.frequency.value = 13; depth.gain.value = .05; depth.connect(g.gain);
     g.gain.value = .0001; g.gain.linearRampToValueAtTime(.07, t + .1);
   }
-  s.connect(f).connect(g).connect(sfxBus);
-  s.start(t);
+  const rec = kind === 'sizzle' && sizzleBuf;
+  (rec ? s.connect(g) : s.connect(f).connect(g)).connect(sfxBus);
+  if (rec) s.start(t, Math.random() * sizzleBuf.duration);
+  else s.start(t);
   lfo.start(t);
   return {
     stop() {

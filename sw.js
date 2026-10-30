@@ -1,4 +1,4 @@
-const CACHE = 'drive-thru-v39';
+const CACHE = 'drive-thru-v40';
 const ASSETS = [
   './',
   './index.html',
@@ -22,9 +22,10 @@ const ASSETS = [
 ];
 // Big file: cached after the core assets, and a failed download never blocks the install.
 const MUSIC = './audio/drive-thru-music.mp3';
+const SIZZLE = './audio/sizzle.mp3';
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS).then(() => c.add(MUSIC).catch(() => {}))));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS).then(() => c.add(MUSIC).then(() => c.add(SIZZLE)).catch(() => {}))));
 });
 
 // A new version waits until the player taps "Tap to Update" in the app.
