@@ -15,3 +15,11 @@ export const LEVELS = [
   { time: 180, goal: 200, items: ALL, patience: 20, gap: 2,   notes: 'Rush hour' },
   { time: 180, goal: 240, items: ALL, patience: 18, gap: 2,   notes: 'Final shift' }
 ];
+
+// Stage 2 tunables. Station make times in seconds (scaled per level later); worker speed in units/s.
+export const STATIONS = {
+  soda:   { time: 2.0 },
+  burger: { time: 4.0 },
+  fries:  { time: 4.0 }
+};
+export const WORKER = { speed: 9, maxHeld: 2, bobRate: 18 };

@@ -239,3 +239,63 @@ html, body {
 @media (orientation: landscape) and (max-height: 500px) {
   #rotate { display: flex; }
 }
+
+/* Gameplay (Stage 2) */
+[hidden] { display: none !important; }
+.screen.game { display: block; padding: 0; background: #8ed1fc; }
+.game canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.pause-btn { position: absolute; top: var(--pad-top); left: calc(var(--pad-left) + 116px); background: var(--yellow); color: var(--ink); font-size: 20px; }
+.level-label {
+  position: absolute;
+  top: var(--pad-top);
+  right: var(--pad-right);
+  min-height: 48px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  border-radius: 24px;
+  background: rgba(255,255,255,.9);
+  font-weight: 900;
+  font-size: 18px;
+}
+.debug {
+  position: absolute;
+  top: calc(var(--pad-top) + 58px);
+  left: var(--pad-left);
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(0,0,0,.65);
+  color: #7CFF9B;
+  font: 12px/1.35 ui-monospace, Menlo, monospace;
+  pointer-events: none;
+}
+.bar {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  padding: 24px var(--pad-right) var(--pad-bottom) var(--pad-left);
+  background: linear-gradient(transparent, rgba(0,0,0,.28));
+}
+.act {
+  appearance: none;
+  flex: 0 1 68px;
+  min-width: 56px;
+  aspect-ratio: 1;
+  padding: 0;
+  border-radius: 20px;
+  border: 3px solid #fff;
+  background: var(--yellow);
+  font-size: 32px;
+  line-height: 1;
+  box-shadow: 0 6px 0 var(--yellow-dark);
+  transition: transform .35s cubic-bezier(.34,1.8,.5,1), box-shadow .35s cubic-bezier(.34,1.8,.5,1), background .15s;
+}
+.act:active { transform: translateY(5px) scale(.92); box-shadow: 0 1px 0 var(--yellow-dark); transition-duration: .06s; }
+.act.on { background: var(--red); border-color: var(--yellow); box-shadow: 0 6px 0 var(--red-dark), 0 0 0 3px #fff; }
+.act.shake { animation: shake .3s; }
+@keyframes shake { 20% { transform: translateX(-7px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(5px); } }
+.btn.small { min-height: 44px; padding: 10px 14px; font-size: 14px; min-width: 0; }
+.test-row { display: flex; gap: 10px; margin-top: 6px; }

@@ -1,4 +1,4 @@
-const CACHE = 'drive-thru-v1';
+const CACHE = 'drive-thru-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -7,6 +7,8 @@ const ASSETS = [
   './lib/three.module.min.js',
   './js/main.js',
   './js/screens.js',
+  './js/game.js',
+  './js/scene.js',
   './js/audio.js',
   './js/save.js',
   './js/levels.js',

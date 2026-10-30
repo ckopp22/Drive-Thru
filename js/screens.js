@@ -1,5 +1,6 @@
 import * as save from './save.js';
 import { LEVELS } from './levels.js';
+import { startGame } from './game.js';
 
 const app = document.getElementById('app');
 const MAX = LEVELS.length;
@@ -12,11 +13,11 @@ const HOW_TO = [
 ];
 
 const screens = { menu, levels, gameplay, results };
-let current = null;
+let teardown = null;
 
 export function go(name, arg) {
+  if (teardown) { teardown(); teardown = null; }
   app.innerHTML = '';
-  current = name;
   screens[name](arg);
 }
 
@@ -93,20 +94,16 @@ function levels() {
   on(s, '#back', () => go('menu'));
 }
 
-// Placeholder until the 3D gameplay stage.
 function gameplay(level) {
   const goal = LEVELS[level - 1].goal;
-  const s = el(`
-    <h2>Level ${level}</h2>
-    <p>Gameplay placeholder<br>Goal $${goal}</p>
-    <div class="stack">
-      <button class="btn green wide" id="pass">Pass level</button>
-      <button class="btn wide" id="fail">Fail level</button>
-      <button class="btn yellow wide" id="quit">Level Select</button>
-    </div>`, 'screen center');
-  on(s, '#pass', () => go('results', { level, pass: true, money: goal + 5, served: 8, lost: 1 }));
-  on(s, '#fail', () => go('results', { level, pass: false, money: Math.floor(goal / 2), served: 3, lost: 4 }));
-  on(s, '#quit', () => go('levels'));
+  teardown = startGame(app, level, {
+    exit: () => go('levels'),
+    restart: () => go('gameplay', level),
+    // Test-only until Stage 3 adds real win/lose.
+    debugResult: pass => go('results', pass
+      ? { level, pass, money: goal + 5, served: 8, lost: 1 }
+      : { level, pass, money: Math.floor(goal / 2), served: 3, lost: 4 })
+  });
 }
 
 function results({ level, pass, money, served, lost }) {

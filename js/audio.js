@@ -13,6 +13,11 @@ export function unlock() {
   } catch (e) {}
 }
 
+// Stub hook: names used so far are tap, start, ready, pickup, handover, trash. Silent until real SFX land.
+export function playSfx(name) {
+  if (!soundOn()) return;
+}
+
 export const soundOn = () => save.get().sound;
 export const musicOn = () => save.get().music;
 
