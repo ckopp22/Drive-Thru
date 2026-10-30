@@ -316,7 +316,10 @@ function makeStationViz(type, x, z, billboards) {
   check.position.y = 1.55;
   check.visible = false;
   const warn = makeWarn();
-  warn.position.set(.6, 1.35, 0);
+  // Right over the food icon: same spot as the circle behind it (see the glow placement above).
+  const warnPos = cy => warn.position.set(0, .75 + (cy - .378) * .7, -.243 * .7);
+  warnPos(cy);
+  warn.scale.setScalar(1.2);
   warn.visible = false;
   let burnFrac = 0, blink = 0, lastT = 0, making = false, isReady = false;
   // Steam / smoke puffs (food) or bubbles (drinks) while making; a pulsing ring on the machine when ready.
@@ -347,6 +350,7 @@ function makeStationViz(type, x, z, billboards) {
       const dark = m => { m.traverse(o => { if (o.isMesh) o.material = M(0x26221f); }); return m; };
       const info = itemInfo(t);
       glow.position.y = info.cy - .378;
+      warnPos(info.cy);
       ready.remove(item); item = makeItem(t); item.scale.setScalar(1.4); item.position.y = -.3; ready.add(item);
       burnt.remove(charred); charred = dark(makeItem(t)); charred.scale.setScalar(1.4); burnt.add(charred);
       const [vx, vy] = info.surf, v1 = onMachine.visible, v2 = burntOnMachine.visible;
