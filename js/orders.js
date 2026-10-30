@@ -95,7 +95,8 @@ export function createOrders(world, cfg, overlay, cb) {
       c.tag.className = 'car-tag angry';
       c.tag.innerHTML = '<div class="emote">😡</div>';
     } else {
-      c.tag.remove();
+      c.tag.className = 'car-tag happy';
+      c.tag.innerHTML = '<div class="emote">😊</div>';
     }
     leaving.push(c);
     lane.shift();

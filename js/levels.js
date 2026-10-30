@@ -35,7 +35,7 @@ export const TUNING = {
   patGreen: 0.6,       // bar is green above this fraction of patience left
   patRed: 0.3,         // bar is red below this; no tip at or below it
   carArrive: 1.1,      // s to drive in
-  carLeave: 1.4,       // s to drive off happily
+  carLeave: 2.6,       // s to drive off happily
   carLeaveAngry: 0.6   // s to drive off angry
 };
 

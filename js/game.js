@@ -309,7 +309,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     for (let i = 0; i < 6; i++) {
       const c = document.createElement('div');
       c.className = 'coin';
-      c.textContent = '🪙';
+      c.textContent = '$';
       c.style.left = pos.x + 'px';
       c.style.top = pos.y + 'px';
       c.style.setProperty('--ox', (Math.random() * 90 - 45) + 'px');
