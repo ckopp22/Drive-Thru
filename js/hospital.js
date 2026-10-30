@@ -217,7 +217,7 @@ export function createHospital(world, cfg, overlay, cb) {
           const frac = clamp(c.pat / cfg.patience, 0, 1);
           c.fill.style.transform = `scaleX(${frac})`;
           const band = frac > TUNING.patGreen ? 'g' : frac > TUNING.patRed ? 'y' : 'r';
-          if (band !== c.band) { c.band = band; c.bar.className = 'pbar ' + band; }
+          if (band !== c.band) { c.band = band; c.bar.className = 'pbar ' + band; c.tag.classList.toggle('urgent', band === 'r'); }
           const work = KIND[c.kind].work;
           // Bandage / ID bars only fill while the worker stands at this counter.
           if (work && c.started && worker.at === side.key && !worker.target) {
