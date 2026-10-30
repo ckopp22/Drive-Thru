@@ -170,7 +170,7 @@ export function createOrders(world, cfg, overlay, cb) {
         const frac = clamp(c.pat / c.maxPat, 0, 1);
         c.fill.style.transform = `scaleX(${frac})`;
         const band = frac > TUNING.patGreen ? 'g' : frac > TUNING.patRed ? 'y' : 'r';
-        if (band !== c.band) { c.band = band; c.bar.className = 'pbar ' + band; }
+        if (band !== c.band) { c.band = band; c.bar.className = 'pbar ' + band; c.tag.classList.toggle('urgent', band === 'r'); }
         if (c.pat <= 0) {
           stats.lost++;
           const pos = tagPos(c);
