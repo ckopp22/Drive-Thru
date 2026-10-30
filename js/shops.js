@@ -44,6 +44,12 @@ export const SHOPS = [
   {
     id: 'pizza', name: 'Pizza Place', icon: '🍕',
     pizza: true, // dough -> table plate -> toppings -> oven -> tray
+    // Endless mode: pizzas only (the oven slot), toppings and topping count grow with the waves, second oven from wave 4.
+    endless: {
+      patMult: 1.5, gapMult: 1.6, items: ['burger'], extraWave: 4, maxItemsCap: 3,
+      toppings: [[1, ['sauce', 'cheese']], [3, ['sauce', 'cheese', 'pepperoni']], [5, PIZZA_TOPS]],
+      maxToppings: [[1, 2], [3, 3], [6, 4]]
+    },
     // Same level curve as the burger joint, re-skinned: 1-3 trays like the burger joint, toppings unlock with the levels, second oven from level 4.
     levels: LEVELS.map((l, i) => ({
       ...l, items: ['burger'], extra: i >= 3, queue: i >= 7 ? 2 : 1, patience: Math.round(l.patience * 1.5),

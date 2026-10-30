@@ -98,11 +98,17 @@ export function endlessCfg(wave, over = {}) {
     patience: Math.round(Math.max(E.minPatience, row[2] - extra * E.patDecay) * m),
     gapRange: [gapLo, gapHi], gap: gapHi
   };
+  // Per-shop overrides. Row lists are [fromWave, value] pairs.
+  const at = rows => rows.filter(r => r[0] <= wave).pop()[1], g = over.gapMult || 1;
+  if (g !== 1) Object.assign(cfg, { gapRange: [gapLo * g, gapHi * g], gap: gapHi * g });
+  if (over.items) cfg.items = over.items;
+  if (over.extraWave) cfg.extra = wave >= over.extraWave;
+  if (over.maxItemsCap) cfg.maxItems = Math.min(cfg.maxItems, over.maxItemsCap);
+  if (over.toppings) Object.assign(cfg, { toppings: at(over.toppings), maxToppings: at(over.maxToppings) }); // pizza
   if (over.hospital) { // patients: tasks (kinds) and line length ramp instead of items; no trays, food or burning
-    const at = rows => rows.filter(r => r[0] <= wave).pop()[1], g = over.gapMult || 1;
     Object.assign(cfg, {
       trays: 0, items: [], extra: wave >= over.registerWave, burn: 0, jam: wave >= over.registerWave ? over.jam : 0, maxItems: 1, doubles: false,
-      kinds: at(over.kinds), queue: at(over.queue), gapRange: [gapLo * g, gapHi * g], gap: gapHi * g
+      kinds: at(over.kinds), queue: at(over.queue)
     });
   }
   return cfg;
