@@ -69,6 +69,12 @@ export const SHOPS = [
   {
     id: 'hospital', name: 'Hospital', icon: '🏥',
     hospital: true, // patients line up at two counters; each needs one task
+    // Endless mode: same wave/patience ramp as the other shops; tasks and line length grow with the waves ([fromWave, value]).
+    endless: {
+      hospital: true, patMult: 1.3, gapMult: 1.6,
+      kinds: [[1, ['medicine']], [3, ['medicine', 'bill']], [5, ['medicine', 'bill', 'bandage']], [7, ['medicine', 'bill', 'bandage', 'id']]],
+      queue: [[1, 1], [4, 2]]
+    },
     foods: {}, layout: {},
     // Where the worker stands for each tappable spot.
     spots: {

@@ -300,7 +300,7 @@ Wrap reads and writes in try/catch; fall back to defaults.
 
 ## 13. Endless Mode
 
-**Always available.** Never locked and independent of level progress. Each shop that lists `endless: {}` in `shops.js` (Burger Joint, Coffee Shop) gets a purple "∞ ENDLESS" tile on its Level Select screen, after Level 10 (full-width last row, no scrolling). The tile shows the shop's best money and wave once there is one. Pizza Place and Hospital have different mechanics and no endless tile yet.
+**Always available.** Never locked and independent of level progress. Each shop that lists `endless: {}` in `shops.js` (Burger Joint, Coffee Shop, Hospital) gets a purple "∞ ENDLESS" tile on its Level Select screen, after Level 10 (full-width last row, no scrolling). The tile shows the shop's best money and wave once there is one. Pizza Place has different mechanics and no endless tile yet. **Hospital endless:** same lives, waves, patience and random-gap rules, but no food: patients ask for medicine from wave 1, bills from wave 3, bandages from wave 5 and ID photos from wave 7 (`endless.kinds` in `shops.js`), with 1 patient waiting behind the front one per line, 2 from wave 4 (`endless.queue`). Patience x1.3 and gaps x1.6, like the Hospital levels; only the front patient of each line loses patience.
 
 **Rules**
 - Same scene, controls, stations, orders, prices and tip system as the levels. No timer, no money goal.

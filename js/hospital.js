@@ -27,6 +27,7 @@ export function createHospital(world, cfg, overlay, cb) {
   const leaving = [];
   const reg = { state: 'idle', p: 0 }; // idle | working | done
   let active = null;
+  let halted = false; // endless game over: no more patients
 
   const bar = document.createElement('div');
   bar.className = 'car-tag small';
@@ -62,7 +63,7 @@ export function createHospital(world, cfg, overlay, cb) {
     tag.innerHTML = `<div class="bubble"><img class="slot" src="${world.itemIcon(kind)}" alt=""></div><div class="pbar"><i></i></div><div class="pbar prog" hidden><i></i></div>`;
     overlay.appendChild(tag);
     const c = {
-      ...pm, side, kind, tag, state: 'moving', t: 0, dur: 1, pat: cfg.patience, phase: 0, progress: 0, started: false, angry: false,
+      ...pm, side, kind, tag, state: 'moving', t: 0, dur: 1, pat: cfg.patience, maxPat: cfg.patience, phase: 0, progress: 0, started: false, angry: false,
       bar: tag.querySelectorAll('.pbar')[0], fill: tag.querySelectorAll('i')[0], progBar: tag.querySelectorAll('.pbar')[1], progFill: tag.querySelectorAll('i')[1], band: ''
     };
     moveTo(c, side.sd * X, ZS[side.line.length]);
@@ -91,7 +92,7 @@ export function createHospital(world, cfg, overlay, cb) {
   }
 
   function complete(c) {
-    const frac = c.pat / cfg.patience, base = KIND[c.kind].base, tip = tipFor(base, frac);
+    const frac = c.pat / c.maxPat, base = KIND[c.kind].base, tip = tipFor(base, frac);
     stats.served++;
     stats.patSum += frac;
     const pos = tagPos(c);
@@ -202,9 +203,9 @@ export function createHospital(world, cfg, overlay, cb) {
   function update(dt) {
     worker.update(dt);
     for (const side of sides) {
-      if (side.line.length < 1 + (cfg.queue || 0)) {
+      if (!halted && side.line.length < 1 + (cfg.queue || 0)) {
         side.gapT -= dt;
-        if (side.gapT <= 0) { spawn(side); side.gapT = cfg.gap; }
+        if (side.gapT <= 0) { spawn(side); side.gapT = cfg.gapRange ? cfg.gapRange[0] + Math.random() * (cfg.gapRange[1] - cfg.gapRange[0]) : cfg.gap; }
       }
       for (const c of [...side.line]) {
         c.t += dt;
@@ -225,7 +226,7 @@ export function createHospital(world, cfg, overlay, cb) {
           }
         } else if (c.state === 'waiting') {
           if (side.line[0] === c) c.pat -= dt; // only the front of each line loses patience
-          const frac = clamp(c.pat / cfg.patience, 0, 1);
+          const frac = clamp(c.pat / c.maxPat, 0, 1);
           c.fill.style.transform = `scaleX(${frac})`;
           const band = frac > TUNING.patGreen ? 'g' : frac > TUNING.patRed ? 'y' : 'r';
           if (band !== c.band) { c.band = band; c.bar.className = 'pbar ' + band; c.tag.classList.toggle('urgent', band === 'r'); }
@@ -284,7 +285,7 @@ export function createHospital(world, cfg, overlay, cb) {
   }
 
   return {
-    orders: { update() {}, stats, matches: () => false, trySend: () => false },
+    orders: { update() {}, halt: () => { halted = true; }, stats, matches: () => false, trySend: () => false },
     logic: {
       st: new Proxy({}, { get: () => ({ state: 'idle', p: 0 }) }),
       hands, trays: [], carried: null, tap, update, sendTray: () => false,

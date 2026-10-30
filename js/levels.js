@@ -89,7 +89,7 @@ export function endlessCfg(wave, over = {}) {
   const m = over.patMult || 1;
   const gapLo = Math.max(E.minGap[0], row[3] - extra * E.gapDecay[0]);
   const gapHi = Math.max(E.minGap[1], row[4] - extra * E.gapDecay[1]);
-  return {
+  const cfg = {
     endless: true, wave, trays: E.trays, time: 0,
     queue: (E.queue.filter(r => r[0] <= wave).pop() || [0, 0])[1],
     items: wave >= E.friesWave ? ALL : SB,
@@ -98,6 +98,14 @@ export function endlessCfg(wave, over = {}) {
     patience: Math.round(Math.max(E.minPatience, row[2] - extra * E.patDecay) * m),
     gapRange: [gapLo, gapHi], gap: gapHi
   };
+  if (over.hospital) { // patients: tasks (kinds) and line length ramp instead of items; no trays, food or burning
+    const at = rows => rows.filter(r => r[0] <= wave).pop()[1], g = over.gapMult || 1;
+    Object.assign(cfg, {
+      trays: 0, items: [], extra: false, burn: 0, maxItems: 1, doubles: false,
+      kinds: at(over.kinds), queue: at(over.queue), gapRange: [gapLo * g, gapHi * g], gap: gapHi * g
+    });
+  }
+  return cfg;
 }
 export const endlessMusicRate = wave => (ENDLESS.music.filter(r => r[0] <= wave).pop() || [0, 1])[1];
 

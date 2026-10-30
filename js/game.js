@@ -348,7 +348,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   // Endless: apply a wave's settings to the live cfg (orders and the logic read it as they go).
   const lopts = { burn: cfg.burn, trays: cfg.trays };
   function setWave(w, announce) {
-    const hadFries = cfg.items.includes('fries'), hadExtra = !!cfg.extra, hadBurn = cfg.burn > 0;
+    const hadFries = cfg.items.includes('fries'), hadExtra = !!cfg.extra, hadBurn = cfg.burn > 0, hadKinds = (cfg.kinds || []).length;
     wave = w;
     Object.assign(cfg, endlessCfg(w, over));
     lopts.burn = cfg.burn;
@@ -357,7 +357,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     world.setFries(cfg.items.includes('fries'), announce && !hadFries);
     audio.setMusicRate(endlessMusicRate(w));
     if (!announce) return;
-    const news = [!hadFries && cfg.items.includes('fries') && '🍟 Fries!', !hadExtra && cfg.extra && '🍳 2nd grill & fryer!', !hadBurn && cfg.burn && '🔥 Food burns!'].filter(Boolean).join(' ');
+    const news = [!hadFries && cfg.items.includes('fries') && '🍟 Fries!', !hadExtra && cfg.extra && '🍳 2nd grill & fryer!', !hadBurn && cfg.burn && '🔥 Food burns!', (cfg.kinds || []).length > hadKinds && 'New patient task!'].filter(Boolean).join(' ');
     banner(`⬆️ Wave up!${news ? '\n' + news : ''}`, 'wave');
     audio.playSfx('waveUp');
   }
