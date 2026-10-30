@@ -5,6 +5,8 @@ import * as save from './save.js';
 const MUSIC_SRC = './audio/drive-thru-music.mp3';
 const SIZZLE_SRC = './audio/sizzle.mp3', SIZZLE_VOL = .35; // quiet background cooking loop
 let sizzleBuf = null;
+const TRASH_SRC = './audio/trash.mp3', TRASH_VOL = .8;
+let trashBuf = null, trashOnset = 0; // trashOnset: seconds of leading silence to skip
 const MUSIC_VOL = .55, DUCK_VOL = .25, MAX_VOICES = 10, MAX_LOOPS = 4;
 const GAP = { walk: 260, tick: 400, tap: 30 }; // minimum ms between plays of the same effect (default 25)
 
@@ -40,6 +42,16 @@ function ensure() {
     for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     // Decode the cooking recording; until it's ready (or if it fails) the synthesized sizzle plays.
     fetch(SIZZLE_SRC).then(r => r.arrayBuffer()).then(b => ctx.decodeAudioData(b)).then(buf => { sizzleBuf = buf; }).catch(() => {});
+    fetch(TRASH_SRC).then(r => r.arrayBuffer()).then(b => ctx.decodeAudioData(b)).then(buf => {
+      // Find the first audible sample so the sound starts the instant it's played.
+      let first = buf.length;
+      for (let c = 0; c < buf.numberOfChannels; c++) {
+        const d = buf.getChannelData(c);
+        for (let i = 0; i < first; i++) if (Math.abs(d[i]) > .01) { first = i; break; }
+      }
+      trashOnset = Math.max(0, first / buf.sampleRate - .003);
+      trashBuf = buf;
+    }).catch(() => {});
   } catch (e) { ctx = null; }
   return ctx;
 }
@@ -137,7 +149,14 @@ const SFX = {
   pickup: () => tone(420, 820, .08, 'sine', .3),
   place: () => tone(520, 300, .09, 'sine', .28),
   deliver: () => { tone(500, 900, .07, 'sine', .3); tone(900, 1300, .06, 'sine', .2, .06); },
-  trash: () => { noise(.2, 'lowpass', 1200, .3); tone(260, 90, .18, 'triangle', .15); },
+  trash: () => {
+    if (!trashBuf) { noise(.2, 'lowpass', 1200, .3); tone(260, 90, .18, 'triangle', .15); return; }
+    const s = ctx.createBufferSource(), g = ctx.createGain();
+    s.buffer = trashBuf;
+    g.gain.value = TRASH_VOL;
+    s.connect(g).connect(sfxBus);
+    s.start(0, trashOnset);
+  },
   burn: () => { tone(150, 80, .3, 'sawtooth', .22); noise(.25, 'highpass', 2500, .1); },
   cash: () => { tone(1568, 1568, .1, 'square', .1); tone(2093, 2093, .1, 'square', .1, .08); tone(2637, 2637, .35, 'square', .1, .16); },
   angry: () => { tone(330, 300, .3, 'square', .16); tone(392, 350, .3, 'square', .12); },
