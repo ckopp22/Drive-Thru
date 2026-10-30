@@ -347,7 +347,9 @@ html, body {
 .act.match { background: #7be495; border-color: #fff; box-shadow: 0 6px 0 #2f9e57, 0 0 14px 4px rgba(123,228,149,.9); animation: pulse .6s ease-in-out infinite; }
 .stars { font-size: 48px; line-height: 1; color: #ffc828; letter-spacing: 6px; text-shadow: 0 2px 0 rgba(0,0,0,.25); }
 .car-tag.queued .pbar { display: none; }
-.car-tag.queued .bubble { transform: scale(.8); opacity: .9; }
+.car-tag.queued .bubble { transform: scale(.85); transform-origin: 50% 100%; opacity: .92; min-height: 34px; padding: 3px 6px; gap: 3px; border-width: 2px; border-radius: 13px; }
+.car-tag.queued .slot { font-size: 20px; }
+.car-tag.queued img.slot { width: 36px; height: 36px; }
 
 .shop-pick { display: flex; align-items: center; gap: 12px; }
 .shop-pick .round-btn:disabled { opacity: .35; }
