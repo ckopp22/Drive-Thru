@@ -221,7 +221,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
       ${endless
         ? `<div class="hud-money"><div class="row">💰 <b class="money">$0</b></div></div>
       <div class="hud-time hud-lives" aria-label="Lives">${'<span class="heart">❤️</span>'.repeat(ENDLESS.lives)}</div>`
-        : `<div class="hud-money"><div class="row">💰 <b class="money">$0</b><span class="goal">/ $${cfg.goal}</span></div><div class="goalbar"><i></i>${starGoals(cfg).map((v, n) => `<s class="tick" style="left:${Math.min(98.5, v / starGoals(cfg)[2] * 100)}%" data-n="${n}"></s>`).join('')}</div></div>
+        : `<div class="hud-money"><div class="row">💰 <b class="money">$0</b><span class="goal">/ $${cfg.goal}</span></div><div class="goalbar"><i></i>${starGoals(cfg).map((v, n) => `<s class="tick" style="left:${v / starGoals(cfg)[2] * 100}%" data-n="${n}">★</s>`).join('')}</div></div>
       <div class="hud-time">⏱️ <b class="time">${mmss(cfg.time)}</b></div>`}
     </div>
     <button class="round-btn pause-btn" aria-label="Pause">⏸</button>
