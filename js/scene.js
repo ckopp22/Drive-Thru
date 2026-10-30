@@ -958,6 +958,11 @@ export function buildWorld() {
   }
 
   let binT = 0, friesPop = 0, friesHit = null;
+  // Black splash when something is thrown away: little dark chunks fly out of the bin and shrink away.
+  const splash = [];
+  const splashGeo = new THREE.IcosahedronGeometry(.07, 0);
+  const splashMat = new THREE.MeshLambertMaterial({ color: 0x1b1715, flatShading: true });
+  const binPos = lid.parent.position;
   const wob = {};
   return {
     scene, camera, worker, viz, billboards, hits,
@@ -1021,7 +1026,17 @@ export function buildWorld() {
     wobble(key) { wob[key] = .3; },
     addCar(c) { scene.add(c); },
     removeCar(c) { scene.remove(c); },
-    binPop() { binT = .3; },
+    binPop() {
+      binT = .3;
+      if (reducedMotion()) return;
+      for (let i = 0; i < 16; i++) {
+        const m = new THREE.Mesh(splashGeo, splashMat), a = Math.random() * Math.PI * 2, r = .8 + Math.random() * 1.6;
+        m.position.set(binPos.x, .85, binPos.z);
+        m.userData = { vx: Math.cos(a) * r, vy: 2.4 + Math.random() * 2, vz: Math.sin(a) * r, age: 0, life: .55 + Math.random() * .3, s: .7 + Math.random() * .9 };
+        scene.add(m);
+        splash.push(m);
+      }
+    },
     update(dt, t) {
       if (friesPop > 0) { // pop-in with a little overshoot
         friesPop = Math.max(0, friesPop - dt);
@@ -1074,6 +1089,14 @@ export function buildWorld() {
         npc.body.position.y = moving ? Math.abs(sw) * .08 : Math.abs(Math.sin(t * 2)) * .02;
       }
       Object.values(viz).forEach(v => v.update(t));
+      for (let i = splash.length - 1; i >= 0; i--) {
+        const m = splash[i], d = m.userData;
+        d.age += dt;
+        d.vy -= 9 * dt;
+        m.position.x += d.vx * dt; m.position.y = Math.max(.05, m.position.y + d.vy * dt); m.position.z += d.vz * dt;
+        m.scale.setScalar(d.s * Math.max(0, 1 - d.age / d.life));
+        if (d.age >= d.life) { scene.remove(m); splash.splice(i, 1); }
+      }
       if (binT > 0) binT = Math.max(0, binT - dt);
       lid.position.y = .78 + Math.sin(Math.PI * (1 - binT / .3)) * (binT > 0 ? .15 : 0);
     }
