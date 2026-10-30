@@ -52,7 +52,7 @@ Station make times and the worker's speed are in the same file (`STATIONS`, `WOR
 
 ## Tune endless mode
 
-`ENDLESS` in `js/levels.js` is all data. `rows` is `[fromWave, maxItems, patience, gapMin, gapMax]`; each row applies until the next one. Past the last row, patience drops `patDecay` per wave to `minPatience`, and the gaps shrink by `gapDecay` to `minGap`. `friesWave`, `doublesWave`, `extraWave`, `burnWave` set when each mechanic switches on, `perWave` is customers per wave (`early` lists shorter first waves), `lives` the hearts, and `music` the playback-rate steps. A shop opts in with `endless: {}` in `js/shops.js` (`patMult` scales patience). Keep `maxItems` at 4 or less (the tray holds 4). Use the debug panel's Wave +1 / +5 buttons to test a wave. High scores are saved per shop id in `shops[id].endless`.
+`ENDLESS` in `js/levels.js` is all data. `rows` is `[fromWave, maxItems, patience, gapMin, gapMax]`; each row applies until the next one. Past the last row, patience drops `patDecay` per wave to `minPatience`, and the gaps shrink by `gapDecay` to `minGap`. `friesWave`, `doublesWave`, `queue` (`[fromWave, waiting cars]`), `extraWave`, `burnWave` set when each mechanic switches on, `perWave` is customers per wave (`early` lists shorter first waves), `lives` the hearts, and `music` the playback-rate steps. A shop opts in with `endless: {}` in `js/shops.js` (`patMult` scales patience). Keep `maxItems` at 4 or less (the tray holds 4). Use the debug panel's Wave +1 / +5 buttons to test a wave. High scores are saved per shop id in `shops[id].endless`.
 
 ## Debug and secret tools
 

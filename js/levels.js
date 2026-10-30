@@ -61,6 +61,7 @@ export const ENDLESS = {
   lives: 3, firstCarDelay: 1, trays: 3,
   friesWave: 3,   // fryer appears (items become ALL)
   doublesWave: 6, // orders may repeat an item
+  queue: [[6, 1], [10, 2]], // [fromWave, cars waiting behind the window car]; orders of waiting cars are visible
   extraWave: 8,   // second grill and fryer
   burnWave: 8, burn: 12, // food burns after `burn` s
   rows: [
@@ -89,7 +90,8 @@ export function endlessCfg(wave, over = {}) {
   const gapLo = Math.max(E.minGap[0], row[3] - extra * E.gapDecay[0]);
   const gapHi = Math.max(E.minGap[1], row[4] - extra * E.gapDecay[1]);
   return {
-    endless: true, wave, trays: E.trays, queue: 0, time: 0,
+    endless: true, wave, trays: E.trays, time: 0,
+    queue: (E.queue.filter(r => r[0] <= wave).pop() || [0, 0])[1],
     items: wave >= E.friesWave ? ALL : SB,
     maxItems: row[1], doubles: wave >= E.doublesWave, extra: wave >= E.extraWave,
     burn: wave >= E.burnWave ? E.burn : 0,

@@ -575,7 +575,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
         dbg.textContent = `${fps} fps  tris ${r.triangles}  calls ${r.calls}\n${world.worker.stateText()}\nhands: ${logic.hands.join(',') || (logic.carried ? 'tray ' + (logic.carried.from + 1) : '-')}\ntrays: ${logic.trays.map(t => t.join('+') || '-').join(' | ')}\n` +
           ITEMS.map(k => `${k}: ${logic.st[k].state} ${Math.round(logic.st[k].p * 100)}%`).join('\n') +
           (endless
-            ? `\n$${money}  lives ${lives}  wave ${wave}  served ${o.served}  (next wave in ${servedFor(wave + 1) - o.served - waveOffset})\nmax ${cfg.maxItems} items  doubles ${cfg.doubles}  extra ${!!cfg.extra}  fries ${cfg.items.includes('fries')}\npatience ${cfg.patience}s  gap ${cfg.gapRange[0].toFixed(1)}-${cfg.gapRange[1].toFixed(1)}s  burn ${cfg.burn}s  music x${endlessMusicRate(wave)}`
+            ? `\n$${money}  lives ${lives}  wave ${wave}  served ${o.served}  (next wave in ${servedFor(wave + 1) - o.served - waveOffset})\nqueue ${cfg.queue}  max ${cfg.maxItems} items  doubles ${cfg.doubles}  extra ${!!cfg.extra}  fries ${cfg.items.includes('fries')}\npatience ${cfg.patience}s  gap ${cfg.gapRange[0].toFixed(1)}-${cfg.gapRange[1].toFixed(1)}s  burn ${cfg.burn}s  music x${endlessMusicRate(wave)}`
             : `\n$${money}/${cfg.goal}  time ${Math.ceil(timeLeft)}s`) +
           `\ncars served ${o.served}  lost ${o.lost}\navg patience at send ${o.served ? Math.round(o.patSum / o.served * 100) + '%' : '-'}`;
       }

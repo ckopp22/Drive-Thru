@@ -305,7 +305,7 @@ Wrap reads and writes in try/catch; fall back to defaults.
 **Rules**
 - Same scene, controls, stations, orders, prices and tip system as the levels. No timer, no money goal.
 - Starts like Level 1 to 2 (soda and burger, 1 item). The fryer is hidden until wave 3, then pops in. The second grill and fryer and food burning arrive at wave 8.
-- One car at the window at a time. After a car leaves (happy or angry) the next arrives after a random gap between `gapMin` and `gapMax`.
+- One car at the window at a time; from wave 6, 1 car waits behind it, and from wave 10, 2 (orders of waiting cars are visible, `ENDLESS.queue`). After a car leaves (happy or angry) the next arrives after a random gap between `gapMin` and `gapMax`.
 - 3 lives (hearts in the HUD where the timer sits). A customer who drives off angry costs one life (heart breaks, short shake, `heartBreak` sound). Sending an order never costs a life. There is no -$2 penalty in endless. At 0 lives: game over (after a 1.4 s beat).
 - Waves 1 and 2 take 3 customers each, every later wave takes 5 (`ENDLESS.early`, `ENDLESS.perWave`). HUD label "Wave N" (top right); a "Wave up!" banner and `waveUp` sound on each change. Music playback rate rises slightly at waves 10 and 15.
 - Pause freezes arrivals, patience, station and burn timers. Hiding the app (phone lock, app switch) opens the pause menu, so coming back never costs lives. Restart, Play Again and leaving rebuild or dispose the whole world, so nothing carries over.
@@ -319,11 +319,11 @@ Wrap reads and writes in try/catch; fall back to defaults.
 | 3 | + Fries | 2 | no | 38 s | 1.2-2.4 s | Fryer pops in |
 | 4 | Same | 3 | no | 38 s | 2.0-3.6 s | |
 | 5 | Same | 3 | no | 36 s | 1.8-3.4 s | |
-| 6 | Same | 3 | yes | 35 s | 1.7-3.2 s | |
+| 6 | Same | 3 | yes | 35 s | 1.7-3.2 s | 1 car queues |
 | 7 | Same | 3 | yes | 34 s | 1.6-3.0 s | |
 | 8 | Same | 4 | yes | 34 s | 1.5-2.8 s | 2nd grill + fryer, food burns after 12 s |
 | 9 | Same | 4 | yes | 33 s | 1.4-2.6 s | |
-| 10 | Same | 4 | yes | 32 s | 1.3-2.4 s | |
+| 10 | Same | 4 | yes | 32 s | 1.3-2.4 s | 2 cars queue |
 | 11+ | Same | 4 | yes | -1.2 s per wave, floor 18 s | gaps shrink 0.05 / 0.08 per wave, floors 0.8 / 1.6 s | |
 
 Orders never exceed 4 items (the tray holds 4) and an item repeats at most twice, so the worst order (for example 2 burgers, 2 fries) is about 13 s of work with two grills and two fryers; the 18 s patience floor keeps every order possible. Station times are unchanged. Roughly wave 15 to 20 (patience 20 to 26 s) is very hard for a good player.
