@@ -81,7 +81,7 @@ export function createHospital(world, cfg, overlay, cb) {
     c.angry = angry;
     if (angry) {
       c.tag.className = 'car-tag angry';
-      c.tag.innerHTML = '<div class="emote">😡</div>';
+      c.tag.innerHTML = `<div class="emote"><img src="${world.faceIcon('angry')}" alt="Angry"></div>`;
     } else c.tag.remove();
     leaving.push(c);
     advance(side);
