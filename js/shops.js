@@ -34,7 +34,7 @@ export const SHOPS = [
     },
     layout: {
       soda: { x: 2.55, z: -1.9 }, burger: { x: 2.55, z: -.2 }, fries: { x: 2.55, z: 1.35 },
-      burger2: { x: -2.55, z: -.9 }, fries2: { x: -2.55, z: .6 }, bin: { x: -2.6, z: 1.9 }, cabinet: { x: -2.55, z: -2.5 }
+      burger2: { x: -2.55, z: -.9 }, fries2: { x: -2.55, z: .6 }, bin: { x: -2.6, z: 1.9 }, cabinet: { x: -2.55, z: -2.1 }
     },
     npc: { x: .9, z: -1, r: .6 }, // a second worker standing in the shop: you walk around them
     colors: { wall: 0xf3e5d0, trim: 0x2f7d5b, tileA: '#f3e3cc', tileB: '#c8a27a' }
