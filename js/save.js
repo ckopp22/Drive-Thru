@@ -1,5 +1,5 @@
 const KEY = 'drive-thru-save';
-const defaults = () => ({ version: 1, highestUnlocked: 1, bestMoney: {}, sound: true, music: true });
+const defaults = () => ({ version: 1, highestUnlocked: 1, bestMoney: { 1: 0 }, sound: true, music: true });
 
 let data = load();
 

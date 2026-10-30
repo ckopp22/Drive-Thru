@@ -72,9 +72,10 @@ html, body {
   color: #fff;
   background: var(--red);
   box-shadow: 0 6px 0 var(--red-dark);
-  transition: transform .08s, box-shadow .08s;
+  transition: transform .35s cubic-bezier(.34,1.8,.5,1), box-shadow .35s cubic-bezier(.34,1.8,.5,1);
+  border: 3px solid rgba(255,255,255,.85);
 }
-.btn:active { transform: translateY(5px); box-shadow: 0 1px 0 var(--red-dark); }
+.btn:active { transform: translateY(5px) scale(.95); box-shadow: 0 1px 0 var(--red-dark); transition-duration: .06s; }
 .btn.yellow { background: var(--yellow); color: var(--ink); box-shadow: 0 6px 0 var(--yellow-dark); }
 .btn.yellow:active { box-shadow: 0 1px 0 var(--yellow-dark); }
 .btn.green { background: var(--green); box-shadow: 0 6px 0 #1d7040; }
@@ -113,8 +114,9 @@ html, body {
   padding: 0;
   box-shadow: 0 3px 0 rgba(0,0,0,.25);
   position: relative;
+  transition: transform .35s cubic-bezier(.34,1.8,.5,1);
 }
-.round-btn:active { transform: translateY(2px); }
+.round-btn:active { transform: scale(.88); transition-duration: .06s; }
 .round-btn.off { background: #8a8a8a; }
 .round-btn.off::after {
   content: "";
@@ -155,6 +157,7 @@ html, body {
   justify-content: center;
   gap: 2px;
   box-shadow: 0 5px 0 rgba(0,0,0,.2);
+  transition: transform .35s cubic-bezier(.34,1.8,.5,1);
 }
 .tile .num { font-size: 26px; line-height: 1; }
 .tile .sub { font-size: 14px; font-weight: 700; }
@@ -165,7 +168,7 @@ html, body {
   box-shadow: 0 5px 0 var(--yellow-dark);
   animation: pulse 1s ease-in-out infinite;
 }
-.tile:not(.locked):active { transform: translateY(4px); }
+.tile:not(.locked):active { transform: translateY(4px) scale(.94); transition-duration: .06s; }
 @keyframes pulse { 50% { transform: scale(1.06); } }
 
 /* Modal */
