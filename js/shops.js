@@ -25,7 +25,6 @@ export const SHOPS = [
   {
     id: 'coffee', name: 'Coffee Shop', icon: '☕', levels: LEVELS.map(l => ({ ...l })),
     endless: { patMult: 1.2 }, // cups add walking, so a little more patience
-    itemIcons: true, // customer bubbles show the 3D food pictures instead of emoji
     cups: true, // every drink needs a cup from the cabinet before a machine will start
     foods: {
       soda:   { icon: '☕', machine: 'espresso machine', price: 2, cy: -.09, surf: [.45, .56] },
@@ -42,7 +41,6 @@ export const SHOPS = [
   {
     id: 'pizza', name: 'Pizza Place', icon: '🍕',
     pizza: true, // dough -> table plate -> toppings -> oven -> tray
-    itemIcons: true,
     // Same level curve as the burger joint, re-skinned: 1-3 trays like the burger joint, toppings unlock with the levels, second oven from level 4.
     levels: LEVELS.map((l, i) => ({
       ...l, items: ['burger'], extra: i >= 3, queue: i >= 7 ? 2 : 1, patience: Math.round(l.patience * 1.5),

@@ -397,7 +397,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   hintEl.addEventListener('pointerdown', () => { hintNow = null; hintEl.hidden = true; });
 
   const ordersCb = {
-    onArrive: slots => showHint('make', activeShop().pizza ? 'Dough 🍞 → table plate, add each topping, then the oven' : `${activeShop().cups ? 'Grab a cup 🥛 from the cabinet, then tap' : 'Tap'} the ${MACHINE[slots[0]]} ${ICON[slots[0]]} to make it`),
+    onArrive: slots => showHint('make', activeShop().pizza ? 'Dough 🍞 → table plate, add each topping, then the oven' : `${activeShop().cups ? 'Grab a cup 🥛 from the cabinet, then tap' : 'Tap'} the ${MACHINE[slots[0]]} <img class="inline-icon" src="${world.itemIcon(slots[0])}" alt=""> to make it`),
     onSend: ({ total, pos }) => {
       money += total;
       endHint('send');
@@ -567,7 +567,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
       const key = t.join();
       if (minis[i].dataset.k !== key) {
         minis[i].dataset.k = key;
-        minis[i].innerHTML = t.map(x => activeShop().itemIcons ? `<img src="${world.itemIcon(x)}" alt="">` : (ICON[x] || itemInfo(x).icon)).join('');
+        minis[i].innerHTML = t.map(x => `<img src="${world.itemIcon(x)}" alt="">`).join('');
       }
       btns[i].classList.toggle('match', orders.matches(t));
     });

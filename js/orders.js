@@ -68,7 +68,7 @@ export function createOrders(world, cfg, overlay, cb) {
     const tag = document.createElement('div');
     tag.className = 'car-tag queued';
     tag.hidden = true;
-    tag.innerHTML = `<div class="bubble">${slots.map(t => activeShop().itemIcons ? `<img class="slot" src="${world.itemIcon(t)}" alt="">` : `<span class="slot">${itemInfo(t).icon}</span>`).join('')}</div><div class="pbar"><i></i></div>`;
+    tag.innerHTML = `<div class="bubble">${slots.map(t => `<img class="slot" src="${world.itemIcon(t)}" alt="">`).join('')}</div><div class="pbar"><i></i></div>`;
     overlay.appendChild(tag);
     const c = {
       group, tag, slots, state: 'moving', t: 0, pat: cfg.patience, maxPat: cfg.patience, angry: false, x0: START_X, tx: 0, dur: 1,

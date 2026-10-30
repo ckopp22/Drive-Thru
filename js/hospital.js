@@ -5,10 +5,10 @@ import { tipFor } from './orders.js';
 // Hospital game mode: a patient line at each counter, one task each. Exposes the same shape as createLogic/createOrders
 // so startGame can drive it: { logic, orders }. Keys: patL/patR (the patient at that counter), medicine, bandage, register, trash.
 const KIND = {
-  medicine: { icon: '💊', base: 4 },
-  bill: { icon: '💵', base: 6 },
-  bandage: { icon: '🩹', base: 5, work: 2.5 },
-  id: { icon: '📷', base: 5, work: 3 }
+  medicine: { base: 4 },
+  bill: { base: 6 },
+  bandage: { base: 5, work: 2.5 },
+  id: { base: 5, work: 3 }
 };
 const REG_TIME = 3;
 const SIDES = [{ key: 'patL', sd: -1 }, { key: 'patR', sd: 1 }];
@@ -30,7 +30,7 @@ export function createHospital(world, cfg, overlay, cb) {
   const bar = document.createElement('div');
   bar.className = 'car-tag';
   bar.hidden = true;
-  bar.innerHTML = '<div class="bubble"><span class="slot">💵</span></div><div class="pbar prog"><i></i></div>';
+  bar.innerHTML = `<div class="bubble"><img class="slot" src="${world.itemIcon('bill')}" alt=""></div><div class="pbar prog"><i></i></div>`;
   overlay.appendChild(bar);
   const regFill = bar.querySelector('.pbar i');
   // Ready badge over the register while the stamped bill waits to be picked up (like the ready food circles).
@@ -58,7 +58,7 @@ export function createHospital(world, cfg, overlay, cb) {
     const tag = document.createElement('div');
     tag.className = 'car-tag queued';
     tag.hidden = true;
-    tag.innerHTML = `<div class="bubble"><span class="slot">${KIND[kind].icon}</span></div><div class="pbar"><i></i></div><div class="pbar prog" hidden><i></i></div>`;
+    tag.innerHTML = `<div class="bubble"><img class="slot" src="${world.itemIcon(kind)}" alt=""></div><div class="pbar"><i></i></div><div class="pbar prog" hidden><i></i></div>`;
     overlay.appendChild(tag);
     const c = {
       ...pm, side, kind, tag, state: 'moving', t: 0, dur: 1, pat: cfg.patience, phase: 0, progress: 0, started: false, angry: false,

@@ -125,6 +125,11 @@ function hospitalItem(type, g) {
     part(G('Cylinder', .1, .1, .22, 8), 0xffffff, 0, .11, 0, g);
     part(G('Cylinder', .105, .105, .06, 8), 0x2c8fd6, 0, .25, 0, g);
     box(.12, .08, .01, 0xe63946, 0, .12, .1, g);
+  } else if (type === 'id') { // ID card with a photo and text lines
+    box(.36, .02, .24, 0xffffff, 0, .02, 0, g);
+    box(.36, .022, .05, 0x2c8fd6, 0, .02, -.095, g);
+    box(.1, .024, .1, 0xf2b279, -.1, .025, .035, g);
+    [-.01, .05].forEach(z => box(.14, .024, .02, 0x9aa0a6, .08, .025, z, g));
   } else { // bandage roll
     part(G('Cylinder', .14, .14, .1, 10), 0xf5e6c8, 0, .05, 0, g);
     part(G('Cylinder', .06, .06, .11, 8), 0xffffff, 0, .05, 0, g);
