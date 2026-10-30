@@ -224,7 +224,7 @@ export function createHospital(world, cfg, overlay, cb) {
             cb.onArrive([c.kind]);
           }
         } else if (c.state === 'waiting') {
-          c.pat -= dt;
+          if (side.line[0] === c) c.pat -= dt; // only the front of each line loses patience
           const frac = clamp(c.pat / cfg.patience, 0, 1);
           c.fill.style.transform = `scaleX(${frac})`;
           const band = frac > TUNING.patGreen ? 'g' : frac > TUNING.patRed ? 'y' : 'r';
