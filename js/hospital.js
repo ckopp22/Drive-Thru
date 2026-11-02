@@ -310,7 +310,18 @@ export function createHospital(world, cfg, overlay, cb) {
     logic: {
       st: new Proxy({}, { get: () => ({ state: 'idle', p: 0 }) }),
       hands, trays: [], carried: null, waiting: key => !!patientAt(key), tap, update, sendTray: () => false,
-      get active() { return active; }
+      get active() { return active; },
+      // Endless helpers: a stamped (or jammed) bill waiting at a bill machine can be grabbed and binned.
+      loot: {
+        ready: () => Object.keys(regs).filter(k => regs[k].state === 'done' || regs[k].state === 'jammed'),
+        take(k) {
+          const reg = regs[k];
+          if (!reg || (reg.state !== 'done' && reg.state !== 'jammed')) return null;
+          const type = reg.state === 'jammed' ? 'burnt' : 'billok';
+          reg.state = 'idle';
+          return type;
+        }
+      }
     }
   };
 }

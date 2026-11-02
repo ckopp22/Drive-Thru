@@ -361,7 +361,8 @@ export function startGame(root, level, levels, cb, opts = {}) {
   // Food shops: helpers sometimes grab a machine's ready (or burnt) food and bin it.
   function helperLoot() {
     const sh = activeShop();
-    if (sh.hospital || sh.pizza) return null;
+    if (sh.hospital) return { ready: () => logic.loot.ready(), take: k => logic.loot.take(k) };
+    if (sh.pizza) return null;
     const grabbable = k => st[k].state === 'ready' || st[k].state === 'burnt';
     return {
       ready: () => ITEMS.filter(grabbable),
