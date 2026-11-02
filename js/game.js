@@ -271,6 +271,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   const moneyEl = el.querySelector('.money'), timeEl = el.querySelector('.time');
   const timeBox = el.querySelector('.hud-time'), moneyBox = el.querySelector('.hud-money');
   const goalFill = el.querySelector('.goalbar i'), goalBar = el.querySelector('.goalbar');
+  const goalEl = el.querySelector('.goal');
   const ticks = [...el.querySelectorAll('.tick')];
   const hearts = [...el.querySelectorAll('.heart')], levelLabel = el.querySelector('.level-label');
   function drawHud() {
@@ -288,6 +289,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
         const goals = starGoals(cfg);
         while (starsHit < 3 && money >= goals[starsHit]) {
           starsHit++;
+          goalEl.textContent = `/ $${goals[Math.min(starsHit, 2)]}`;
           if (starsHit === 1) moneyBox.classList.add('goal-pulse');
           const b = document.createElement('div');
           b.className = 'goal-banner';
