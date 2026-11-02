@@ -318,6 +318,10 @@ export function createHospital(world, cfg, overlay, cb) {
           const reg = regs[k];
           if (!reg || (reg.state !== 'done' && reg.state !== 'jammed')) return null;
           const type = reg.state === 'jammed' ? 'burnt' : 'billok';
+          if (reg.state === 'done') { // the stamped bill is lost: a patient who handed theirs over hands in a new one
+            const owner = sides.flatMap(sd => sd.line).find(c => c.kind === 'bill' && c.phase === 1);
+            if (owner) owner.phase = 0;
+          }
           reg.state = 'idle';
           return type;
         }
