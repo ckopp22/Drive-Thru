@@ -156,6 +156,7 @@ function levels() {
     if (!locked) b.addEventListener('click', () => go('gameplay', n));
     grid.appendChild(b);
   }
+  if (MAX % 3 === 2) grid.appendChild(s.querySelector('#back')); // fills the empty last cell of the grid
   // Endless mode: always open, pinned under the title.
   if (best) {
     const b = document.createElement('button');
