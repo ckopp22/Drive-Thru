@@ -81,12 +81,18 @@ export const ENDLESS = {
   music: [[10, 1.06], [15, 1.12]]   // [fromWave, music playback rate]
 };
 
+// Patience (s) at a wave start; `frac` (0-1) eases toward the next wave so it tightens with every order.
+export function endlessPatience(wave, over = {}, frac = 0) {
+  const E = ENDLESS, last = E.rows[E.rows.length - 1];
+  const at = w => Math.max(E.minPatience, (E.rows.filter(r => r[0] <= w).pop() || E.rows[0])[2] - Math.max(0, w - last[0]) * E.patDecay);
+  return Math.round((at(wave) + (at(wave + 1) - at(wave)) * frac) * (over.patMult || 1));
+}
+
 // Level-style config for an endless wave. over: per-shop overrides ({ patMult }).
 export function endlessCfg(wave, over = {}) {
   const E = ENDLESS, last = E.rows[E.rows.length - 1];
   const row = E.rows.filter(r => r[0] <= wave).pop() || E.rows[0];
   const extra = Math.max(0, wave - last[0]);
-  const m = over.patMult || 1;
   const gapLo = Math.max(E.minGap[0], row[3] - extra * E.gapDecay[0]);
   const gapHi = Math.max(E.minGap[1], row[4] - extra * E.gapDecay[1]);
   const cfg = {
@@ -95,7 +101,7 @@ export function endlessCfg(wave, over = {}) {
     items: wave >= E.friesWave ? ALL : SB,
     maxItems: row[1], doubles: wave >= E.doublesWave, extra: wave >= E.extraWave,
     burn: wave >= E.burnWave ? E.burn : 0,
-    patience: Math.round(Math.max(E.minPatience, row[2] - extra * E.patDecay) * m),
+    patience: endlessPatience(wave, over),
     gapRange: [gapLo, gapHi], gap: gapHi
   };
   // Per-shop overrides. Row lists are [fromWave, value] pairs.

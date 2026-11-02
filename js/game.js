@@ -1,5 +1,5 @@
 import { createWorld, reducedMotion } from './scene.js';
-import { STATIONS, WORKER, TUNING, ENDLESS, servedFor, waveFor, starGoals, endlessCfg, endlessMusicRate } from './levels.js';
+import { STATIONS, WORKER, TUNING, ENDLESS, servedFor, waveFor, starGoals, endlessCfg, endlessPatience, endlessMusicRate } from './levels.js';
 import { createOrders } from './orders.js';
 import * as audio from './audio.js';
 import { activeShop, itemInfo, PIZZA_TOPS } from './shops.js';
@@ -535,6 +535,8 @@ export function startGame(root, level, levels, cb, opts = {}) {
     if (n !== orderNo) { orderNo = n; levelLabel.textContent = `Order ${n}`; }
     const w = waveFor(orders.stats.served + waveOffset);
     if (w !== wave) setWave(w, true);
+    const s = orders.stats.served + waveOffset, from = servedFor(wave);
+    cfg.patience = endlessPatience(wave, over, (s - from) / (servedFor(wave + 1) - from));
   }
 
   function tick(step) {
