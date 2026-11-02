@@ -1177,7 +1177,7 @@ export function buildWorld() {
         if (hv.state === 'wait') {
           if ((hv.t -= dt) <= 0) {
             const ok = (typeof hv.stops === 'function' ? hv.stops() : hv.stops).filter(k => SPOTS[k] && k !== hv.key && !helpers.some(o => o !== H && o.hv.stops && o.hv.key === k && o.hv.state !== 'wait') && worker.target !== k && !(worker.at === k && Math.hypot(wp.x - SPOTS[k].x, wp.z - SPOTS[k].z) < 1));
-            const rk = loot && Math.random() < .4 ? loot.ready().filter(k => ok.includes(k)) : [];
+            const rk = loot && Math.random() < .25 ? loot.ready().filter(k => ok.includes(k)) : [];
             if (ok.length) { hv.grab = !!rk.length; hv.key = (hv.grab ? rk : ok)[Math.floor(Math.random() * (hv.grab ? rk : ok).length)]; hv.state = 'walk'; hv.stall = 0; }
             else hv.t = .5;
           }
