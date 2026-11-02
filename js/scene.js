@@ -874,7 +874,7 @@ function makeWorker() {
       if (w.target) {
         const s = SPOTS[w.target];
         const tx = s.x - group.position.x, tz = s.z - group.position.z;
-        const dist = Math.hypot(tx, tz), step = (w.speed || WORKER.speed) * dt;
+        const dist = Math.hypot(tx, tz), step = (w.speed || WORKER.speed) * (w.slow || 1) * dt;
         const [ax, az] = steer(group.position.x, group.position.z, s.x, s.z);
         const dx = ax - group.position.x, dz = az - group.position.z, ad = Math.hypot(dx, dz) || 1;
         if (dist <= step + 1e-4) {
@@ -1037,6 +1037,25 @@ export function buildWorld() {
       splash.push(m);
     }
   }
+  // Sticky puddles (endless): they slow the worker; the mop beside the bin cleans them all up.
+  const mopOff = activeShop().hospital ? [1.1, 0] : [0, binPos.z + 1 > 3.5 ? -1 : 1];
+  const mop = new THREE.Group();
+  mop.position.set(binPos.x + mopOff[0], 0, binPos.z + mopOff[1]);
+  mop.visible = false;
+  part(G('Cylinder', .26, .2, .4, 10), 0x2c8fd6, 0, .2, 0, mop);
+  part(G('Cylinder', .22, .22, .02, 10), 0x9fdcff, 0, .39, 0, mop);
+  part(G('Cylinder', .025, .025, 1.18, 6), 0x8a6a45, .28, .64, 0, mop).rotation.z = .28;
+  part(G('Box', .3, .12, .18), 0xe8e2d0, .45, .07, 0, mop);
+  scene.add(mop);
+  const mopHit = new THREE.Mesh(G('Box', 1.1, 1.3, 1.1), hitMat);
+  mopHit.position.set(mop.position.x + .2, .65, mop.position.z);
+  mopHit.userData.key = null;
+  scene.add(mopHit);
+  SPOTS.mop = { x: SPOTS.trash.x + mopOff[0], z: SPOTS.trash.z + mopOff[1], face: SPOTS.trash.face };
+  const puddles = [];
+  const puddleGeo = new THREE.CircleGeometry(1, 14).rotateX(-Math.PI / 2);
+  const puddleMat = new THREE.MeshLambertMaterial({ color: 0xd9a21b, transparent: true, opacity: .85 });
+  const livePuddles = () => puddles.filter(m => !m.userData.dying);
   let loot = null; // endless helpers: { ready(): machine keys with food to grab, take(key): item type or null }
   return {
     scene, camera, worker, viz, billboards, hits,
@@ -1118,7 +1137,44 @@ export function buildWorld() {
     addCar(c) { scene.add(c); },
     removeCar(c) { scene.remove(c); },
     binPop,
+    mopPos: mop.position,
+    // Endless: show the mop (and make it tappable) once puddles start.
+    setMop(on) {
+      mop.visible = on;
+      mopHit.userData.key = on ? 'mop' : null;
+      const i = hits.indexOf(mopHit);
+      if (on && i < 0) hits.push(mopHit);
+      else if (!on && i >= 0) hits.splice(i, 1);
+      if (!on) this.clearPuddles();
+    },
+    // Drops a puddle somewhere on the floor, away from the bin, mop and other puddles. Returns false if no free spot was found.
+    spawnPuddle() {
+      const hosp = activeShop().hospital, live = livePuddles();
+      for (let i = 0; i < 14; i++) {
+        const x = (hosp ? 1 : 1.5) * (Math.random() * 2 - 1), z = (hosp ? -1 : -1.2) + Math.random() * (hosp ? 4.2 : 4.2);
+        if ([SPOTS.mop, SPOTS.trash].some(q => Math.hypot(q.x - x, q.z - z) < 1) || live.some(m => Math.hypot(m.position.x - x, m.position.z - z) < .9)) continue;
+        const m = new THREE.Mesh(puddleGeo, puddleMat);
+        m.position.set(x, .035, z);
+        m.rotation.y = Math.random() * Math.PI;
+        m.userData = { r: .4 + Math.random() * .25, grow: 0 };
+        m.scale.setScalar(.001);
+        scene.add(m);
+        puddles.push(m);
+        return true;
+      }
+      return false;
+    },
+    clearPuddles() { puddles.forEach(m => { m.userData.dying = true; }); },
+    puddleCount: () => livePuddles().length,
     update(dt, t) {
+      for (let i = puddles.length - 1; i >= 0; i--) {
+        const m = puddles[i], d = m.userData;
+        d.grow = d.dying ? Math.max(0, d.grow - dt * 4) : Math.min(1, d.grow + dt * 4);
+        m.scale.set(d.r * d.grow * 1.15, 1, d.r * d.grow * .9);
+        if (d.dying && d.grow <= 0) { scene.remove(m); puddles.splice(i, 1); }
+      }
+      const wp = worker.group.position;
+      worker.slow = livePuddles().some(m => Math.hypot(m.position.x - wp.x, m.position.z - wp.z) < m.userData.r * .9) ? .45 : 1;
       if (friesPop > 0) { // pop-in with a little overshoot
         friesPop = Math.max(0, friesPop - dt);
         const u = 1 - friesPop / .45, c = 1.70158;

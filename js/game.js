@@ -264,7 +264,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   let paused = false, running = true, ended = false, raf = 0, last = 0, clock = 0;
   let frames = 0, fpsT = 0, fps = 0, debug = false, speed = 1;
   let starsHit = 0;
-  let lives = ENDLESS.lives, orderNo = 1, wave = 1, waveOffset = 0, dying = 0, over_ = false; // endless state (dying: s left before the game over screen)
+  let lives = ENDLESS.lives, orderNo = 1, wave = 1, waveOffset = 0, dying = 0, over_ = false, puddleOn = false, puddleAge = 0, puddleT = 3, puddleCool = 0, mopT = -1; // endless state (dying: s left before the game over screen)
   let money = 0, timeLeft = cfg.time, lastSec = Math.ceil(timeLeft), shownMoney = -1, shownSec = -1;
 
   // HUD
@@ -375,7 +375,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     };
   }
   function setWave(w, announce) {
-    const hadHelper = cfg.helper, hadFries = cfg.items.includes('fries'), hadExtra = !!cfg.extra, hadBurn = cfg.burn > 0, hadKinds = (cfg.kinds || []).length, hadTops = (cfg.toppings || []).length;
+    const hadHelper = cfg.helper, hadFries = cfg.items.includes('fries'), hadExtra = !!cfg.extra, hadMop = puddleOn, hadBurn = cfg.burn > 0, hadKinds = (cfg.kinds || []).length, hadTops = (cfg.toppings || []).length;
     wave = w;
     Object.assign(cfg, endlessCfg(w, over));
     lopts.burn = cfg.burn;
@@ -383,9 +383,11 @@ export function startGame(root, level, levels, cb, opts = {}) {
     if (activeShop().pizza) world.setFixtures(['dough', ...cfg.toppings]);
     world.setFries(cfg.items.includes('fries'), announce && !hadFries);
     audio.setMusicRate(endlessMusicRate(w));
+    puddleOn = cfg.helper >= 2;
+    if (puddleOn !== hadMop) { world.setMop(puddleOn); puddleT = 3; }
     world.setHelper(cfg.helper ? helperStops() : null, cfg.helper, helperLoot());
     if (!announce) return;
-    const news = [!hadFries && cfg.items.includes('fries') && '🍟 Fries!', !hadExtra && cfg.extra && (activeShop().hospital ? '2nd bill machine! Bills can jam' : '🍳 2nd grill & fryer!'), !hadBurn && cfg.burn && '🔥 Food burns!', cfg.helper > hadHelper && (hadHelper ? '🧑‍🍳 Another "helper"!' : '🧑‍🍳 A "helper" is in your way!'), (cfg.kinds || []).length > hadKinds && 'New patient task!', (cfg.toppings || []).length > hadTops && 'New topping!'].filter(Boolean).join(' ');
+    const news = [!hadFries && cfg.items.includes('fries') && '🍟 Fries!', !hadExtra && cfg.extra && (activeShop().hospital ? '2nd bill machine! Bills can jam' : '🍳 2nd grill & fryer!'), !hadBurn && cfg.burn && '🔥 Food burns!', puddleOn && !hadMop && '🧽 Sticky puddles! Mop by the bin', cfg.helper > hadHelper && (hadHelper ? '🧑‍🍳 Another "helper"!' : '🧑‍🍳 A "helper" is in your way!'), (cfg.kinds || []).length > hadKinds && 'New patient task!', (cfg.toppings || []).length > hadTops && 'New topping!'].filter(Boolean).join(' ');
     if (news) banner(`⬆️ ${news}`, 'wave');
     audio.playSfx('waveUp');
   }
@@ -477,6 +479,40 @@ export function startGame(root, level, levels, cb, opts = {}) {
     }, lopts);
   }
 
+  // Sticky puddles: tap the mop by the bin and wait for the bar to clear them all; none appear for 20 s after.
+  const MOP_TIME = 2.2, PUDDLE_COOLDOWN = 20;
+  const mopBar = document.createElement('div');
+  mopBar.className = 'car-tag small';
+  mopBar.hidden = true;
+  mopBar.innerHTML = '<div class="bubble">🧽</div><div class="pbar prog"><i></i></div>';
+  overlay.appendChild(mopBar);
+  const baseArrive = world.worker.onArrive;
+  world.worker.onArrive = key => {
+    if (key !== 'mop') return baseArrive(key);
+    if (!world.puddleCount()) return;
+    mopT = 0;
+    audio.playSfx('start');
+  };
+  function puddleStep(dt) {
+    if (mopT >= 0) {
+      if (world.worker.at !== 'mop') mopT = -1;
+      else if ((mopT += dt) >= MOP_TIME) { world.clearPuddles(); puddleCool = PUDDLE_COOLDOWN; mopT = -1; audio.playSfx('place'); }
+    }
+    mopBar.hidden = mopT < 0;
+    if (mopT >= 0) {
+      const p = world.project(world.mopPos.x, 1.7, world.mopPos.z);
+      mopBar.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, -100%)`;
+      mopBar.querySelector('i').style.transform = `scaleX(${Math.min(1, mopT / MOP_TIME)})`;
+    }
+    if (!puddleOn) return;
+    puddleAge += dt;
+    if (puddleCool > 0) { puddleCool -= dt; return; }
+    if ((puddleT -= dt) <= 0) { // more puddles, more often, the longer it goes on
+      if (world.puddleCount() < Math.min(10, 2 + Math.floor(puddleAge / 25))) world.spawnPuddle();
+      puddleT = Math.max(2.5, 8 - puddleAge / 20);
+    }
+  }
+
   // Small icon bubble above the worker showing what they carry (hands, or the items on a carried tray).
   const heldTag = document.createElement('div');
   heldTag.className = 'held-tag';
@@ -504,6 +540,11 @@ export function startGame(root, level, levels, cb, opts = {}) {
     const k = world.pick(e.clientX, e.clientY);
     if (!k || (ITEMS.includes(k) && !(STATIONS[k].type ? cfg.extra : cfg.items.includes(k)))) return;
     if (world.helperBlocks(k)) { world.helperShoo(k); audio.playSfx('tap'); return; }
+    if (k === 'mop') {
+      audio.playSfx('tap');
+      if (world.puddleCount() && mopT < 0) world.worker.walkTo('mop');
+      return;
+    }
     logic.tap(k);
     if (ITEMS.includes(k)) endHint('make');
   });
@@ -581,7 +622,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     const m = logic.trays.findIndex(t => orders.matches(t));
     if (m >= 0) { endHint('tray'); showHint('send', `Order ready! Press ${m + 1} below`); }
     if (endless) {
-      if (!dying) checkWave();
+      if (!dying) { checkWave(); puddleStep(step); }
       if (over_) finish();
     } else if (timeLeft <= 0) { timeLeft = 0; finish(); }
   }
