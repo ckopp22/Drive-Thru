@@ -34,6 +34,16 @@ export const SHAKE_LEVELS = [
   { time: 180, goal: 50, star2: 105, star3: 210, trays: 3, items: SH, patience: 32, gap: 1.8, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 2, puddles: { max: 7, every: 4.5 }, notes: 'Grand finale: puddles and two helpers' }
 ];
 
+// Coffee Shop only (levels 16-20): the donut levels. Same shape as the shake levels, with a little more patience for the extra walking.
+const CD = [...ALL, 'donut'];
+export const DONUT_LEVELS = [
+  { time: 120, goal: 30, star2: 70, star3: 130, trays: 3, items: CD, patience: 44, gap: 2.2, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Donuts: grab one from the table, then stand at the microwave', intro: '🍩 New: Donut! Grab one from the table, then stand at the microwave' },
+  { time: 120, goal: 32, star2: 72, star3: 134, trays: 3, items: CD, patience: 42, gap: 2.1, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Donut rush' },
+  { time: 120, goal: 34, star2: 74, star3: 138, trays: 3, items: CD, patience: 40, gap: 2,   maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Busier donuts' },
+  { time: 120, goal: 36, star2: 76, star3: 142, trays: 3, items: CD, patience: 38, gap: 1.9, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Donut crunch' },
+  { time: 180, goal: 50, star2: 105, star3: 210, trays: 3, items: CD, patience: 36, gap: 1.8, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 2, puddles: { max: 7, every: 4.5 }, notes: 'Grand finale: puddles and two helpers' }
+];
+
 // Stars: 1 star = reach the goal (passes the level), 2 and 3 stars at these multiples of the goal.
 export const STAR_MULT = [1, 1.4, 1.8];
 // Tuned with tools/sim.mjs: 1 star (the goal) is easy for a slow/young player, 2 stars needs a decent player, 3 stars a near-expert one.
@@ -66,7 +76,9 @@ export const STATIONS = {
   burger2: { time: 6.5, burns: true, type: 'burger' },
   fries2:  { time: 6.5, burns: true, type: 'fries' },
   // Burger Joint levels 16+: the shake needs milk from the fridge and the worker standing at the mixer; it never burns.
-  shake:   { time: 5, needs: 'milk', stand: true }
+  shake:   { time: 5, needs: 'milk', stand: true },
+  // Coffee Shop levels 16+: the donut needs a plain one from the table and the worker standing at the microwave; it never burns.
+  donut:   { time: 5, needs: 'rawdonut', stand: true }
 };
 export const WORKER = { speed: 6, maxHeld: 1, bobRate: 14, trayCap: 4 };
 

@@ -1,4 +1,4 @@
-import { LEVELS, SHAKE_LEVELS } from './levels.js';
+import { LEVELS, SHAKE_LEVELS, DONUT_LEVELS } from './levels.js';
 
 export const PIZZA_TOPS = ['sauce', 'cheese', 'pepperoni', 'mushroom'];
 
@@ -28,17 +28,19 @@ export const SHOPS = [
     colors: { wall: 0xfff1b8, trim: 0xe63946, tileA: '#fff6d6', tileB: '#f4c542' }
   },
   {
-    id: 'coffee', name: 'Coffee Shop', icon: '☕', levels: LEVELS.map(l => ({ ...l })),
+    id: 'coffee', name: 'Coffee Shop', icon: '☕', levels: [...LEVELS.map(l => ({ ...l })), ...DONUT_LEVELS],
     endless: { patMult: 1.2 }, // cups add walking, so a little more patience
     cups: true, // every drink needs a cup from the cabinet before a machine will start
     foods: {
       soda:   { icon: '☕', machine: 'espresso machine', price: 2, cy: -.09, surf: [.45, .56] },
       burger: { icon: '🥤', machine: 'cold brew tap',    price: 4, cy: -.03, surf: [0, .9] },
-      fries:  { icon: '🍵', machine: 'tea kettle',       price: 3, cy: -.16, surf: [.25, .85] }
+      fries:  { icon: '🍵', machine: 'tea kettle',       price: 3, cy: -.16, surf: [.25, .85] },
+      donut:  { icon: '🍩', machine: 'microwave',        price: 5, cy: -.05, surf: [0, .95] }
     },
     layout: {
       soda: { x: 2.55, z: -1.9 }, burger: { x: 2.55, z: -.2 }, fries: { x: 2.55, z: 1.35 },
-      burger2: { x: -2.55, z: -.9 }, fries2: { x: -2.55, z: .6 }, bin: { x: -2.6, z: 1.9 }, cabinet: { x: -2.55, z: -2.1 }
+      burger2: { x: -2.55, z: -.9 }, fries2: { x: -2.55, z: .6 }, bin: { x: -2.6, z: 1.9 }, cabinet: { x: -2.55, z: -2.1 },
+      donuts: { x: -2.55, z: 3.1 }, donut: { x: 2.55, z: 3.1 }, mop: { x: 0, z: 3.4 }
     },
     npc: { x: .9, z: -1, r: .6 }, // a second worker standing in the shop: you walk around them
     colors: { wall: 0xf3e5d0, trim: 0x2f7d5b, tileA: '#f3e3cc', tileB: '#c8a27a' }

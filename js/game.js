@@ -19,6 +19,8 @@ const typeOf = k => STATIONS[k].type || k; // item a station makes (extra machin
 // Station/worker/tray rules. Keys come from tapping the 3D scene: soda, burger, fries, trash, tray0-2.
 // hooks: { sfx(name), shake(key), send(items) -> bool }
 // opts.burn: seconds a finished food item may wait before it burns (0 = never).
+// Walk-up supplies: tap one to grab its item (hands must be empty).
+const GRAB = { cabinet: 'cup', fridge: 'milk', donuts: 'rawdonut' };
 export function createLogic(world, hooks, opts = {}) {
   const worker = world.worker;
   const st = {};
@@ -44,7 +46,7 @@ export function createLogic(world, hooks, opts = {}) {
     const putBack = ITEMS.includes(key) && st[key].state === 'idle' && hands.includes(typeOf(key));
     const need = ITEMS.includes(key) && STATIONS[key].needs;
     const canStart = need ? hands.includes(need) : pizza ? (hands[0] || '').startsWith('plate:') : cups ? hands.includes('cup') : !busy();
-    if ((key === 'cabinet' || key === 'fridge' || key === 'dough' || PIZZA_TOPS.includes(key)) && busy()) {
+    if ((GRAB[key] || key === 'dough' || PIZZA_TOPS.includes(key)) && busy()) {
       hooks.shake(key);
       return false;
     }
@@ -134,9 +136,9 @@ export function createLogic(world, hooks, opts = {}) {
       } else return hooks.shake(key);
       setHeld();
       world.setTable(key, t);
-    } else if (key === 'cabinet' || key === 'fridge') {
+    } else if (GRAB[key]) {
       if (busy()) return hooks.shake(key);
-      hands.push(key === 'fridge' ? 'milk' : 'cup');
+      hands.push(GRAB[key]);
       setHeld();
       worker.kick();
       hooks.sfx('pickup');
@@ -152,7 +154,7 @@ export function createLogic(world, hooks, opts = {}) {
         worker.setHeld([]);
         hooks.sfx('place');
       } else if (hands.length) {
-        if (hands[0] === 'cup' || hands[0] === 'milk' || hands[0] === 'burnt' || (pizza && !hands[0].startsWith('pizza:')) || tray.length >= WORKER.trayCap || away[i]) return;
+        if (['cup', 'milk', 'rawdonut', 'burnt'].includes(hands[0]) || (pizza && !hands[0].startsWith('pizza:')) || tray.length >= WORKER.trayCap || away[i]) return;
         tray.push(hands.shift());
         setHeld();
         world.setTray(i, tray);
@@ -363,7 +365,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     const sh = activeShop();
     if (sh.hospital) return () => ['medicine', 'bandage', 'register', ...(cfg.extra ? ['register2'] : []), ...['patL0', 'patR0'].filter(logic.waiting)]; // also the patient up next in each line
     if (sh.pizza) return ['dough', ...cfg.toppings, 'burger', ...(cfg.extra ? ['burger2'] : [])];
-    return ['soda', 'burger', 'fries', ...(cfg.items.includes('shake') ? ['shake', 'fridge'] : []), ...(cfg.extra ? ['burger2', 'fries2'] : []), ...(sh.cups ? ['cabinet'] : [])];
+    return ['soda', 'burger', 'fries', ...(cfg.items.includes('shake') ? ['shake', 'fridge'] : []), ...(cfg.items.includes('donut') ? ['donut', 'donuts'] : []), ...(cfg.extra ? ['burger2', 'fries2'] : []), ...(sh.cups ? ['cabinet'] : [])];
   }
   // Food shops: helpers sometimes grab a machine's ready (or burnt) food and bin it.
   function helperLoot() {
