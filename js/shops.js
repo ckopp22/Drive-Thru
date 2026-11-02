@@ -13,7 +13,7 @@ export const PAT_ZS = [-.5, 1.3, 3.1];
 //   colors: walls/trim (hex) and floor tiles (css).
 export const SHOPS = [
   {
-    id: 'burger', name: 'Burger Joint', icon: '🍔', levels: [...LEVELS, ...SHAKE_LEVELS],
+    id: 'burger', name: 'Burger Joint', icon: '🍔', menuItem: 'burger', levels: [...LEVELS, ...SHAKE_LEVELS],
     endless: {}, // endless mode overrides (see levels.js ENDLESS); shops without this have no endless tile
     foods: {
       soda:   { icon: '🥤', machine: 'soda machine', price: 2, cy: .05,  surf: [.45, .56] },
@@ -29,7 +29,7 @@ export const SHOPS = [
     colors: { wall: 0xfff1b8, trim: 0xe63946, tileA: '#fff6d6', tileB: '#f4c542' }
   },
   {
-    id: 'coffee', name: 'Coffee Shop', icon: '☕', levels: [...LEVELS.map(l => ({ ...l })), ...DONUT_LEVELS],
+    id: 'coffee', name: 'Coffee Shop', icon: '☕', menuItem: 'soda', levels: [...LEVELS.map(l => ({ ...l })), ...DONUT_LEVELS],
     endless: { patMult: 1.2 }, // cups add walking, so a little more patience
     cups: true, // every drink needs a cup from the cabinet before a machine will start
     foods: {
@@ -47,7 +47,7 @@ export const SHOPS = [
     colors: { wall: 0xf3e5d0, trim: 0x2f7d5b, tileA: '#f3e3cc', tileB: '#c8a27a' }
   },
   {
-    id: 'pizza', name: 'Pizza Place', icon: '🍕',
+    id: 'pizza', name: 'Pizza Place', icon: '🍕', menuItem: 'pizza:sauce+cheese',
     pizza: true, // dough -> table plate -> toppings -> oven -> tray
     // Endless mode: pizzas only (the oven slot), toppings and topping count grow with the waves, second oven from wave 4.
     endless: {
@@ -81,7 +81,7 @@ export const SHOPS = [
     colors: { wall: 0xf6d9b0, trim: 0xd62828, tileA: '#ffffff', tileB: '#e0524a' }
   },
   {
-    id: 'hospital', name: 'Hospital', icon: '🏥',
+    id: 'hospital', name: 'Hospital', icon: '🏥', menuItem: 'medicine',
     hospital: true, // patients line up at two counters; each needs one task
     // Endless mode: same wave/patience ramp as the other shops; tasks and line length grow with the waves ([fromWave, value]).
     endless: {

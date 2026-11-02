@@ -1567,6 +1567,12 @@ export function createMenuScene(canvas, shop) {
   };
   raf = requestAnimationFrame(frame);
   return {
+    // Icon (data URL) of one of this shop's items, drawn like the in-game ones.
+    icon(type) {
+      const prev = activeShop();
+      useShop(shop);
+      try { return world.itemIcon(type); } finally { useShop(prev); }
+    },
     stop() {
       cancelAnimationFrame(raf);
       cars.forEach(c => world.removeCar(c));
