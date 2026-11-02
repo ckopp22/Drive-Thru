@@ -358,6 +358,21 @@ export function startGame(root, level, levels, cb, opts = {}) {
     if (sh.pizza) return ['dough', ...cfg.toppings, 'burger', ...(cfg.extra ? ['burger2'] : [])];
     return ['soda', 'burger', 'fries', ...(cfg.extra ? ['burger2', 'fries2'] : []), ...(sh.cups ? ['cabinet'] : [])];
   }
+  // Food shops: helpers sometimes grab a machine's ready (or burnt) food and bin it.
+  function helperLoot() {
+    const sh = activeShop();
+    if (sh.hospital || sh.pizza) return null;
+    const grabbable = k => st[k].state === 'ready' || st[k].state === 'burnt';
+    return {
+      ready: () => ITEMS.filter(grabbable),
+      take(k) {
+        if (!grabbable(k)) return null;
+        const type = st[k].state === 'burnt' ? 'burnt' : typeOf(k);
+        Object.assign(st[k], { state: 'idle', p: 0, t: 0 });
+        return type;
+      }
+    };
+  }
   function setWave(w, announce) {
     const hadHelper = cfg.helper, hadFries = cfg.items.includes('fries'), hadExtra = !!cfg.extra, hadBurn = cfg.burn > 0, hadKinds = (cfg.kinds || []).length, hadTops = (cfg.toppings || []).length;
     wave = w;
@@ -367,7 +382,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     if (activeShop().pizza) world.setFixtures(['dough', ...cfg.toppings]);
     world.setFries(cfg.items.includes('fries'), announce && !hadFries);
     audio.setMusicRate(endlessMusicRate(w));
-    world.setHelper(cfg.helper ? helperStops() : null, cfg.helper);
+    world.setHelper(cfg.helper ? helperStops() : null, cfg.helper, helperLoot());
     if (!announce) return;
     const news = [!hadFries && cfg.items.includes('fries') && '🍟 Fries!', !hadExtra && cfg.extra && (activeShop().hospital ? '2nd bill machine! Bills can jam' : '🍳 2nd grill & fryer!'), !hadBurn && cfg.burn && '🔥 Food burns!', cfg.helper > hadHelper && (hadHelper ? '🧑‍🍳 Another "helper"!' : '🧑‍🍳 A "helper" is in your way!'), (cfg.kinds || []).length > hadKinds && 'New patient task!', (cfg.toppings || []).length > hadTops && 'New topping!'].filter(Boolean).join(' ');
     if (news) banner(`⬆️ ${news}`, 'wave');

@@ -833,6 +833,28 @@ function turn(cur, want, maxStep) {
   return cur + Math.max(-maxStep, Math.min(maxStep, d));
 }
 
+// Puts the carried items (or a whole tray) in front of a worker body, replacing what was there.
+function showHeld(body, types, asTray) {
+  for (let i = body.children.length - 1; i >= 0; i--) if (body.children[i].userData.item) body.remove(body.children[i]);
+  if (asTray) {
+    const tray = new THREE.Group();
+    makeTrayBase(tray);
+    layItems(tray, types);
+    tray.userData.item = true;
+    tray.scale.setScalar(.6);
+    tray.position.set(0, .5, .6);
+    body.add(tray);
+    return;
+  }
+  types.forEach((t, i) => {
+    const it = makeItem(t);
+    it.userData.item = true;
+    it.scale.setScalar(.8);
+    it.position.set(types.length === 1 ? 0 : (i ? .24 : -.24), .55, .55);
+    body.add(it);
+  });
+}
+
 function makeWorker() {
   const { group, body, legs, arms } = buildWorker();
   group.position.set(0, 0, .5);
@@ -845,24 +867,7 @@ function makeWorker() {
     bounce() { hopT = .6; hopN = 2; },
     setHeld(types, asTray) {
       w.held = asTray ? ['tray'] : types.slice();
-      for (let i = body.children.length - 1; i >= 0; i--) if (body.children[i].userData.item) body.remove(body.children[i]);
-      if (asTray) {
-        const tray = new THREE.Group();
-        makeTrayBase(tray);
-        layItems(tray, types);
-        tray.userData.item = true;
-        tray.scale.setScalar(.6);
-        tray.position.set(0, .5, .6);
-        body.add(tray);
-        return;
-      }
-      types.forEach((t, i) => {
-        const it = makeItem(t);
-        it.userData.item = true;
-        it.scale.setScalar(.8);
-        it.position.set(types.length === 1 ? 0 : (i ? .24 : -.24), .55, .55);
-        body.add(it);
-      });
+      showHeld(body, types, asTray);
     },
     update(dt) {
       w.moving = false;
@@ -1021,6 +1026,18 @@ export function buildWorld() {
   const splashMat = new THREE.MeshLambertMaterial({ color: 0x1b1715, flatShading: true });
   const binPos = lid.parent.position;
   const wob = {};
+  function binPop() {
+    binT = .3;
+    if (reducedMotion()) return;
+    for (let i = 0; i < 16; i++) {
+      const m = new THREE.Mesh(splashGeo, splashMat), a = Math.random() * Math.PI * 2, r = .8 + Math.random() * 1.6;
+      m.position.set(binPos.x, .85, binPos.z);
+      m.userData = { vx: Math.cos(a) * r, vy: 2.4 + Math.random() * 2, vz: Math.sin(a) * r, age: 0, life: .55 + Math.random() * .3, s: .7 + Math.random() * .9 };
+      scene.add(m);
+      splash.push(m);
+    }
+  }
+  let loot = null; // endless helpers: { ready(): machine keys with food to grab, take(key): item type or null }
   return {
     scene, camera, worker, viz, billboards, hits,
     // Show the items sitting on tray i (2x2 grid).
@@ -1050,7 +1067,8 @@ export function buildWorld() {
       });
     },
     // Endless mode: n helpers join (stops = machine keys they visit, or a function returning them) or leave (null).
-    setHelper(stops, n = 1) {
+    setHelper(stops, n = 1, lootFns = null) {
+      loot = lootFns;
       helpers.forEach((H, i) => {
         const on = stops && i < n, was = !!H.hv.stops;
         H.hv.stops = on ? stops : null;
@@ -1059,7 +1077,7 @@ export function buildWorld() {
           H.helper.group.position.set(i ? 1.2 : -1.2, 0, 2.6);
           Object.assign(H.hv, { state: 'wait', key: null, t: 1.5 + i * 2, pop: reducedMotion() ? 0 : .5 });
         }
-        if (!on) { H.helperObs.x = H.helperObs.z = 99; H.hv.key = null; }
+        if (!on) { H.helperObs.x = H.helperObs.z = 99; H.hv.key = null; H.hv.carry = null; H.hv.grab = false; showHeld(H.helper.body, []); }
       });
     },
     // True while a helper is standing at this machine (taps on it do nothing).
@@ -1099,17 +1117,7 @@ export function buildWorld() {
     wobble(key) { wob[key] = .3; },
     addCar(c) { scene.add(c); },
     removeCar(c) { scene.remove(c); },
-    binPop() {
-      binT = .3;
-      if (reducedMotion()) return;
-      for (let i = 0; i < 16; i++) {
-        const m = new THREE.Mesh(splashGeo, splashMat), a = Math.random() * Math.PI * 2, r = .8 + Math.random() * 1.6;
-        m.position.set(binPos.x, .85, binPos.z);
-        m.userData = { vx: Math.cos(a) * r, vy: 2.4 + Math.random() * 2, vz: Math.sin(a) * r, age: 0, life: .55 + Math.random() * .3, s: .7 + Math.random() * .9 };
-        scene.add(m);
-        splash.push(m);
-      }
-    },
+    binPop,
     update(dt, t) {
       if (friesPop > 0) { // pop-in with a little overshoot
         friesPop = Math.max(0, friesPop - dt);
@@ -1169,16 +1177,26 @@ export function buildWorld() {
         if (hv.state === 'wait') {
           if ((hv.t -= dt) <= 0) {
             const ok = (typeof hv.stops === 'function' ? hv.stops() : hv.stops).filter(k => SPOTS[k] && k !== hv.key && !helpers.some(o => o !== H && o.hv.stops && o.hv.key === k && o.hv.state !== 'wait') && worker.target !== k && !(worker.at === k && Math.hypot(wp.x - SPOTS[k].x, wp.z - SPOTS[k].z) < 1));
-            if (ok.length) { hv.key = ok[Math.floor(Math.random() * ok.length)]; hv.state = 'walk'; hv.stall = 0; }
+            const rk = loot && Math.random() < .4 ? loot.ready().filter(k => ok.includes(k)) : [];
+            if (ok.length) { hv.grab = !!rk.length; hv.key = (hv.grab ? rk : ok)[Math.floor(Math.random() * (hv.grab ? rk : ok).length)]; hv.state = 'walk'; hv.stall = 0; }
             else hv.t = .5;
           }
         } else if (hv.state === 'walk') {
           const s = SPOTS[hv.key], dx = s.x - p.x, dz = s.z - p.z, d = Math.hypot(dx, dz), step = 1 * dt;
           face = Math.atan2(dx, dz);
-          if (worker.target === hv.key || Math.hypot(wp.x - s.x, wp.z - s.z) < .7 && d < 1.2) { hv.state = 'wait'; hv.t = .4; } // the player got there first
-          else if (d <= step) { p.x = s.x; p.z = s.z; hv.state = 'stay'; hv.t = 3; face = s.face; }
+          if (!hv.carry && (worker.target === hv.key || Math.hypot(wp.x - s.x, wp.z - s.z) < .7 && d < 1.2)) { hv.state = 'wait'; hv.t = .4; hv.grab = false; } // the player got there first
+          else if (d <= step) {
+            p.x = s.x; p.z = s.z; face = s.face;
+            if (hv.carry) { hv.carry = null; showHeld(helper.body, []); binPop(); hv.state = 'wait'; hv.t = .5 + Math.random(); } // throws it away
+            else { hv.state = 'stay'; hv.t = 3; }
+          }
           else { p.x += dx / d * step; p.z += dz / d * step; moving = true; hv.stall = 0; }
-        } else if ((hv.t -= dt) <= 0) { hv.state = 'wait'; hv.t = .3 + Math.random() * 1.2; }
+        } else if ((hv.t -= dt) <= 0) {
+          const got = hv.grab && loot && loot.take(hv.key);
+          hv.grab = false;
+          if (got) { hv.carry = got; showHeld(helper.body, [got]); hv.key = 'trash'; hv.state = 'walk'; hv.stall = 0; } // takes the ready food to the bin
+          else { hv.state = 'wait'; hv.t = .3 + Math.random() * 1.2; }
+        }
         helperObs.x = p.x; helperObs.z = p.z;
         if (hv.state === 'stay') face = SPOTS[hv.key].face;
         if (face !== null) helper.group.rotation.y = turn(helper.group.rotation.y, face, 8 * dt);
@@ -1201,8 +1219,8 @@ export function buildWorld() {
         helper.legs[0].rotation.x = sw * .7;
         helper.legs[1].rotation.x = -sw * .7;
         const wave = hv.shoo > 0 ? Math.sin(t * 30) * .5 : 0;
-        helper.arms[0].rotation.x = busy ? -1.3 + Math.sin(t * 9) * .4 + wave : moving ? sw * .6 : 0;
-        helper.arms[1].rotation.x = busy ? -1.3 - Math.sin(t * 9) * .4 - wave : moving ? -sw * .6 : 0;
+        helper.arms[0].rotation.x = busy ? -1.3 + Math.sin(t * 9) * .4 + wave : hv.carry ? -1.1 : moving ? sw * .6 : 0;
+        helper.arms[1].rotation.x = busy ? -1.3 - Math.sin(t * 9) * .4 - wave : hv.carry ? -1.1 : moving ? -sw * .6 : 0;
         helper.body.position.y = moving ? Math.abs(sw) * .08 : 0;
       }
       Object.values(viz).forEach(v => v.update(t));
