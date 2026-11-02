@@ -140,6 +140,7 @@ function levels() {
   const best = shop.endless ? save.endless(shop.id) : null;
   const s = el(`<h2>${shop.name}</h2><div class="grid"></div><button class="btn" id="back">Back</button>`, 'screen levels');
   const grid = s.querySelector('.grid');
+  grid.style.gridTemplateRows = `repeat(${Math.ceil(MAX / 3)}, 1fr)`;
   for (let n = 1; n <= MAX; n++) {
     const done = n < highestUnlocked || (n === MAX && bestMoney[n] > 0);
     const isCurrent = n === highestUnlocked && !done;

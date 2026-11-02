@@ -42,8 +42,9 @@ export function createLogic(world, hooks, opts = {}) {
     hooks.sfx('tap');
     // An idle machine accepts the item you took from it back (set it down); otherwise busy hands can't use a machine.
     const putBack = ITEMS.includes(key) && st[key].state === 'idle' && hands.includes(typeOf(key));
-    const canStart = pizza ? (hands[0] || '').startsWith('plate:') : cups ? hands.includes('cup') : !busy();
-    if ((key === 'cabinet' || key === 'dough' || PIZZA_TOPS.includes(key)) && busy()) {
+    const need = ITEMS.includes(key) && STATIONS[key].needs;
+    const canStart = need ? hands.includes(need) : pizza ? (hands[0] || '').startsWith('plate:') : cups ? hands.includes('cup') : !busy();
+    if ((key === 'cabinet' || key === 'fridge' || key === 'dough' || PIZZA_TOPS.includes(key)) && busy()) {
       hooks.shake(key);
       return false;
     }
@@ -88,7 +89,12 @@ export function createLogic(world, hooks, opts = {}) {
           hooks.sfx('place');
           return;
         }
-        if (pizza) {
+        const need = STATIONS[key].needs;
+        if (need) { // the shake: milk goes in, then the worker has to stand here while it mixes
+          if (!hands.includes(need)) return hooks.shake(key);
+          hands.splice(hands.indexOf(need), 1);
+          setHeld();
+        } else if (pizza) {
           if (!(hands[0] || '').startsWith('plate:')) return hooks.shake(key);
           s.item = 'pizza:' + hands[0].slice(6);
           hands.length = 0;
@@ -128,9 +134,9 @@ export function createLogic(world, hooks, opts = {}) {
       } else return hooks.shake(key);
       setHeld();
       world.setTable(key, t);
-    } else if (key === 'cabinet') {
+    } else if (key === 'cabinet' || key === 'fridge') {
       if (busy()) return hooks.shake(key);
-      hands.push('cup');
+      hands.push(key === 'fridge' ? 'milk' : 'cup');
       setHeld();
       worker.kick();
       hooks.sfx('pickup');
@@ -146,7 +152,7 @@ export function createLogic(world, hooks, opts = {}) {
         worker.setHeld([]);
         hooks.sfx('place');
       } else if (hands.length) {
-        if (hands[0] === 'cup' || hands[0] === 'burnt' || (pizza && !hands[0].startsWith('pizza:')) || tray.length >= WORKER.trayCap || away[i]) return;
+        if (hands[0] === 'cup' || hands[0] === 'milk' || hands[0] === 'burnt' || (pizza && !hands[0].startsWith('pizza:')) || tray.length >= WORKER.trayCap || away[i]) return;
         tray.push(hands.shift());
         setHeld();
         world.setTray(i, tray);
@@ -181,7 +187,7 @@ export function createLogic(world, hooks, opts = {}) {
       const s = st[k];
       if (!world.viz[k]) continue;
       if (s.state === 'making') {
-        s.p = Math.min(1, s.p + dt / STATIONS[k].time);
+        if (!STATIONS[k].stand || worker.at === k) s.p = Math.min(1, s.p + dt / STATIONS[k].time); // the shake only mixes while you stand at it
         if (s.p >= 1) {
           s.state = 'ready';
           s.t = 0;
@@ -248,6 +254,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   const world = createWorld(el.querySelector('canvas'));
   world.setTrayCount(cfg.trays);
   world.setExtra(!!cfg.extra);
+  world.setShake(cfg.items.includes('shake'));
   if (endless) world.setFries(false);
   if (cfg.workerSpeed) world.worker.speed = cfg.workerSpeed;
   if (activeShop().pizza) world.setFixtures(['dough', ...cfg.toppings]);
@@ -356,7 +363,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     const sh = activeShop();
     if (sh.hospital) return () => ['medicine', 'bandage', 'register', ...(cfg.extra ? ['register2'] : []), ...['patL0', 'patR0'].filter(logic.waiting)]; // also the patient up next in each line
     if (sh.pizza) return ['dough', ...cfg.toppings, 'burger', ...(cfg.extra ? ['burger2'] : [])];
-    return ['soda', 'burger', 'fries', ...(cfg.extra ? ['burger2', 'fries2'] : []), ...(sh.cups ? ['cabinet'] : [])];
+    return ['soda', 'burger', 'fries', ...(cfg.items.includes('shake') ? ['shake', 'fridge'] : []), ...(cfg.extra ? ['burger2', 'fries2'] : []), ...(sh.cups ? ['cabinet'] : [])];
   }
   // Food shops: helpers sometimes grab a machine's ready (or burnt) food and bin it.
   function helperLoot() {
@@ -480,6 +487,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   }
 
   if (!endless && cfg.puddles) { puddleOn = true; world.setMop(true); }
+  if (cfg.intro) banner(cfg.intro, 'wave');
   if (!endless && cfg.helper) world.setHelper(helperStops(), cfg.helper, helperLoot());
   // Sticky puddles: tap the mop by the bin and wait for the bar to clear them all; none appear for 20 s after (5 s in levels).
   const MOP_TIME = 2.2, PUDDLE_COOLDOWN = endless ? 20 : 5;
@@ -620,7 +628,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     logic.update(step);
     orders.update(step);
     if (world.worker.moving) audio.playSfx('walk');
-    for (const k of ITEMS) audio.setLoop('st' + k, logic.st[k].state === 'making' ? (k.startsWith('soda') || activeShop().id === 'coffee' ? 'fill' : 'sizzle') : null);
+    for (const k of ITEMS) audio.setLoop('st' + k, logic.st[k].state === 'making' ? (k.startsWith('soda') || k === 'shake' || activeShop().id === 'coffee' ? 'fill' : 'sizzle') : null);
     world.update(step, clock);
     if (logic.hands.length) { endHint('make'); if (!activeShop().hospital) showHint('tray', 'Tap a numbered tray to set it down'); }
     const m = logic.trays.findIndex(t => orders.matches(t));

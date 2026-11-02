@@ -1,4 +1,4 @@
-import { LEVELS } from './levels.js';
+import { LEVELS, SHAKE_LEVELS } from './levels.js';
 
 export const PIZZA_TOPS = ['sauce', 'cheese', 'pepperoni', 'mushroom'];
 
@@ -12,14 +12,16 @@ export const PAT_ZS = [-.5, 1.3, 3.1];
 //   colors: walls/trim (hex) and floor tiles (css).
 export const SHOPS = [
   {
-    id: 'burger', name: 'Burger Joint', icon: '🍔', levels: LEVELS,
+    id: 'burger', name: 'Burger Joint', icon: '🍔', levels: [...LEVELS, ...SHAKE_LEVELS],
     endless: {}, // endless mode overrides (see levels.js ENDLESS); shops without this have no endless tile
     foods: {
       soda:   { icon: '🥤', machine: 'soda machine', price: 2, cy: .05,  surf: [.45, .56] },
       burger: { icon: '🍔', machine: 'grill',        price: 4, cy: -.09, surf: [0, .9] },
-      fries:  { icon: '🍟', machine: 'fryer',        price: 3, cy: -.05, surf: [0, .85] }
+      fries:  { icon: '🍟', machine: 'fryer',        price: 3, cy: -.05, surf: [0, .85] },
+      shake:  { icon: '🥛', machine: 'mixer',        price: 5, cy: -.02, surf: [0, .95] }
     },
     layout: {
+      shake: { x: -2.55, z: -2.3 }, fridge: { x: -2.55, z: 2.9 },
       soda: { x: -2.55, z: -1.2 }, burger: { x: 2.55, z: -1.2 }, fries: { x: -2.55, z: 1.6 },
       burger2: { x: 2.55, z: .4 }, fries2: { x: -2.55, z: .2 }, bin: { x: 2.6, z: 1.6 }
     },
