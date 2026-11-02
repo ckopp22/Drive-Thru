@@ -63,7 +63,7 @@ export const SHOPS = [
       doubles: false
     })),
     foods: {},
-    layout: { burger: { x: 2.55, z: -1.6 }, burger2: { x: 2.55, z: -.1 }, bin: { x: 2.6, z: 2.7 } },
+    layout: { burger: { x: 2.55, z: -1.6 }, burger2: { x: 2.55, z: -.1 }, bin: { x: 2.6, z: 2.7 }, mop: { x: 0, z: 3.4 } },
     // Walk-up fixtures: key, kind (model), position; tables stand in the room and give their own walk spot.
     fixtures: [
       { key: 'dough', kind: 'dough', x: -2.55, z: -1.5 },
