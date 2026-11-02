@@ -56,31 +56,30 @@ export const WORKER = { speed: 6, maxHeld: 1, bobRate: 14, trayCap: 4 };
 // Past the last row, patience and the gaps keep shrinking per wave down to their floors.
 // Orders never exceed 4 items (the tray holds 4) and never repeat an item more than twice (doubles), so they stay doable.
 export const ENDLESS = {
-  perWave: 5,        // customers per wave
-  early: [3, 3],     // the first waves are shorter: wave 1 and 2 take 3 customers each
+  perWave: 1,        // each order is its own "wave" (difficulty step)
+  early: [],
   lives: 3, firstCarDelay: 1, trays: 3,
   friesWave: 3,   // fryer appears (items become ALL)
-  doublesWave: 6, // orders may repeat an item
-  queue: [[6, 1], [10, 2]], // [fromWave, cars waiting behind the window car]; orders of waiting cars are visible
-  extraWave: 8,   // second grill and fryer
-  burnWave: 8, burn: 12, // food burns after `burn` s
-  helper2Gap: 5,  // waves after the first helper that a second joins
-  helperWave: 9,  // the obstructing helper joins once everything above is in (a shop can override with `helperWave`)
+  doublesWave: 5, // orders may repeat an item
+  queue: [[4, 1], [8, 2]], // [fromOrder, cars waiting behind the window car]; orders of waiting cars are visible
+  extraWave: 6,   // second grill and fryer
+  burnWave: 5, burn: 12, // food burns after `burn` s
+  helper2Gap: 4,  // orders after the first helper that a second joins
+  helperWave: 7,  // the obstructing helper joins once everything above is in (a shop can override with `helperWave`)
   rows: [
     [1, 1, 38, 1, 2],
     [2, 2, 36, 1, 2],
-    [3, 2, 38, 1.2, 2.4],
-    [4, 3, 38, 2, 3.6],
-    [5, 3, 36, 1.8, 3.4],
-    [6, 3, 35, 1.7, 3.2],
-    [7, 3, 34, 1.6, 3],
-    [8, 4, 34, 1.5, 2.8],
-    [9, 4, 33, 1.4, 2.6],
-    [10, 4, 32, 1.3, 2.4]
+    [3, 2, 34, 1.2, 2.4],
+    [4, 3, 32, 2, 3.4],
+    [5, 3, 30, 1.8, 3.2],
+    [6, 3, 28, 1.6, 3],
+    [8, 4, 26, 1.5, 2.8],
+    [10, 4, 24, 1.4, 2.6],
+    [12, 4, 22, 1.3, 2.4]
   ],
-  patDecay: 1.2, minPatience: 18,   // per wave past the last row
+  patDecay: 1, minPatience: 14,   // per order past the last row
   gapDecay: [.05, .08], minGap: [.8, 1.6],
-  music: [[10, 1.06], [15, 1.12]]   // [fromWave, music playback rate]
+  music: [[8, 1.06], [12, 1.12]]   // [fromOrder, music playback rate]
 };
 
 // Patience (s) at a wave start; `frac` (0-1) eases toward the next wave so it tightens with every order.

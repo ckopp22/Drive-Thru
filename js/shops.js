@@ -46,9 +46,9 @@ export const SHOPS = [
     pizza: true, // dough -> table plate -> toppings -> oven -> tray
     // Endless mode: pizzas only (the oven slot), toppings and topping count grow with the waves, second oven from wave 4.
     endless: {
-      patMult: 1.5, gapMult: 1.6, items: ['burger'], extraWave: 4, maxItemsCap: 3,
-      toppings: [[1, ['sauce', 'cheese']], [3, ['sauce', 'cheese', 'pepperoni']], [5, PIZZA_TOPS]],
-      maxToppings: [[1, 2], [3, 3], [6, 4]]
+      patMult: 1.5, gapMult: 1.6, items: ['burger'], extraWave: 3, maxItemsCap: 3,
+      toppings: [[1, ['sauce', 'cheese']], [2, ['sauce', 'cheese', 'pepperoni']], [4, PIZZA_TOPS]],
+      maxToppings: [[1, 2], [2, 3], [4, 4]]
     },
     // Same level curve as the burger joint, re-skinned: 1-3 trays like the burger joint, toppings unlock with the levels, second oven from level 4.
     levels: LEVELS.map((l, i) => ({
@@ -78,9 +78,9 @@ export const SHOPS = [
     // Endless mode: same wave/patience ramp as the other shops; tasks and line length grow with the waves ([fromWave, value]).
     endless: {
       hospital: true, patMult: 1.3, gapMult: 1.6,
-      kinds: [[1, ['medicine']], [3, ['medicine', 'bill']], [5, ['medicine', 'bill', 'bandage']], [7, ['medicine', 'bill', 'bandage', 'id']]],
-      queue: [[1, 1], [4, 2]],
-      helperWave: 8, registerWave: 7, jam: 12 // from this wave: a second bill machine, and a stamped bill left 12 s jams its machine
+      kinds: [[1, ['medicine']], [2, ['medicine', 'bill']], [4, ['medicine', 'bill', 'bandage']], [6, ['medicine', 'bill', 'bandage', 'id']]],
+      queue: [[1, 1], [3, 2]],
+      helperWave: 7, registerWave: 6, jam: 12 // from this wave: a second bill machine, and a stamped bill left 12 s jams its machine
     },
     foods: {}, layout: {},
     // Where the worker stands for each tappable spot.
