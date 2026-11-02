@@ -1112,7 +1112,7 @@ export function buildWorld() {
   SPOTS.mop = L0.mop ? { x: L0.mop.x, z: L0.mop.z - .7, face: 0 } : { x: SPOTS.trash.x + mopOff[0], z: SPOTS.trash.z + mopOff[1], face: SPOTS.trash.face };
   const puddles = [];
   const puddleGeo = new THREE.CircleGeometry(1, 14).rotateX(-Math.PI / 2);
-  const puddleMat = new THREE.MeshLambertMaterial({ color: 0xd9a21b, transparent: true, opacity: .85 });
+  const puddleMat = new THREE.MeshLambertMaterial({ color: 0x8a9096, transparent: true, opacity: .85 });
   const livePuddles = () => puddles.filter(m => !m.userData.dying);
   let loot = null; // endless helpers: { ready(): machine keys with food to grab, take(key): item type or null }
   return {
