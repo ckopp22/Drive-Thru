@@ -158,12 +158,15 @@ function hospitalItem(type, g) {
     }
     pill.position.y = .12;
     g.add(pill);
-  } else if (type === 'toy') { // teddy bear
-    part(G('Sphere', .15, 8, 6), 0xa9743a, 0, .15, 0, g);
-    part(G('Sphere', .11, 8, 6), 0xb98348, 0, .36, 0, g);
-    [-.09, .09].forEach(x => part(G('Sphere', .045, 6, 5), 0xa9743a, x, .45, 0, g));
-    part(G('Sphere', .05, 6, 5), 0xf0d9b5, 0, .34, .09, g);
-    [-.05, .05].forEach(x => part(G('Sphere', .018, 4, 4), 0x222222, x, .39, .09, g));
+  } else if (type === 'toy') { // teddy bear, sized up so its icon reads as large as the others
+    const t = new THREE.Group();
+    t.scale.setScalar(1.7);
+    g.add(t);
+    part(G('Sphere', .15, 8, 6), 0xa9743a, 0, .15, 0, t);
+    part(G('Sphere', .11, 8, 6), 0xb98348, 0, .36, 0, t);
+    [-.09, .09].forEach(x => part(G('Sphere', .045, 6, 5), 0xa9743a, x, .45, 0, t));
+    part(G('Sphere', .05, 6, 5), 0xf0d9b5, 0, .34, .09, t);
+    [-.05, .05].forEach(x => part(G('Sphere', .018, 4, 4), 0x222222, x, .39, .09, t));
   } else if (type === 'id') { // camera for the ID photo
     box(.4, .22, .22, 0x2f343a, 0, .11, 0, g);
     box(.4, .06, .22, 0xc9ced4, 0, .25, 0, g); // silver top plate
@@ -653,12 +656,19 @@ function buildHospital(scene, hit, hits) {
     [-.2, 0, .2].forEach(x => part(G('Cylinder', .08, .08, .12, 8), 0xf5e6c8, x, .5, .26, g).rotation.x = Math.PI / 2);
   });
   // Toy chest (levels 16+), shown by world.setShake.
-  const toyHit = cabinet('toy', -2.2, 0xa9743a, 'TOYS', '#f2a33a', g => {
-    box(.3, .2, .03, 0xe63946, -.18, .4, .26, g);
-    box(.2, .2, .03, 0x4cb8ff, .15, .4, .26, g);
-    part(G('Sphere', .12, 8, 6), 0xa9743a, 0, 1.05, 0, g);
-  });
-  machines.toy.visible = false;
+  const toyG = new THREE.Group(); // a wooden chest on the floor, bottom left of the bin
+  toyG.position.set(-1.3, 0, BIN_Z);
+  box(.9, .45, .6, 0xa9743a, 0, .225, 0, toyG);
+  box(.94, .12, .64, 0x7a4f26, 0, .51, 0, toyG);
+  [-.3, .3].forEach(x => box(.1, .5, .66, 0xf2a33a, x, .25, 0, toyG));
+  const toyLabel = labelPlane('TOYS', '#f2a33a', .6);
+  toyLabel.position.set(0, .28, .31);
+  toyG.add(toyLabel);
+  part(G('Sphere', .12, 8, 6), 0xb98348, .05, .66, 0, toyG);
+  toyG.visible = false;
+  scene.add(toyG);
+  machines.toy = toyG;
+  const toyHit = hit('toy', 1.1, .9, .8, -1.3, .45, BIN_Z);
   hits.splice(hits.indexOf(toyHit), 1);
   const registerLook = g => {
     box(.5, .3, .05, 0x1f2933, 0, .4, .27, g);

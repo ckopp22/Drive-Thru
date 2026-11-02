@@ -32,7 +32,7 @@ export function createHospital(world, cfg, overlay, cb) {
   let halted = false; // endless game over: no more patients
 
   // Toy chest (levels 16+): tap it to start making a toy, then pick the toy up when the bar is full. It waits there and never spoils.
-  const TOY_TIME = 5, TOY_X = -2.2;
+  const TOY_TIME = 5, TOY_X = -1.3;
   const toy = { state: 'idle', p: 0 };
   {
     toy.bar = document.createElement('div');
@@ -336,7 +336,7 @@ export function createHospital(world, cfg, overlay, cb) {
       }
     }
     {
-      const p = world.project(TOY_X, 2.3, -3.05);
+      const p = world.project(TOY_X, 1.5, 4.4);
       if (toy.state === 'working') {
         toy.p += dt / TOY_TIME;
         if (toy.p >= 1) { toy.state = 'ready'; cb.sfx('ready'); }
