@@ -9,7 +9,8 @@ const HOSPITAL_HINT = {
   medicine: 'Tap the 💊 MEDICINE cabinet, then tap the patient',
   bill: 'Tap the patient for their bill, then the PAY HERE register, then bring the paper back',
   bandage: 'Tap the BANDAGES cabinet, then the patient. Stay with them while it loads',
-  id: 'Tap the patient and stay there while the photo loads'
+  id: 'Tap the patient and stay there while the photo loads',
+  toy: 'Tap the 🧸 TOYS chest, wait for the bar, grab the toy, then tap the patient'
 };
 const reduced = reducedMotion();
 const buzz = p => { try { if (!reduced) navigator.vibrate && navigator.vibrate(p); } catch (e) {} }; // optional haptics, no-op where unsupported
@@ -261,7 +262,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   const world = createWorld(el.querySelector('canvas'));
   world.setTrayCount(cfg.trays);
   world.setExtra(!!cfg.extra);
-  world.setShake(['shake', 'donut', 'slice'].some(k => cfg.items.includes(k)));
+  world.setShake(['shake', 'donut', 'slice'].some(k => cfg.items.includes(k)) || (cfg.kinds || []).includes('toy'));
   if (endless) world.setFries(false);
   if (cfg.workerSpeed) world.worker.speed = cfg.workerSpeed;
   if (activeShop().pizza) world.setFixtures(['dough', ...cfg.toppings]);
@@ -368,7 +369,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   const lopts = { burn: cfg.burn, trays: cfg.trays };
   function helperStops() {
     const sh = activeShop();
-    if (sh.hospital) return () => ['medicine', 'bandage', 'register', ...(cfg.extra ? ['register2'] : []), ...['patL0', 'patR0'].filter(logic.waiting)]; // also the patient up next in each line
+    if (sh.hospital) return () => ['medicine', 'bandage', 'register', ...(cfg.kinds.includes('toy') ? ['toy'] : []), ...(cfg.extra ? ['register2'] : []), ...['patL0', 'patR0'].filter(logic.waiting)]; // also the patient up next in each line
     if (sh.pizza) return ['dough', ...cfg.toppings, ...(cfg.items.includes('slice') ? ['slice'] : []), 'burger', ...(cfg.extra ? ['burger2'] : [])];
     return ['soda', 'burger', 'fries', ...(cfg.items.includes('shake') ? ['shake', 'fridge'] : []), ...(cfg.items.includes('donut') ? ['donut', 'donuts'] : []), ...(cfg.extra ? ['burger2', 'fries2'] : []), ...(sh.cups ? ['cabinet'] : [])];
   }

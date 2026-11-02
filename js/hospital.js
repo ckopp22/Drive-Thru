@@ -9,7 +9,8 @@ const KIND = {
   medicine: { base: 4 },
   bill: { base: 6 },
   bandage: { base: 5, work: 2.5 },
-  id: { base: 5, work: 3 }
+  id: { base: 5, work: 3 },
+  toy: { base: 6 }
 };
 const REG_TIME = 3;
 const SIDES = [{ key: 'patL', sd: -1 }, { key: 'patR', sd: 1 }];
@@ -29,6 +30,23 @@ export function createHospital(world, cfg, overlay, cb) {
   const REG_X = { register: 1.1, register2: 2.2 };
   let active = null;
   let halted = false; // endless game over: no more patients
+
+  // Toy chest (levels 16+): tap it to start making a toy, then pick the toy up when the bar is full. It waits there and never spoils.
+  const TOY_TIME = 5, TOY_X = -2.2;
+  const toy = { state: 'idle', p: 0 };
+  {
+    toy.bar = document.createElement('div');
+    toy.bar.className = 'car-tag small';
+    toy.bar.hidden = true;
+    toy.bar.innerHTML = `<div class="bubble"><img class="slot" src="${world.itemIcon('toy')}" alt=""></div><div class="pbar prog"><i></i></div>`;
+    overlay.appendChild(toy.bar);
+    toy.fill = toy.bar.querySelector('.pbar i');
+    toy.badge = document.createElement('div');
+    toy.badge.className = 'ready-badge';
+    toy.badge.hidden = true;
+    toy.badge.innerHTML = `<img src="${world.itemIcon('toy')}" alt="">`;
+    overlay.appendChild(toy.badge);
+  }
 
   const regs = {};
   for (const key in REG_X) {
@@ -127,6 +145,10 @@ export function createHospital(world, cfg, overlay, cb) {
       cb.shake(key);
       return false;
     }
+    if (key === 'toy' && (held || (toy.state !== 'idle' && toy.state !== 'ready'))) {
+      cb.shake(key);
+      return false;
+    }
     if (regs[key] && !(held === 'bill' || (!held && (regs[key].state === 'done' || regs[key].state === 'jammed')))) {
       cb.shake(key);
       return false;
@@ -168,6 +190,16 @@ export function createHospital(world, cfg, overlay, cb) {
         worker.kick();
         cb.sfx('pickup');
       } else cb.shake(key);
+    } else if (key === 'toy') {
+      if (held) return cb.shake(key);
+      if (toy.state === 'idle') { toy.state = 'working'; toy.p = 0; cb.sfx('start'); }
+      else if (toy.state === 'ready') {
+        hands.push('toy');
+        toy.state = 'idle';
+        setHeld();
+        worker.kick();
+        cb.sfx('pickup');
+      } else cb.shake(key);
     } else if (key.startsWith('pat')) {
       const c = patientAt(key);
       if (!c) return cb.shake(key);
@@ -196,6 +228,11 @@ export function createHospital(world, cfg, overlay, cb) {
           c.started = true;
           cb.sfx('start');
         }
+      } else if (c.kind === 'toy') {
+        if (held !== 'toy') return cb.shake(key);
+        hands.length = 0;
+        setHeld();
+        complete(c);
       } else if (!c.started) { // id photo: just stand there while it loads
         if (held) return cb.shake(key);
         c.started = true;
@@ -298,6 +335,18 @@ export function createHospital(world, cfg, overlay, cb) {
         reg.badge.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, -100%)`;
       }
     }
+    {
+      const p = world.project(TOY_X, 2.3, -3.05);
+      if (toy.state === 'working') {
+        toy.p += dt / TOY_TIME;
+        if (toy.p >= 1) { toy.state = 'ready'; cb.sfx('ready'); }
+      }
+      toy.bar.hidden = toy.state !== 'working';
+      toy.badge.hidden = toy.state !== 'ready';
+      const el = toy.bar.hidden ? toy.badge : toy.bar;
+      if (!el.hidden) el.style.transform = `translate(${p.x.toFixed(1)}px, ${p.y.toFixed(1)}px) translate(-50%, -100%)`;
+      if (!toy.bar.hidden) toy.fill.style.transform = `scaleX(${clamp(toy.p, 0, 1)})`;
+    }
     for (const c of [...sides.flatMap(s => s.line), ...leaving]) {
       if (c.tag.hidden || !c.tag.isConnected) continue;
       const p = tagPos(c);
@@ -313,8 +362,9 @@ export function createHospital(world, cfg, overlay, cb) {
       get active() { return active; },
       // Endless helpers: a stamped (or jammed) bill waiting at a bill machine can be grabbed and binned.
       loot: {
-        ready: () => Object.keys(regs).filter(k => regs[k].state === 'done' || regs[k].state === 'jammed'),
+        ready: () => [...Object.keys(regs).filter(k => regs[k].state === 'done' || regs[k].state === 'jammed'), ...(toy.state === 'ready' ? ['toy'] : [])],
         take(k) {
+          if (k === 'toy') { if (toy.state !== 'ready') return null; toy.state = 'idle'; return 'toy'; }
           const reg = regs[k];
           if (!reg || (reg.state !== 'done' && reg.state !== 'jammed')) return null;
           const type = reg.state === 'jammed' ? 'burnt' : 'billok';

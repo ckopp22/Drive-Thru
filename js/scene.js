@@ -158,6 +158,12 @@ function hospitalItem(type, g) {
     }
     pill.position.y = .12;
     g.add(pill);
+  } else if (type === 'toy') { // teddy bear
+    part(G('Sphere', .15, 8, 6), 0xa9743a, 0, .15, 0, g);
+    part(G('Sphere', .11, 8, 6), 0xb98348, 0, .36, 0, g);
+    [-.09, .09].forEach(x => part(G('Sphere', .045, 6, 5), 0xa9743a, x, .45, 0, g));
+    part(G('Sphere', .05, 6, 5), 0xf0d9b5, 0, .34, .09, g);
+    [-.05, .05].forEach(x => part(G('Sphere', .018, 4, 4), 0x222222, x, .39, .09, g));
   } else if (type === 'id') { // camera for the ID photo
     box(.4, .22, .22, 0x2f343a, 0, .11, 0, g);
     box(.4, .06, .22, 0xc9ced4, 0, .25, 0, g); // silver top plate
@@ -614,7 +620,7 @@ function labelPlane(text, bg, w = .8) {
 
 // Hospital: a counter down each side (patients line up outside them), cabinets and a register on the back counter.
 const BIN_Z = 4.4;
-function buildHospital(scene, hit) {
+function buildHospital(scene, hit, hits) {
   const machines = {};
   [-1, 1].forEach(sd => {
     box(.6, 1.0, 3.6, 0xdfe9ef, sd * 1.55, .5, 1.1, scene);
@@ -646,6 +652,14 @@ function buildHospital(scene, hit) {
   cabinet('bandage', 0, 0xf4efe0, 'BANDAGES', '#e63946', g => {
     [-.2, 0, .2].forEach(x => part(G('Cylinder', .08, .08, .12, 8), 0xf5e6c8, x, .5, .26, g).rotation.x = Math.PI / 2);
   });
+  // Toy chest (levels 16+), shown by world.setShake.
+  const toyHit = cabinet('toy', -2.2, 0xa9743a, 'TOYS', '#f2a33a', g => {
+    box(.3, .2, .03, 0xe63946, -.18, .4, .26, g);
+    box(.2, .2, .03, 0x4cb8ff, .15, .4, .26, g);
+    part(G('Sphere', .12, 8, 6), 0xa9743a, 0, 1.05, 0, g);
+  });
+  machines.toy.visible = false;
+  hits.splice(hits.indexOf(toyHit), 1);
   const registerLook = g => {
     box(.5, .3, .05, 0x1f2933, 0, .4, .27, g);
     box(.4, .2, .02, 0x9be7ff, 0, .4, .3, g);
@@ -661,7 +675,7 @@ function buildHospital(scene, hit) {
   const lid = part(G('Cylinder', .42, .42, .08, 8), 0x3f454d, 0, .78, 0, bin);
   scene.add(bin);
   hit('trash', 1.1, 1.1, 1.1, 0, .55, BIN_Z);
-  return { viz: {}, lid, trays: [], machines, signs: [], trayHits: [], extraHits: [register2Hit], shakeHits: [], fixtures: {}, tablePlates: {} };
+  return { viz: {}, lid, trays: [], machines, signs: [], trayHits: [], extraHits: [register2Hit], shakeHits: [toyHit], fixtures: {}, tablePlates: {} };
 }
 
 const tub = (g, color) => {
@@ -737,7 +751,7 @@ function buildKitchen(scene, billboards, hits) {
   box(18, .02, 2.4, 0x555a64, 0, .01, -6.0, scene);
   for (let x = -8; x <= 8; x += 2) box(.8, .025, .12, 0xffc828, x, .022, -6.0, scene);
 
-  if (activeShop().hospital) return buildHospital(scene, hit);
+  if (activeShop().hospital) return buildHospital(scene, hit, hits);
 
   // Machines sit on the left or right wall by the sign of their layout x; they face the room.
   const L = activeShop().layout, MB = MACHINE_BUILD[activeShop().id];
@@ -1218,7 +1232,7 @@ export function buildWorld() {
     mopPos: mop.position,
     // Level setup: show the milkshake mixer and milk fridge and make them tappable (or hide them).
     setShake(on) {
-      for (const k of ['shake', 'fridge', 'donut', 'donuts', 'slice']) if (machines[k]) { machines[k].visible = on; if (viz[k]) viz[k].root.visible = on; }
+      for (const k of ['shake', 'fridge', 'donut', 'donuts', 'slice', 'toy']) if (machines[k]) { machines[k].visible = on; if (viz[k]) viz[k].root.visible = on; }
       shakeHits.forEach(h => {
         const i = hits.indexOf(h);
         if (on && i < 0) hits.push(h);

@@ -54,6 +54,16 @@ export const PIZZA_LEVELS = [
   { ...PZ, time: 180, goal: 50, star2: 105, star3: 210, patience: 36, helper: 2, puddles: { max: 7, every: 4.5 }, maxToppings: 5, extraTops: ['pickles'], notes: 'Grand finale: puddles and two helpers' }
 ];
 
+// Hospital only (levels 16-20): patients that want a toy from the toy chest. Each level cuts patience; 20 is the 3 minute finale.
+const HP = { trays: 0, items: [], extra: false, burn: 0, queue: 2, gap: 3.2, maxItems: 1, doubles: false, kinds: ['medicine', 'bill', 'bandage', 'id', 'toy'] };
+export const HOSPITAL_LEVELS = [
+  { ...HP, time: 120, goal: 30, star2: 70, star3: 130, patience: 52, helper: 1, notes: 'Toy patients', intro: '🧸 New: Toy patients! Tap the toy chest, wait for the bar, then bring the toy' },
+  { ...HP, time: 120, goal: 32, star2: 72, star3: 134, patience: 48, helper: 1, notes: 'Less patient' },
+  { ...HP, time: 120, goal: 34, star2: 74, star3: 138, patience: 44, helper: 1, notes: 'Even less patient' },
+  { ...HP, time: 120, goal: 36, star2: 76, star3: 142, patience: 40, helper: 1, notes: 'Impatient crowd' },
+  { ...HP, time: 180, goal: 50, star2: 105, star3: 210, patience: 36, gap: 3, helper: 2, puddles: { max: 7, every: 4.5 }, notes: 'Grand finale: puddles and two helpers' }
+];
+
 // Stars: 1 star = reach the goal (passes the level), 2 and 3 stars at these multiples of the goal.
 export const STAR_MULT = [1, 1.4, 1.8];
 // Tuned with tools/sim.mjs: 1 star (the goal) is easy for a slow/young player, 2 stars needs a decent player, 3 stars a near-expert one.

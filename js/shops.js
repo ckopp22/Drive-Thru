@@ -1,4 +1,4 @@
-import { LEVELS, SHAKE_LEVELS, DONUT_LEVELS, PIZZA_LEVELS } from './levels.js';
+import { LEVELS, SHAKE_LEVELS, DONUT_LEVELS, PIZZA_LEVELS, HOSPITAL_LEVELS } from './levels.js';
 
 export const PIZZA_TOPS = ['sauce', 'cheese', 'pepperoni', 'mushroom'];
 export const ALL_TOPS = [...PIZZA_TOPS, 'pickles']; // level 17+ adds pickles (order = pizza signature order)
@@ -95,7 +95,7 @@ export const SHOPS = [
     spots: {
       ...Object.fromEntries(PAT_ZS.flatMap((z, i) => [['patL' + i, { x: -.85, z, face: -Math.PI / 2 }], ['patR' + i, { x: .85, z, face: Math.PI / 2 }]])),
       medicine: { x: -1.1, z: -2.1, face: Math.PI }, bandage: { x: 0, z: -2.1, face: Math.PI },
-      register: { x: 1.1, z: -2.1, face: Math.PI }, register2: { x: 2.2, z: -2.1, face: Math.PI }, trash: { x: 0, z: 3.6, face: 0 }
+      toy: { x: -2.2, z: -2.1, face: Math.PI }, register: { x: 1.1, z: -2.1, face: Math.PI }, register2: { x: 2.2, z: -2.1, face: Math.PI }, trash: { x: 0, z: 3.6, face: 0 }
     },
     // Same level curve as the burger joint; tasks unlock with the levels, 1-2 patients waiting per side.
     levels: LEVELS.map((l, i) => ({
@@ -103,7 +103,7 @@ export const SHOPS = [
       patience: Math.round(l.patience * 1.3), gap: i === 0 ? 3.5 : l.gap * 1.6, maxItems: 1, doubles: false,
       ...(i === 0 ? { workerSpeed: 3.5, goal: 40, star2: 52, star3: 64 } : {}),
       kinds: i === 0 ? ['medicine'] : i === 1 ? ['medicine', 'bill'] : i === 2 ? ['medicine', 'bill', 'bandage'] : ['medicine', 'bill', 'bandage', 'id']
-    })),
+    })).concat(HOSPITAL_LEVELS),
     colors: { wall: 0xeef6fa, trim: 0x2c8fd6, tileA: '#ffffff', tileB: '#cfe8f3' }
   }
 ];
