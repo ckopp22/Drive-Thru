@@ -256,7 +256,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   const world = createWorld(el.querySelector('canvas'));
   world.setTrayCount(cfg.trays);
   world.setExtra(!!cfg.extra);
-  world.setShake(cfg.items.includes('shake'));
+  world.setShake(cfg.items.includes('shake') || cfg.items.includes('donut'));
   if (endless) world.setFries(false);
   if (cfg.workerSpeed) world.worker.speed = cfg.workerSpeed;
   if (activeShop().pizza) world.setFixtures(['dough', ...cfg.toppings]);
