@@ -14,7 +14,11 @@ export const LEVELS = [
   { time: 120, goal: 30, star2: 60, star3: 95, trays: 3, items: ALL, patience: 40, gap: 2.5, maxItems: 4, doubles: true,  queue: 1, burn: 0, notes: 'Larger orders' },
   { time: 120, goal: 30, star2: 78, star3: 145, trays: 3, items: ALL, patience: 40, gap: 2.5, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, notes: 'Food burns if left too long' },
   { time: 120, goal: 30, star2: 78, star3: 148, trays: 3, items: ALL, patience: 40, gap: 2,   maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, notes: 'Rush hour' },
-  { time: 120, goal: 30, star2: 78, star3: 150, trays: 3, items: ALL, patience: 40, gap: 2,   maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, notes: 'Final shift' }
+  { time: 120, goal: 30, star2: 78, star3: 150, trays: 3, items: ALL, patience: 40, gap: 2,   maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, notes: 'Final shift' },
+  // Levels 11-13 add sticky puddles (see game.js puddleStep): up to `max` on the floor, a new one every `every` s; a mop by the bin clears them.
+  { time: 120, goal: 30, star2: 78, star3: 150, trays: 3, items: ALL, patience: 38, gap: 1.9, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 3, every: 8 }, notes: 'Sticky puddles' },
+  { time: 120, goal: 32, star2: 80, star3: 152, trays: 3, items: ALL, patience: 36, gap: 1.8, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 5, every: 6 }, notes: 'More puddles' },
+  { time: 120, goal: 34, star2: 82, star3: 154, trays: 3, items: ALL, patience: 34, gap: 1.7, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 7, every: 4.5 }, notes: 'Puddle flood' }
 ];
 
 // Stars: 1 star = reach the goal (passes the level), 2 and 3 stars at these multiples of the goal.

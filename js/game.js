@@ -479,6 +479,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     }, lopts);
   }
 
+  if (!endless && cfg.puddles) { puddleOn = true; world.setMop(true); }
   // Sticky puddles: tap the mop by the bin and wait for the bar to clear them all; none appear for 20 s after.
   const MOP_TIME = 2.2, PUDDLE_COOLDOWN = 20;
   const mopBar = document.createElement('div');
@@ -508,8 +509,9 @@ export function startGame(root, level, levels, cb, opts = {}) {
     puddleAge += dt;
     if (puddleCool > 0) { puddleCool -= dt; return; }
     if ((puddleT -= dt) <= 0) { // more puddles, more often, the longer it goes on
-      if (world.puddleCount() < Math.min(10, 2 + Math.floor(puddleAge / 25))) world.spawnPuddle();
-      puddleT = Math.max(2.5, 8 - puddleAge / 20);
+      const pd = endless ? { max: Math.min(10, 2 + Math.floor(puddleAge / 25)), every: Math.max(2.5, 8 - puddleAge / 20) } : cfg.puddles;
+      if (world.puddleCount() < pd.max) world.spawnPuddle();
+      puddleT = pd.every;
     }
   }
 
@@ -624,7 +626,10 @@ export function startGame(root, level, levels, cb, opts = {}) {
     if (endless) {
       if (!dying) { checkWave(); puddleStep(step); }
       if (over_) finish();
-    } else if (timeLeft <= 0) { timeLeft = 0; finish(); }
+    } else {
+      if (cfg.puddles) puddleStep(step);
+      if (timeLeft <= 0) { timeLeft = 0; finish(); }
+    }
   }
 
   function frame(now) {

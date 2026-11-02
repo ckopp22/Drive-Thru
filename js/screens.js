@@ -7,11 +7,11 @@ import { createMenuScene } from './scene.js';
 
 const app = document.getElementById('app');
 const curShop = () => shopById(save.get().shop);
-// A shop is open once every level of the one before it has been passed.
+// A shop is open once level 10 (the end of the main run; 11-13 are bonus puddle levels) of the one before it has been passed.
 const shopUnlocked = i => {
   if (i === 0) return true;
   const prev = SHOPS[i - 1];
-  return !!prev.levels && save.shop(prev.id).stars[prev.levels.length] > 0;
+  return !!prev.levels && save.shop(prev.id).stars[Math.min(10, prev.levels.length)] > 0;
 };
 
 const HOW_TO = [
