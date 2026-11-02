@@ -113,7 +113,8 @@ const TOP_COLOR = { sauce: 0xd62828, cheese: 0xffd23f, pepperoni: 0xb3262b, mush
 function pizzaItem(type, g) {
   if (type === 'slice') { // one wedge of cheese pizza
     part(G('Cylinder', .34, .34, .05, 12, 1, false, 0, Math.PI / 3), 0xd9a04a, 0, .03, 0, g);
-    part(G('Cylinder', .3, .3, .02, 12, 1, false, 0, Math.PI / 3), 0xffd23f, 0, .065, 0, g);
+    part(G('Cylinder', .31, .31, .015, 12, 1, false, 0, Math.PI / 3), TOP_COLOR.sauce, 0, .06, 0, g);
+    part(G('Cylinder', .26, .26, .02, 12, 1, false, 0, Math.PI / 3), TOP_COLOR.cheese, 0, .075, 0, g);
     g.rotation.y = Math.PI / 6;
   } else if (type === 'dough') {
     part(G('Sphere', .2, 10, 8), 0xf5e6c8, 0, .14, 0, g).scale.y = .7;
