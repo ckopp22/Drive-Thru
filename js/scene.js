@@ -1101,6 +1101,12 @@ export function buildWorld() {
     },
     // True while a helper is standing at this machine (taps on it do nothing).
     helperBlocks(key) { return helpers.some(H => H.hv.state === 'stay' && H.hv.key === key); },
+    // Points SPOTS.wait at the place just behind a machine's spot (away from the machine) and returns its key.
+    helperWaitSpot(key) {
+      const s = SPOTS[key];
+      SPOTS.wait = { x: s.x - Math.sin(s.face) * .9, z: s.z - Math.cos(s.face) * .9, face: s.face };
+      return 'wait';
+    },
     helperShoo(key) { const H = helpers.find(h => h.hv.state === 'stay' && h.hv.key === key); if (H) H.hv.shoo = .4; },
     // Endless mode: the fryer (fries/tea kettle) appears at a later wave, popping in when `pop` is set.
     setFries(on, pop) {

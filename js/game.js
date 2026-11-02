@@ -490,6 +490,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   overlay.appendChild(mopBar);
   const baseArrive = world.worker.onArrive;
   world.worker.onArrive = key => {
+    if (key === 'wait') return;
     if (key !== 'mop') return baseArrive(key);
     if (!world.puddleCount()) return;
     mopT = 0;
@@ -542,7 +543,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     if (paused || ended || dying) return;
     const k = world.pick(e.clientX, e.clientY);
     if (!k || (ITEMS.includes(k) && !(STATIONS[k].type ? cfg.extra : cfg.items.includes(k)))) return;
-    if (world.helperBlocks(k)) { world.helperShoo(k); audio.playSfx('tap'); return; }
+    if (world.helperBlocks(k)) { world.helperShoo(k); audio.playSfx('tap'); world.worker.walkTo(world.helperWaitSpot(k)); return; } // queue up behind the helper; tap again once it leaves
     if (k === 'mop') {
       audio.playSfx('tap');
       if (world.puddleCount() && mopT < 0) world.worker.walkTo('mop');
