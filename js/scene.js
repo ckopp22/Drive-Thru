@@ -917,7 +917,7 @@ function makeWorker() {
 }
 
 // Camera framing: smallest distance that fits FIT_POINTS, centred between the HUD (top) and button bar (bottom).
-const NX = .94, Y_LO = -.62, Y_HI = .58;
+const NX = .94, Y_LO = -.72, Y_HI = .48; // map sits low, close to the tray bar, leaving room above the road for order bubbles
 export function fitCamera(camera, aspect) {
   camera.aspect = aspect;
   camera.fov = FOV;
