@@ -150,7 +150,7 @@ function levels() {
     b.innerHTML = locked
       ? `<span class="num">🔒</span><span class="sub">Level ${n}</span>`
       : done
-        ? `<span class="num">✓ ${n}</span><span class="sub starrow">${starRow(n)}</span>`
+        ? `<span class="num">${n}</span><span class="sub starrow">${starRow(n)}</span>`
         : `<span class="num">${n}</span><span class="sub">Goal $${LEVELS[n - 1].goal}</span>`;
     if (!locked) b.addEventListener('click', () => go('gameplay', n));
     grid.appendChild(b);
@@ -159,7 +159,7 @@ function levels() {
   if (best) {
     const b = document.createElement('button');
     b.className = 'tile endless';
-    b.innerHTML = `<span class="num">∞ ENDLESS</span><span class="sub">${best.bestMoney ? `Best $${best.bestMoney} · Wave ${best.bestWave}` : 'Never locked'}</span>`;
+    b.innerHTML = `<span class="num">∞ ENDLESS</span><span class="sub">${best.bestMoney ? `Best $${best.bestMoney} · Wave ${best.bestWave}` : ''}</span>`;
     b.addEventListener('click', () => go('gameplay', 'endless'));
     grid.appendChild(b);
   }
