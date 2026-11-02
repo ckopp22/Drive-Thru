@@ -1,4 +1,4 @@
-const CACHE = 'drive-thru-v96';
+const CACHE = 'drive-thru-v97';
 const ASSETS = [
   './',
   './index.html',
@@ -26,7 +26,7 @@ const SIZZLE = './audio/sizzle.mp3';
 const TRASH = './audio/trash.mp3';
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS).then(() => c.add(MUSIC).then(() => c.add(SIZZLE)).then(() => c.add(TRASH)).catch(() => {}))));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS.map(u => new Request(u, { cache: 'reload' }))).then(() => c.add(MUSIC).then(() => c.add(SIZZLE)).then(() => c.add(TRASH)).catch(() => {}))));
 });
 
 // A new version waits until the player taps "Tap to Update" in the app.
