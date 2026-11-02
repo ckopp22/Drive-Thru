@@ -263,7 +263,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
 
   let paused = false, running = true, ended = false, raf = 0, last = 0, clock = 0;
   let frames = 0, fpsT = 0, fps = 0, debug = false, speed = 1;
-  let goalHit = false;
+  let starsHit = 0;
   let lives = ENDLESS.lives, wave = 1, waveOffset = 0, dying = 0, over_ = false; // endless state (dying: s left before the game over screen)
   let money = 0, timeLeft = cfg.time, lastSec = Math.ceil(timeLeft), shownMoney = -1, shownSec = -1;
 
@@ -284,15 +284,18 @@ export function startGame(root, level, levels, cb, opts = {}) {
         goalBar.classList.toggle('met', money >= cfg.goal);
         ticks.forEach((t, n) => t.classList.toggle('got', money >= starGoals(cfg)[n]));
       }
-      if (!endless && money >= cfg.goal && !goalHit) {
-        goalHit = true;
-        moneyBox.classList.add('goal-pulse');
-        const b = document.createElement('div');
-        b.className = 'goal-banner';
-        b.textContent = '⭐ Goal reached!';
-        el.appendChild(b);
-        setTimeout(() => b.remove(), 2200); // play continues until the timer ends
-        audio.playSfx('ready');
+      if (!endless) {
+        const goals = starGoals(cfg);
+        while (starsHit < 3 && money >= goals[starsHit]) {
+          starsHit++;
+          if (starsHit === 1) moneyBox.classList.add('goal-pulse');
+          const b = document.createElement('div');
+          b.className = 'goal-banner';
+          b.textContent = starsHit === 1 ? '⭐ Goal reached!' : `${'⭐'.repeat(starsHit)} ${starsHit} stars!`;
+          el.appendChild(b);
+          setTimeout(() => b.remove(), 2200); // play continues until the timer ends
+          audio.playSfx('ready');
+        }
       }
     }
     if (endless) return;
