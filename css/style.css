@@ -102,6 +102,9 @@ html, body {
   gap: 10px;
   z-index: 50;
 }
+/* In a level the toggles hide until the pause menu is open */
+body:has(.screen.game) #toggles { display: none; }
+body:has(.screen.game.paused) #toggles { display: flex; }
 .round-btn {
   appearance: none;
   width: 48px;
@@ -250,7 +253,7 @@ html, body {
 [hidden] { display: none !important; }
 .screen.game { display: block; padding: 0; background: #8ed1fc; }
 .game canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-.pause-btn { position: absolute; top: var(--pad-top); left: calc(var(--pad-left) + 116px); background: var(--yellow); color: var(--ink); font-size: 20px; }
+.pause-btn { position: absolute; top: var(--pad-top); left: var(--pad-left); background: var(--yellow); color: var(--ink); font-size: 20px; }
 .level-label {
   position: absolute;
   top: calc(var(--pad-top) + 54px);
@@ -310,7 +313,7 @@ html, body {
 .test-row { display: flex; gap: 10px; margin-top: 6px; }
 
 /* Stage 3: HUD, order bubbles, floaters, hints */
-.hud { position: absolute; top: var(--pad-top); left: calc(var(--pad-left) + 172px); right: var(--pad-right); height: 48px; display: flex; gap: 6px; pointer-events: none; }
+.hud { position: absolute; top: var(--pad-top); left: calc(var(--pad-left) + 58px); right: var(--pad-right); height: 48px; display: flex; gap: 6px; pointer-events: none; }
 .hud-money, .hud-time { background: rgba(255,255,255,.92); border-radius: 16px; font-weight: 900; font-size: 15px; box-shadow: 0 3px 0 rgba(0,0,0,.2); }
 .hud-money { flex: 1 1 auto; min-width: 0; padding: 0 9px; display: flex; flex-direction: column; justify-content: center; gap: 5px; }
 .hud-money .row { white-space: nowrap; line-height: 1; }
