@@ -145,8 +145,7 @@ body:has(.screen.game.paused) #toggles { display: flex; }
   grid-template-rows: repeat(5, 1fr);
   gap: 10px;
 }
-.grid.has-endless { grid-template-rows: repeat(5, 1fr) minmax(56px, .8fr); }
-.tile.endless { grid-column: 1 / -1; background: #7b5cff; color: #fff; box-shadow: 0 5px 0 #4a34b8; }
+.tile.endless { width: 100%; max-width: 420px; min-height: 64px; flex: none; background: #7b5cff; color: #fff; box-shadow: 0 5px 0 #4a34b8; }
 .tile.endless .num { font-size: 24px; }
 .tile {
   appearance: none;

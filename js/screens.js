@@ -138,7 +138,7 @@ function levels() {
   const { highestUnlocked, bestMoney, stars } = save.shop(shop.id);
   const starRow = n => '★'.repeat(stars[n] || 0) + `<span class="off">${'★'.repeat(3 - (stars[n] || 0))}</span>`;
   const best = shop.endless ? save.endless(shop.id) : null;
-  const s = el(`<h2>${shop.name}</h2><div class="grid${best ? ' has-endless' : ''}"></div><button class="btn" id="back">Back</button>`, 'screen levels');
+  const s = el(`<h2>${shop.name}</h2><div class="grid"></div><button class="btn" id="back">Back</button>`, 'screen levels');
   const grid = s.querySelector('.grid');
   for (let n = 1; n <= MAX; n++) {
     const done = n < highestUnlocked || (n === MAX && bestMoney[n] > 0);
@@ -155,13 +155,13 @@ function levels() {
     if (!locked) b.addEventListener('click', () => go('gameplay', n));
     grid.appendChild(b);
   }
-  // Endless mode: always open, after the last level.
+  // Endless mode: always open, pinned under the title.
   if (best) {
     const b = document.createElement('button');
     b.className = 'tile endless';
     b.innerHTML = `<span class="num">∞ ENDLESS</span><span class="sub">${best.bestMoney ? `Best $${best.bestMoney} · ${best.bestServed} orders` : ''}</span>`;
     b.addEventListener('click', () => go('gameplay', 'endless'));
-    grid.appendChild(b);
+    grid.before(b);
   }
   on(s, '#back', () => go('menu'));
 }
