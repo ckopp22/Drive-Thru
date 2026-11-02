@@ -1003,7 +1003,14 @@ export function buildWorld() {
   scene.add(helper.group);
   const helperObs = { x: 99, z: 99, r: .55 };
   OBSTACLES.push(helperObs);
-  const hv = { stops: null, state: 'wait', key: null, t: 1.5, pop: 0, shoo: 0, stall: 0 };
+  const hv = { stops: null, state: 'wait', key: null, t: 1.5, pop: 0, shoo: 0, stall: 0, cl: 0 };
+  // The mess he makes at a machine: grey puffs, squiggles and dust swirling around him.
+  const cloud = new THREE.Group();
+  cloud.visible = false;
+  scene.add(cloud);
+  const puffs = Array.from({ length: 6 }, (_, i) => part(G('Icosahedron', .2 + (i % 3) * .04, 0), i % 2 ? 0x9aa0a6 : 0xb4b9be, 0, 0, 0, cloud));
+  const squigs = Array.from({ length: 3 }, () => part(G('Torus', .14, .03, 5, 10, Math.PI * 1.5), 0x4a4f55, 0, 0, 0, cloud));
+  const specks = Array.from({ length: 8 }, () => part(G('Octahedron', .05), 0xcdc2ad, 0, 0, 0, cloud));
 
   let binT = 0, friesPop = 0, friesHit = null;
   // Black splash when something is thrown away: little dark chunks fly out of the bin and shrink away.
@@ -1163,7 +1170,7 @@ export function buildWorld() {
           const s = SPOTS[hv.key], dx = s.x - p.x, dz = s.z - p.z, d = Math.hypot(dx, dz), step = 1 * dt;
           face = Math.atan2(dx, dz);
           if (worker.target === hv.key || Math.hypot(wp.x - s.x, wp.z - s.z) < .7 && d < 1.2) { hv.state = 'wait'; hv.t = .4; } // the player got there first
-          else if (d <= step) { p.x = s.x; p.z = s.z; hv.state = 'stay'; hv.t = 2; face = s.face; }
+          else if (d <= step) { p.x = s.x; p.z = s.z; hv.state = 'stay'; hv.t = 3; face = s.face; }
           else if (Math.hypot(p.x + dx / d * step - wp.x, p.z + dz / d * step - wp.z) < .8) { if ((hv.stall += dt) > 1.5) { hv.state = 'wait'; hv.t = .3; } } // don't walk into the player
           else { p.x += dx / d * step; p.z += dz / d * step; moving = true; hv.stall = 0; }
         } else if ((hv.t -= dt) <= 0) { hv.state = 'wait'; hv.t = .3 + Math.random() * 1.2; }
@@ -1172,7 +1179,17 @@ export function buildWorld() {
         if (hv.pop > 0) hv.pop = Math.max(0, hv.pop - dt);
         helper.group.scale.setScalar(1 - hv.pop * 1.6);
         if (hv.shoo > 0) hv.shoo = Math.max(0, hv.shoo - dt);
-        const busy = hv.state === 'stay', sw = moving ? Math.sin(t * 6) : 0;
+        const busy = hv.state === 'stay';
+        hv.cl = busy ? Math.min(1, hv.cl + dt * 5) : Math.max(0, hv.cl - dt * 8);
+        cloud.visible = hv.cl > 0;
+        if (cloud.visible) {
+          cloud.position.set(p.x, 0, p.z);
+          cloud.scale.setScalar(hv.cl);
+          puffs.forEach((m, i) => m.position.set(Math.cos(t * 2.2 + i * 1.05) * .5, .75 + Math.sin(t * 3 + i * 2) * .25, Math.sin(t * 2.6 + i * 1.7) * .45));
+          squigs.forEach((m, i) => { m.position.set(Math.cos(t * 1.7 + i * 2.1) * .6, 1.15 + Math.sin(t * 4 + i) * .2, Math.sin(t * 1.9 + i * 2.1) * .55); m.rotation.set(t * 5 + i, t * 3, t * 4 + i * 2); });
+          specks.forEach((m, i) => { m.position.set(Math.cos(t * 3.4 + i * .8) * .75, .3 + (t * .9 + i * .37) % 1.1, Math.sin(t * 3 + i * .8) * .7); m.rotation.y = t * 6 + i; });
+        }
+        const sw = moving ? Math.sin(t * 6) : 0;
         helper.legs[0].rotation.x = sw * .7;
         helper.legs[1].rotation.x = -sw * .7;
         const wave = hv.shoo > 0 ? Math.sin(t * 30) * .5 : 0;
