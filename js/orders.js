@@ -216,7 +216,10 @@ export function createOrders(world, cfg, overlay, cb) {
       if (c.tag.hidden || !c.tag.isConnected) continue;
       const p = tagPos(c);
       // Every other waiting car's bubble sits higher so neighbours don't overlap.
-      const want = lane.indexOf(c) % 2 === 1 ? 56 : 0;
+      // The next car's bubble is a bit bigger and floats above the current order so it reads as "up next".
+      const idx = lane.indexOf(c);
+      c.tag.classList.toggle('next', idx === 1);
+      const want = idx === 1 ? 80 : idx % 2 === 1 ? 56 : 0;
       c.lift = (c.lift || 0) + (want - (c.lift || 0)) * Math.min(1, dt * 10);
       c.tag.style.transform = `translate(${p.x.toFixed(1)}px, ${(p.y - c.lift).toFixed(1)}px) translate(-50%, -100%)`;
       c.tag.style.visibility = p.x < 30 ? 'hidden' : '';
