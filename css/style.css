@@ -356,7 +356,8 @@ body:has(.screen.game.paused) #toggles { display: flex; }
 .stars { font-size: 48px; line-height: 1; color: #ffc828; letter-spacing: 6px; text-shadow: 0 2px 0 rgba(0,0,0,.25); }
 .car-tag.queued .pbar { display: none; }
 .car-tag.queued .bubble { transform: scale(.75); transform-origin: 50% 100%; opacity: .92; min-height: 26px; padding: 2px 5px; gap: 2px; border-width: 2px; border-radius: 11px; }
-.car-tag.queued.next .bubble { transform: scale(.92); opacity: 1; }
+.car-tag.queued.next .bubble { transform: none; opacity: 1; min-height: 42px; padding: 4px 8px; gap: 4px; border-width: 3px; border-radius: 15px; }
+.car-tag.queued.next img.slot { width: 38px; height: 38px; }
 .car-tag.queued .slot { font-size: 16px; }
 .car-tag.queued img.slot { width: 28px; height: 28px; }
 
