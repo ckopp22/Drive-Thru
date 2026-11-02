@@ -44,7 +44,7 @@ export function createHospital(world, cfg, overlay, cb) {
     toy.badge = document.createElement('div');
     toy.badge.className = 'ready-badge';
     toy.badge.hidden = true;
-    toy.badge.innerHTML = `<img src="${world.itemIcon('toy')}" alt="">`;
+    toy.badge.innerHTML = `<img style="padding:12px" src="${world.itemIcon('toy')}" alt="">`; // smaller toy inside the circle
     overlay.appendChild(toy.badge);
   }
 
