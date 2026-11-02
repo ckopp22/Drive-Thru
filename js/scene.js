@@ -1011,7 +1011,13 @@ export function buildWorld() {
     const puffs = Array.from({ length: 6 }, (_, i) => part(G('Icosahedron', .2 + (i % 3) * .04, 0), i % 2 ? 0x9aa0a6 : 0xb4b9be, 0, 0, 0, cloud));
     const squigs = Array.from({ length: 3 }, () => part(G('Torus', .14, .03, 5, 10, Math.PI * 1.5), 0x4a4f55, 0, 0, 0, cloud));
     const specks = Array.from({ length: 8 }, () => part(G('Octahedron', .05), 0xcdc2ad, 0, 0, 0, cloud));
-    return { helper, helperObs, hv, cloud, puffs, squigs, specks };
+    const mcloud = new THREE.Group(); // a smaller copy of the mess over the machine itself
+    mcloud.visible = false;
+    scene.add(mcloud);
+    const mpuffs = Array.from({ length: 4 }, (_, i) => part(G('Icosahedron', .16 + (i % 2) * .04, 0), i % 2 ? 0x9aa0a6 : 0xb4b9be, 0, 0, 0, mcloud));
+    const msquigs = Array.from({ length: 2 }, () => part(G('Torus', .12, .03, 5, 10, Math.PI * 1.5), 0x4a4f55, 0, 0, 0, mcloud));
+    const mspecks = Array.from({ length: 5 }, () => part(G('Octahedron', .05), 0xcdc2ad, 0, 0, 0, mcloud));
+    return { helper, helperObs, hv, cloud, puffs, squigs, specks, mcloud, mpuffs, msquigs, mspecks };
   });
 
   let binT = 0, friesPop = 0, friesHit = null;
@@ -1162,7 +1168,7 @@ export function buildWorld() {
         npc.body.position.y = moving ? Math.abs(sw) * .08 : Math.abs(Math.sin(t * 2)) * .02;
       }
       for (const H of helpers) {
-        const { helper, helperObs, hv, cloud, puffs, squigs, specks } = H;
+        const { helper, helperObs, hv, cloud, puffs, squigs, specks, mcloud, mpuffs, msquigs, mspecks } = H;
         if (!hv.stops) continue;
         const p = helper.group.position, wp = worker.group.position;
         let moving = false, face = null;
@@ -1194,6 +1200,15 @@ export function buildWorld() {
           puffs.forEach((m, i) => m.position.set(Math.cos(t * 2.2 + i * 1.05) * .5, .75 + Math.sin(t * 3 + i * 2) * .25, Math.sin(t * 2.6 + i * 1.7) * .45));
           squigs.forEach((m, i) => { m.position.set(Math.cos(t * 1.7 + i * 2.1) * .6, 1.15 + Math.sin(t * 4 + i) * .2, Math.sin(t * 1.9 + i * 2.1) * .55); m.rotation.set(t * 5 + i, t * 3, t * 4 + i * 2); });
           specks.forEach((m, i) => { m.position.set(Math.cos(t * 3.4 + i * .8) * .75, .3 + (t * .9 + i * .37) % 1.1, Math.sin(t * 3 + i * .8) * .7); m.rotation.y = t * 6 + i; });
+        }
+        const mp = hv.key && machines[hv.key] && machines[hv.key].position;
+        mcloud.visible = cloud.visible && !!mp;
+        if (mcloud.visible) {
+          mcloud.position.set(mp.x, mp.y + .9, mp.z);
+          mcloud.scale.setScalar(hv.cl);
+          mpuffs.forEach((m, i) => m.position.set(Math.cos(t * 2.4 + i * 1.6) * .35, Math.sin(t * 3 + i * 2) * .15, Math.sin(t * 2.8 + i * 1.9) * .3));
+          msquigs.forEach((m, i) => { m.position.set(Math.cos(t * 1.7 + i * 3) * .4, .35 + Math.sin(t * 4 + i) * .12, Math.sin(t * 1.9 + i * 3) * .35); m.rotation.set(t * 5 + i, t * 3, t * 4 + i * 2); });
+          mspecks.forEach((m, i) => { m.position.set(Math.cos(t * 3.4 + i * 1.3) * .45, -.2 + (t * .9 + i * .37) % .9, Math.sin(t * 3 + i * 1.3) * .4); m.rotation.y = t * 6 + i; });
         }
         const sw = moving ? Math.sin(t * 6) : 0;
         helper.legs[0].rotation.x = sw * .7;
