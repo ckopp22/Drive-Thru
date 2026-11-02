@@ -21,7 +21,7 @@ export const SHOPS = [
       shake:  { icon: '🥛', machine: 'mixer',        price: 5, cy: -.02, surf: [0, .95] }
     },
     layout: {
-      shake: { x: -2.55, z: -2.3 }, fridge: { x: -2.55, z: 2.9 },
+      shake: { x: 2.55, z: 3 }, fridge: { x: -2.55, z: 2.9 },
       soda: { x: -2.55, z: -1.2 }, burger: { x: 2.55, z: -1.2 }, fries: { x: -2.55, z: 1.6 },
       burger2: { x: 2.55, z: .4 }, fries2: { x: -2.55, z: .2 }, bin: { x: 2.6, z: 1.6 }
     },

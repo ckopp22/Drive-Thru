@@ -1072,7 +1072,7 @@ export function buildWorld() {
     }
   }
   // Sticky puddles (endless): they slow the worker; the mop beside the bin cleans them all up.
-  const mopOff = activeShop().hospital ? [1.1, 0] : [0, binPos.z + 1 > 3.5 ? -1 : 1];
+  const mopOff = activeShop().hospital ? [1.1, 0] : L.shake && L.shake.x * binPos.x > 0 ? [-Math.sign(binPos.x) * .9, 0] : [0, binPos.z + 1 > 3.5 ? -1 : 1]; // beside the bin, toward the room, when the mixer takes the spot below it
   const mop = new THREE.Group();
   mop.position.set(binPos.x + mopOff[0], 0, binPos.z + mopOff[1]);
   mop.visible = false;
