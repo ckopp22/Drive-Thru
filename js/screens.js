@@ -159,7 +159,7 @@ function levels() {
   if (best) {
     const b = document.createElement('button');
     b.className = 'tile endless';
-    b.innerHTML = `<span class="num">∞ ENDLESS</span><span class="sub">${best.bestMoney ? `Best $${best.bestMoney} · Wave ${best.bestWave}` : ''}</span>`;
+    b.innerHTML = `<span class="num">∞ ENDLESS</span><span class="sub">${best.bestMoney ? `Best $${best.bestMoney} · ${best.bestServed} orders` : ''}</span>`;
     b.addEventListener('click', () => go('gameplay', 'endless'));
     grid.appendChild(b);
   }
@@ -186,8 +186,7 @@ function endlessOver({ money, served, wave }) {
     <h2>Shop Closed!</h2>
     <div class="stats endless-stats">
       ${row('Money', money, old.bestMoney, beat.money, x => '$' + x)}
-      ${row('Customers', served, old.bestServed, beat.served)}
-      ${row('Wave', wave, old.bestWave, beat.wave)}
+      ${row('Orders', served, old.bestServed, beat.served)}
     </div>
     <div class="stack">
       <button class="btn yellow wide" id="again">Play Again</button>

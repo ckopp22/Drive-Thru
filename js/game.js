@@ -234,7 +234,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
       <div class="hud-time">⏱️ <b class="time">${mmss(cfg.time)}</b></div>`}
     </div>
     <button class="round-btn pause-btn" aria-label="Pause">⏸</button>
-    <div class="level-label">${endless ? 'Wave 1' : 'Level ' + level}</div>
+    <div class="level-label">${endless ? 'Order 1' : 'Level ' + level}</div>
     <div class="debug" hidden>
       <pre></pre>
       <div class="dbtns">${endless
@@ -264,7 +264,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   let paused = false, running = true, ended = false, raf = 0, last = 0, clock = 0;
   let frames = 0, fpsT = 0, fps = 0, debug = false, speed = 1;
   let starsHit = 0;
-  let lives = ENDLESS.lives, wave = 1, waveOffset = 0, dying = 0, over_ = false; // endless state (dying: s left before the game over screen)
+  let lives = ENDLESS.lives, orderNo = 1, wave = 1, waveOffset = 0, dying = 0, over_ = false; // endless state (dying: s left before the game over screen)
   let money = 0, timeLeft = cfg.time, lastSec = Math.ceil(timeLeft), shownMoney = -1, shownSec = -1;
 
   // HUD
@@ -357,14 +357,13 @@ export function startGame(root, level, levels, cb, opts = {}) {
     wave = w;
     Object.assign(cfg, endlessCfg(w, over));
     lopts.burn = cfg.burn;
-    levelLabel.textContent = `Wave ${w}`;
     world.setExtra(!!cfg.extra);
     if (activeShop().pizza) world.setFixtures(['dough', ...cfg.toppings]);
     world.setFries(cfg.items.includes('fries'), announce && !hadFries);
     audio.setMusicRate(endlessMusicRate(w));
     if (!announce) return;
     const news = [!hadFries && cfg.items.includes('fries') && '🍟 Fries!', !hadExtra && cfg.extra && (activeShop().hospital ? '2nd bill machine! Bills can jam' : '🍳 2nd grill & fryer!'), !hadBurn && cfg.burn && '🔥 Food burns!', (cfg.kinds || []).length > hadKinds && 'New patient task!', (cfg.toppings || []).length > hadTops && 'New topping!'].filter(Boolean).join(' ');
-    banner(`⬆️ Wave up!${news ? '\n' + news : ''}`, 'wave');
+    if (news) banner(`⬆️ ${news}`, 'wave');
     audio.playSfx('waveUp');
   }
   function loseLife() {
@@ -532,6 +531,8 @@ export function startGame(root, level, levels, cb, opts = {}) {
 
   // Endless: wave = 1 + customers served / perWave (debug jumps add to waveOffset).
   function checkWave() {
+    const n = orders.stats.served + 1;
+    if (n !== orderNo) { orderNo = n; levelLabel.textContent = `Order ${n}`; }
     const w = waveFor(orders.stats.served + waveOffset);
     if (w !== wave) setWave(w, true);
   }
