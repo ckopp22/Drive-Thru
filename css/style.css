@@ -431,6 +431,9 @@ img.slot { width: 56px; height: 56px; display: block; }
 
 /* Star checkpoints on the goal bar (1, 2 and 3 stars) */
 .goalbar .tick { position: absolute; top: 50%; transform: translate(-50%, -50%); font-size: 17px; line-height: 1; text-decoration: none; color: #fff; -webkit-text-stroke: 1.5px rgba(0,0,0,.55); paint-order: stroke fill; }
+.goalbar .tick u { position: absolute; top: 15px; left: 50%; transform: translateX(-50%); font-size: 9px; font-weight: 900; color: #333; -webkit-text-stroke: 0; text-decoration: none; }
+.goalbar .tick:last-child u { transform: translateX(-80%); }
+.goalbar { margin-bottom: 8px; }
 .goalbar .tick.got { color: #ffcc00; }
 
 /* Order bubble blinks when the customer's patience is in the red */
