@@ -44,14 +44,14 @@ export const DONUT_LEVELS = [
   { time: 180, goal: 50, star2: 105, star3: 210, trays: 3, items: CD, patience: 36, gap: 1.8, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 2, puddles: { max: 7, every: 4.5 }, notes: 'Grand finale: puddles and two helpers' }
 ];
 
-// Pizza Place only (levels 16-20): ham, then pickles. `toppings` are filled in by shops.js. 18 and 19 only cut patience; 20 is the 3 minute finale.
-const PZ = { trays: 3, items: ['burger'], gap: 2, maxItems: 3, doubles: false, queue: 2, extra: true, burn: 0 };
+// Pizza Place only (levels 16-20): 16 adds slices (cutting table), 17 pickles. `toppings` are filled in by shops.js. 18 and 19 only cut patience; 20 is the 3 minute finale.
+const PZ = { trays: 3, items: ['burger', 'slice'], gap: 2, maxItems: 3, doubles: false, queue: 2, extra: true, burn: 0 };
 export const PIZZA_LEVELS = [
-  { ...PZ, time: 120, goal: 30, star2: 70, star3: 130, patience: 60, helper: 1, maxToppings: 4, extraTops: ['ham'], notes: 'Ham', intro: '🍖 New topping: Ham! The table is bottom left, by the mop' },
-  { ...PZ, time: 120, goal: 32, star2: 72, star3: 134, patience: 56, helper: 1, maxToppings: 5, extraTops: ['ham', 'pickles'], notes: 'Pickles', intro: '🥒 New topping: Pickles! The table is bottom right, by the mop' },
-  { ...PZ, time: 120, goal: 34, star2: 74, star3: 138, patience: 48, helper: 1, maxToppings: 5, extraTops: ['ham', 'pickles'], notes: 'Less patient customers' },
-  { ...PZ, time: 120, goal: 36, star2: 76, star3: 142, patience: 40, helper: 1, maxToppings: 5, extraTops: ['ham', 'pickles'], notes: 'Even less patient' },
-  { ...PZ, time: 180, goal: 50, star2: 105, star3: 210, patience: 36, helper: 2, puddles: { max: 7, every: 4.5 }, maxToppings: 5, extraTops: ['ham', 'pickles'], notes: 'Grand finale: puddles and two helpers' }
+  { ...PZ, time: 120, goal: 30, star2: 70, star3: 130, patience: 60, helper: 1, maxToppings: 4, extraTops: [], notes: 'Slices', intro: '🔪 New: Slices! Take a baked cheese pizza to the cutting table and stand there to cut it' },
+  { ...PZ, time: 120, goal: 32, star2: 72, star3: 134, patience: 56, helper: 1, maxToppings: 5, extraTops: ['pickles'], notes: 'Pickles', intro: '🥒 New topping: Pickles! The table is bottom right, by the mop' },
+  { ...PZ, time: 120, goal: 34, star2: 74, star3: 138, patience: 48, helper: 1, maxToppings: 5, extraTops: ['pickles'], notes: 'Less patient customers' },
+  { ...PZ, time: 120, goal: 36, star2: 76, star3: 142, patience: 40, helper: 1, maxToppings: 5, extraTops: ['pickles'], notes: 'Even less patient' },
+  { ...PZ, time: 180, goal: 50, star2: 105, star3: 210, patience: 36, helper: 2, puddles: { max: 7, every: 4.5 }, maxToppings: 5, extraTops: ['pickles'], notes: 'Grand finale: puddles and two helpers' }
 ];
 
 // Stars: 1 star = reach the goal (passes the level), 2 and 3 stars at these multiples of the goal.
@@ -88,7 +88,9 @@ export const STATIONS = {
   // Burger Joint levels 16+: the shake needs milk from the fridge and the worker standing at the mixer; it never burns.
   shake:   { time: 5, needs: 'milk', stand: true },
   // Coffee Shop levels 16+: the donut needs a plain one from the table and the worker standing at the microwave; it never burns.
-  donut:   { time: 5, needs: 'rawdonut', stand: true }
+  donut:   { time: 5, needs: 'rawdonut', stand: true },
+  // Pizza Place levels 16+: the cutting table turns a baked cheese pizza into a slice while the worker stands at it.
+  slice:   { time: 3, needs: 'pizza:sauce+cheese', stand: true }
 };
 export const WORKER = { speed: 6, maxHeld: 1, bobRate: 14, trayCap: 4 };
 

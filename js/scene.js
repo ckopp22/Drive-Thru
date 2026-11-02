@@ -109,9 +109,13 @@ function coffeeItem(type, g) {
   }
 }
 
-const TOP_COLOR = { sauce: 0xd62828, cheese: 0xffd23f, pepperoni: 0xb3262b, mushroom: 0xd9c2a0, ham: 0xf2a0a8, pickles: 0x6aa84f };
+const TOP_COLOR = { sauce: 0xd62828, cheese: 0xffd23f, pepperoni: 0xb3262b, mushroom: 0xd9c2a0, pickles: 0x6aa84f };
 function pizzaItem(type, g) {
-  if (type === 'dough') {
+  if (type === 'slice') { // one wedge of cheese pizza
+    part(G('Cylinder', .34, .34, .05, 12, 1, false, 0, Math.PI / 3), 0xd9a04a, 0, .03, 0, g);
+    part(G('Cylinder', .3, .3, .02, 12, 1, false, 0, Math.PI / 3), 0xffd23f, 0, .065, 0, g);
+    g.rotation.y = Math.PI / 6;
+  } else if (type === 'dough') {
     part(G('Sphere', .2, 10, 8), 0xf5e6c8, 0, .14, 0, g).scale.y = .7;
   } else if (TOP_COLOR[type]) { // a bowl of one topping
     part(G('Cylinder', .16, .12, .12, 8), 0x9aa0a6, 0, .06, 0, g);
@@ -123,7 +127,6 @@ function pizzaItem(type, g) {
     if (tops.includes('sauce')) part(G('Cylinder', .22, .22, .012, 12), TOP_COLOR.sauce, 0, .086, 0, g);
     if (tops.includes('cheese')) part(G('Cylinder', .2, .2, .012, 12), TOP_COLOR.cheese, 0, .098, 0, g);
     if (tops.includes('pepperoni')) [[.1, .06], [-.1, .08], [.02, -.12], [-.12, -.07]].forEach(([x, z]) => part(G('Cylinder', .05, .05, .015, 8), TOP_COLOR.pepperoni, x, .112, z, g));
-    if (tops.includes('ham')) [[-.05, .12], [.12, .1], [-.13, -.02]].forEach(([x, z]) => box(.09, .012, .09, TOP_COLOR.ham, x, .112, z, g));
     if (tops.includes('pickles')) [[.05, -.1], [-.1, -.1], [.1, .0]].forEach(([x, z]) => part(G('Cylinder', .035, .035, .014, 8), TOP_COLOR.pickles, x, .116, z, g));
     if (tops.includes('mushroom')) [[0, 0], [.14, -.05], [-.06, .14]].forEach(([x, z]) => part(G('Sphere', .045, 6, 4, 0, Math.PI * 2, 0, Math.PI / 2), TOP_COLOR.mushroom, x, .108, z, g));
   }
@@ -525,6 +528,13 @@ const MACHINE_BUILD = {
     }
   },
   pizza: {
+    slice(g) { // cutting table with a board and a pizza cutter
+      box(1.2, .08, .8, 0xa9743a, 0, .76, 0, g);
+      [[-.5, -.3], [.5, -.3], [-.5, .3], [.5, .3]].forEach(([x, z]) => box(.08, .74, .08, 0x5c4033, x, .37, z, g));
+      box(.9, .04, .6, 0xe8d3a8, 0, .82, 0, g);
+      part(G('Cylinder', .1, .1, .02, 10), 0xcfd4d9, .25, .86, .05, g).rotation.z = Math.PI / 2;
+      box(.04, .03, .3, 0x333333, .25, .88, -.15, g);
+    },
     burger(g) { // brick pizza oven
       box(1.4, .75, 1.0, 0xa8553a, 0, .375, 0, g);
       box(1.4, .12, 1.0, 0x3a3a3f, 0, .81, 0, g);
@@ -670,7 +680,6 @@ const FIXTURE_BUILD = {
   sauce(g) { tub(g, TOP_COLOR.sauce); },
   cheese(g) { tub(g, TOP_COLOR.cheese); },
   pepperoni(g) { tub(g, TOP_COLOR.pepperoni); [[.1, .1], [-.12, -.08], [.12, -.12]].forEach(([x, z]) => part(G('Cylinder', .08, .08, .02, 8), 0x7a1a1a, x, 1.14, z, g)); },
-  ham(g) { tub(g, TOP_COLOR.ham); [[.1, .1], [-.12, -.08], [.12, -.12]].forEach(([x, z]) => box(.16, .02, .16, 0xd9707c, x, 1.14, z, g)); },
   pickles(g) { tub(g, TOP_COLOR.pickles); [[.1, .1], [-.12, -.08], [.12, -.12]].forEach(([x, z]) => part(G('Cylinder', .07, .07, .03, 8), 0x3f7a2f, x, 1.14, z, g)); },
   mushroom(g) { tub(g, TOP_COLOR.mushroom); [[.1, .1], [-.12, -.08]].forEach(([x, z]) => part(G('Sphere', .09, 6, 4, 0, Math.PI * 2, 0, Math.PI / 2), 0xf2e6cf, x, 1.13, z, g)); },
   table(g) {
@@ -735,7 +744,7 @@ function buildKitchen(scene, billboards, hits) {
   const mk = (k, build) => {
     const g = new THREE.Group();
     g.position.set(L[k].x, 0, L[k].z);
-    g.rotation.y = -side(k) * Math.PI / 2;
+    g.rotation.y = L[k].rot !== undefined ? L[k].rot : -side(k) * Math.PI / 2;
     build(g);
     scene.add(g);
     return g;
@@ -778,7 +787,7 @@ function buildKitchen(scene, billboards, hits) {
   ];
   if (L.fries2) extraHits.push(hit('fries2', 1.1, .9, 1.3, L.fries2.x, .45, L.fries2.z));
   // Special-item stations (Burger Joint shake: mixer + fridge; Coffee Shop donut: microwave + table), toggled by world.setShake.
-  const BONUS = { shake: [1.2, 1.2, 1.2, .7], fridge: [1.1, 1.9, 1.0, .95], donut: [1.2, 1.2, 1.2, .7], donuts: [1.1, 1.0, 1.1, .5] };
+  const BONUS = { slice: [1.3, 1.0, 1.0, .5], shake: [1.2, 1.2, 1.2, .7], fridge: [1.1, 1.9, 1.0, .95], donut: [1.2, 1.2, 1.2, .7], donuts: [1.1, 1.0, 1.1, .5] };
   const bonusKeys = Object.keys(BONUS).filter(k => L[k]);
   const shakeHits = bonusKeys.map(k => hit(k, BONUS[k][0], BONUS[k][1], BONUS[k][2], L[k].x, BONUS[k][3], L[k].z));
   shakeHits.forEach(h => hits.splice(hits.indexOf(h), 1));
@@ -812,9 +821,9 @@ function buildKitchen(scene, billboards, hits) {
   }
 
   const viz = {};
-  for (const k of ['soda', 'burger', 'fries', 'burger2', 'fries2', 'shake', 'donut']) if (L[k]) viz[k] = makeStationViz(STATIONS[k].type || k, L[k].x, L[k].z, billboards);
+  for (const k of ['soda', 'burger', 'fries', 'burger2', 'fries2', 'shake', 'donut', 'slice']) if (L[k]) viz[k] = makeStationViz(STATIONS[k].type || k, L[k].x, L[k].z, billboards);
   for (const k in viz) scene.add(viz[k].root);
-  for (const k of ['shake', 'donut']) if (viz[k]) viz[k].root.visible = false;
+  for (const k of ['shake', 'donut', 'slice']) if (viz[k]) viz[k].root.visible = false;
   return { viz, lid, trays, machines, signs, trayHits, extraHits, shakeHits, fixtures, tablePlates };
 }
 
@@ -1208,7 +1217,7 @@ export function buildWorld() {
     mopPos: mop.position,
     // Level setup: show the milkshake mixer and milk fridge and make them tappable (or hide them).
     setShake(on) {
-      for (const k of ['shake', 'fridge', 'donut', 'donuts']) if (machines[k]) { machines[k].visible = on; if (viz[k]) viz[k].root.visible = on; }
+      for (const k of ['shake', 'fridge', 'donut', 'donuts', 'slice']) if (machines[k]) { machines[k].visible = on; if (viz[k]) viz[k].root.visible = on; }
       shakeHits.forEach(h => {
         const i = hits.indexOf(h);
         if (on && i < 0) hits.push(h);

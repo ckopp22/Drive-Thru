@@ -1,7 +1,7 @@
 import { LEVELS, SHAKE_LEVELS, DONUT_LEVELS, PIZZA_LEVELS } from './levels.js';
 
 export const PIZZA_TOPS = ['sauce', 'cheese', 'pepperoni', 'mushroom'];
-export const ALL_TOPS = [...PIZZA_TOPS, 'ham', 'pickles']; // levels 16+ add ham and pickles (order = pizza signature order)
+export const ALL_TOPS = [...PIZZA_TOPS, 'pickles']; // level 17+ adds pickles (order = pizza signature order)
 
 // Hospital: z of each place in a patient line (front first). Every place is tappable: spots patL0..2 / patR0..2.
 export const PAT_ZS = [-.5, 1.3, 3.1];
@@ -64,7 +64,8 @@ export const SHOPS = [
       doubles: false
     })).concat(PIZZA_LEVELS.map(({ extraTops, ...l }) => ({ ...l, toppings: [...PIZZA_TOPS, ...extraTops] }))),
     foods: {},
-    layout: { burger: { x: 2.55, z: -1.6 }, burger2: { x: 2.55, z: -.1 }, bin: { x: 2.6, z: 2.7 }, mop: { x: 0, z: 3.4 } },
+    spots: { slice: { x: -1.4, z: 2.6, face: 0 } }, // the cutting table stands on the bottom edge
+    layout: { slice: { x: -1.4, z: 3.3, rot: Math.PI }, burger: { x: 2.55, z: -1.6 }, burger2: { x: 2.55, z: -.1 }, bin: { x: 2.6, z: 2.7 }, mop: { x: 0, z: 3.4 } },
     // Walk-up fixtures: key, kind (model), position; tables stand in the room and give their own walk spot.
     fixtures: [
       { key: 'dough', kind: 'dough', x: -2.55, z: -1.5 },
@@ -72,8 +73,7 @@ export const SHOPS = [
       { key: 'cheese', kind: 'cheese', x: -2.55, z: 1.1 },
       { key: 'pepperoni', kind: 'pepperoni', x: -2.55, z: 2.4 },
       { key: 'mushroom', kind: 'mushroom', x: 2.55, z: 1.4 },
-      // Bottom edge, either side of the mop (levels 16 and 17): they face up the room.
-      { key: 'ham', kind: 'ham', x: -1.4, z: 3.3, rot: Math.PI, spot: { x: -1.4, z: 2.6, face: 0 } },
+      // Bottom edge, right of the mop (level 17): faces up the room. The cutting table (level 16) is the `slice` machine on the left.
       { key: 'pickles', kind: 'pickles', x: 1.4, z: 3.3, rot: Math.PI, spot: { x: 1.4, z: 2.6, face: 0 } },
       { key: 'table0', kind: 'table', x: -.8, z: .9, spot: { x: -.8, z: 1.75, face: Math.PI } },
       { key: 'table1', kind: 'table', x: .8, z: .9, spot: { x: .8, z: 1.75, face: Math.PI } }
@@ -119,6 +119,7 @@ export const activeShop = () => active;
 export const itemInfo = type => {
   if (active.foods[type]) return active.foods[type];
   if (active.pizza) {
+    if (type === 'slice') return { icon: '🍕', machine: 'cutting table', price: 3, cy: -.1, surf: [0, .95] };
     const n = type.startsWith('pizza:') ? type.slice(6).split('+').filter(Boolean).length : 0;
     return { icon: '🍕', machine: 'oven', price: 3 + 2 * n, cy: -.22, surf: [0, .9] };
   }

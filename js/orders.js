@@ -16,6 +16,7 @@ export function makeOrder(cfg) {
   if (activeShop().pizza) {
     // Each pizza is a random non-empty set of the level's toppings, written as a sorted signature.
     return Array.from({ length: 1 + rnd(cfg.maxItems) }, () => {
+      if (cfg.items.includes('slice') && Math.random() < .35) return 'slice'; // a single cheese slice, cut at the cutting table
       const pool = cfg.toppings.slice(), tops = [];
       for (let n = 1 + rnd(Math.min(cfg.maxToppings, pool.length)); n > 0; n--) tops.push(pool.splice(rnd(pool.length), 1)[0]);
       return 'pizza:' + cfg.toppings.filter(t => tops.includes(t)).join('+');
