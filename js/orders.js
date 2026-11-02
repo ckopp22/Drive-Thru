@@ -219,9 +219,14 @@ export function createOrders(world, cfg, overlay, cb) {
       // The next car's bubble is a bit bigger and floats above the current order so it reads as "up next".
       const idx = lane.indexOf(c);
       c.tag.classList.toggle('next', idx === 1);
-      const want = idx === 1 ? 80 : idx % 2 === 1 ? 56 : 0;
+      const want = idx === 1 ? 105 : idx === 2 ? 165 : idx % 2 === 1 ? 56 : 0;
       c.lift = (c.lift || 0) + (want - (c.lift || 0)) * Math.min(1, dt * 10);
-      c.tag.style.transform = `translate(${p.x.toFixed(1)}px, ${(p.y - c.lift).toFixed(1)}px) translate(-50%, -100%)`;
+      let y = p.y - c.lift;
+      if (idx === 2) { // the third order rides as high as it can, just under the pause button
+        const pb = document.querySelector('.pause-btn');
+        if (pb) y = Math.max(y, pb.getBoundingClientRect().bottom - overlay.getBoundingClientRect().top + 8 + c.tag.offsetHeight);
+      }
+      c.tag.style.transform = `translate(${p.x.toFixed(1)}px, ${y.toFixed(1)}px) translate(-50%, -100%)`;
       c.tag.style.visibility = p.x < 30 ? 'hidden' : '';
     }
   }
