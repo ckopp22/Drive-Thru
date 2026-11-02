@@ -354,7 +354,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   const lopts = { burn: cfg.burn, trays: cfg.trays };
   function helperStops() {
     const sh = activeShop();
-    if (sh.hospital) return ['medicine', 'bandage', 'register', ...(cfg.extra ? ['register2'] : [])];
+    if (sh.hospital) return () => ['medicine', 'bandage', 'register', ...(cfg.extra ? ['register2'] : []), ...['patL0', 'patR0'].filter(logic.waiting)]; // also the patient up next in each line
     if (sh.pizza) return ['dough', ...cfg.toppings, 'burger', ...(cfg.extra ? ['burger2'] : [])];
     return ['soda', 'burger', 'fries', ...(cfg.extra ? ['burger2', 'fries2'] : []), ...(sh.cups ? ['cabinet'] : [])];
   }

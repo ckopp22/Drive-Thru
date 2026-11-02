@@ -1162,7 +1162,7 @@ export function buildWorld() {
         let moving = false, face = null;
         if (hv.state === 'wait') {
           if ((hv.t -= dt) <= 0) {
-            const ok = hv.stops.filter(k => SPOTS[k] && k !== hv.key && worker.target !== k && !(worker.at === k && Math.hypot(wp.x - SPOTS[k].x, wp.z - SPOTS[k].z) < 1));
+            const ok = (typeof hv.stops === 'function' ? hv.stops() : hv.stops).filter(k => SPOTS[k] && k !== hv.key && worker.target !== k && !(worker.at === k && Math.hypot(wp.x - SPOTS[k].x, wp.z - SPOTS[k].z) < 1));
             if (ok.length) { hv.key = ok[Math.floor(Math.random() * ok.length)]; hv.state = 'walk'; hv.stall = 0; }
             else hv.t = .5;
           }

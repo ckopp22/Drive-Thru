@@ -309,7 +309,7 @@ export function createHospital(world, cfg, overlay, cb) {
     orders: { update() {}, halt: () => { halted = true; }, stats, matches: () => false, trySend: () => false },
     logic: {
       st: new Proxy({}, { get: () => ({ state: 'idle', p: 0 }) }),
-      hands, trays: [], carried: null, tap, update, sendTray: () => false,
+      hands, trays: [], carried: null, waiting: key => !!patientAt(key), tap, update, sendTray: () => false,
       get active() { return active; }
     }
   };
