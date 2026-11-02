@@ -1003,7 +1003,6 @@ export function buildWorld() {
     helper.group.visible = false;
     scene.add(helper.group);
     const helperObs = { x: 99, z: 99, r: .55 };
-    OBSTACLES.push(helperObs);
     const hv = { stops: null, state: 'wait', key: null, t: 1.5, pop: 0, shoo: 0, stall: 0, cl: 0 };
     // The mess he makes at a machine: grey puffs, squiggles and dust swirling around him.
     const cloud = new THREE.Group();
@@ -1178,7 +1177,6 @@ export function buildWorld() {
           face = Math.atan2(dx, dz);
           if (worker.target === hv.key || Math.hypot(wp.x - s.x, wp.z - s.z) < .7 && d < 1.2) { hv.state = 'wait'; hv.t = .4; } // the player got there first
           else if (d <= step) { p.x = s.x; p.z = s.z; hv.state = 'stay'; hv.t = 3; face = s.face; }
-          else if (Math.hypot(p.x + dx / d * step - wp.x, p.z + dz / d * step - wp.z) < .8) { if ((hv.stall += dt) > 1.5) { hv.state = 'wait'; hv.t = .3; } } // don't walk into the player
           else { p.x += dx / d * step; p.z += dz / d * step; moving = true; hv.stall = 0; }
         } else if ((hv.t -= dt) <= 0) { hv.state = 'wait'; hv.t = .3 + Math.random() * 1.2; }
         helperObs.x = p.x; helperObs.z = p.z;
