@@ -190,6 +190,13 @@ export function makeItem(type) {
     part(G('Icosahedron', .11, 0), 0x4a423d, .1, .3, .05, g);
     return g;
   }
+  if (type === 'lock') { // padlock for locked shops and levels
+    box(.36, .28, .14, 0xf2b705, 0, .14, 0, g);
+    box(.38, .04, .16, 0xc98f00, 0, .02, 0, g);
+    part(G('Torus', .1, .035, 6, 10, Math.PI), 0x9aa0a6, 0, .28, 0, g);
+    box(.05, .09, .02, 0x3a3a3f, 0, .15, .08, g);
+    return g;
+  }
   if (type === 'sponge') { // the mop bar's icon: a yellow sponge with a green scrubber and a few holes
     box(.34, .14, .24, 0xffd23f, 0, .07, 0, g);
     box(.36, .05, .26, 0x4cb84c, 0, .165, 0, g);

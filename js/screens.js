@@ -6,6 +6,7 @@ import { startGame } from './game.js';
 import { createMenuScene } from './scene.js';
 
 const app = document.getElementById('app');
+const lockHtml = () => shopIcons.lock ? `<img src="${shopIcons.lock}" alt="Locked">` : '🔒';
 const shopIcons = {}; // shop id -> food icon (data URL) for the menu card
 const curShop = () => shopById(save.get().shop);
 // A shop is open once level 10 (the end of the main run; 11-13 are bonus puddle levels) of the one before it has been passed.
@@ -60,7 +61,7 @@ function menu() {
   teardown = () => { clearTimeout(bgTimer); if (menuScene) menuScene.stop(); menuScene = null; };
   let idx = Math.max(0, SHOPS.indexOf(curShop()));
   if (!shopUnlocked(idx)) idx = 0;
-  const iconHtml = (sh, open) => !open ? '🔒' : shopIcons[sh.id] ? `<img src="${shopIcons[sh.id]}" alt="">` : sh.icon; // the in-game food icon once the shop's 3D scene has drawn it
+  const iconHtml = (sh, open) => !open ? lockHtml() : shopIcons[sh.id] ? `<img src="${shopIcons[sh.id]}" alt="">` : sh.icon; // the in-game food icon once the shop's 3D scene has drawn it
   const render = () => {
     const sh = SHOPS[idx], open = shopUnlocked(idx);
     card.innerHTML = `<span class="shop-icon">${iconHtml(sh, open)}</span><b>${sh.name}</b><span class="sub">${
@@ -81,10 +82,9 @@ function menu() {
       bg = fresh;
       try {
         menuScene = createMenuScene(bg, sh);
-        if (open && sh.menuItem && !shopIcons[sh.id]) {
-          shopIcons[sh.id] = menuScene.icon(sh.menuItem);
-          if (SHOPS[idx] === sh) card.querySelector('.shop-icon').innerHTML = iconHtml(sh, open);
-        }
+        if (!shopIcons.lock) shopIcons.lock = menuScene.icon('lock');
+        if (open && sh.menuItem && !shopIcons[sh.id]) shopIcons[sh.id] = menuScene.icon(sh.menuItem);
+        if (SHOPS[idx] === sh) card.querySelector('.shop-icon').innerHTML = iconHtml(sh, open);
       } catch (e) {}
     }, 150);
   };
@@ -157,7 +157,7 @@ function levels() {
     b.className = 'tile ' + (locked ? 'locked' : isCurrent ? 'current' : 'done');
     b.disabled = locked;
     b.innerHTML = locked
-      ? `<span class="num">🔒</span><span class="sub">Level ${n}</span>`
+      ? `<span class="num">${lockHtml()}</span><span class="sub">Level ${n}</span>`
       : done
         ? `<span class="num">${n}</span><span class="sub starrow">${starRow(n)}</span>`
         : `<span class="num">${n}</span><span class="sub">Goal $${LEVELS[n - 1].goal}</span>`;
