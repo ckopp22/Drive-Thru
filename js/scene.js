@@ -661,7 +661,7 @@ function buildHospital(scene, hit) {
   const lid = part(G('Cylinder', .42, .42, .08, 8), 0x3f454d, 0, .78, 0, bin);
   scene.add(bin);
   hit('trash', 1.1, 1.1, 1.1, 0, .55, BIN_Z);
-  return { viz: {}, lid, trays: [], machines, signs: [], trayHits: [], extraHits: [register2Hit], fixtures: {}, tablePlates: {} };
+  return { viz: {}, lid, trays: [], machines, signs: [], trayHits: [], extraHits: [register2Hit], shakeHits: [], fixtures: {}, tablePlates: {} };
 }
 
 const tub = (g, color) => {
