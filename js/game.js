@@ -363,13 +363,13 @@ export function startGame(root, level, levels, cb, opts = {}) {
     const sh = activeShop();
     if (sh.hospital) return { ready: () => logic.loot.ready(), take: k => logic.loot.take(k) };
     if (sh.pizza) return null;
-    const grabbable = k => st[k].state === 'ready' || st[k].state === 'burnt';
+    const grabbable = k => logic.st[k].state === 'ready' || logic.st[k].state === 'burnt';
     return {
       ready: () => ITEMS.filter(grabbable),
       take(k) {
         if (!grabbable(k)) return null;
-        const type = st[k].state === 'burnt' ? 'burnt' : typeOf(k);
-        Object.assign(st[k], { state: 'idle', p: 0, t: 0 });
+        const type = logic.st[k].state === 'burnt' ? 'burnt' : typeOf(k);
+        Object.assign(logic.st[k], { state: 'idle', p: 0, t: 0 });
         return type;
       }
     };
@@ -480,6 +480,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   }
 
   if (!endless && cfg.puddles) { puddleOn = true; world.setMop(true); }
+  if (!endless && cfg.helper) world.setHelper(helperStops(), cfg.helper, helperLoot());
   // Sticky puddles: tap the mop by the bin and wait for the bar to clear them all; none appear for 20 s after (5 s in levels).
   const MOP_TIME = 2.2, PUDDLE_COOLDOWN = endless ? 20 : 5;
   const mopBar = document.createElement('div');

@@ -18,7 +18,10 @@ export const LEVELS = [
   // Levels 11-13 add sticky puddles (see game.js puddleStep): up to `max` on the floor, a new one every `every` s; a mop by the bin clears them.
   { time: 120, goal: 30, star2: 78, star3: 150, trays: 3, items: ALL, patience: 38, gap: 1.9, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 3, every: 8 }, notes: 'Sticky puddles' },
   { time: 120, goal: 32, star2: 80, star3: 152, trays: 3, items: ALL, patience: 36, gap: 1.8, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 5, every: 6 }, notes: 'More puddles' },
-  { time: 120, goal: 34, star2: 82, star3: 154, trays: 3, items: ALL, patience: 34, gap: 1.7, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 7, every: 4.5 }, notes: 'Puddle flood' }
+  { time: 120, goal: 34, star2: 82, star3: 154, trays: 3, items: ALL, patience: 34, gap: 1.7, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 7, every: 4.5 }, notes: 'Puddle flood' },
+  // Levels 14-15 add the endless-style "helper" (cfg.helper = how many) that wanders between machines and gets in the way.
+  { time: 120, goal: 34, star2: 82, star3: 154, trays: 3, items: ALL, patience: 34, gap: 1.7, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 5, every: 6 }, helper: 1, notes: 'A helper gets in the way' },
+  { time: 120, goal: 36, star2: 84, star3: 156, trays: 3, items: ALL, patience: 32, gap: 1.6, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 7, every: 4.5 }, helper: 2, notes: 'Two helpers' }
 ];
 
 // Stars: 1 star = reach the goal (passes the level), 2 and 3 stars at these multiples of the goal.

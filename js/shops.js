@@ -54,8 +54,8 @@ export const SHOPS = [
     levels: LEVELS.map((l, i) => ({
       ...l, items: ['burger'], extra: i >= 3, queue: i >= 7 ? 2 : 1, patience: Math.round(l.patience * 1.5),
       toppings: i < 2 ? ['sauce', 'cheese'] : i < 4 ? ['sauce', 'cheese', 'pepperoni'] : PIZZA_TOPS,
-      maxToppings: [2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4][i],
-      maxItems: [1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3][i],
+      maxToppings: [2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4][i],
+      maxItems: [1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3][i],
       doubles: false
     })),
     foods: {},
