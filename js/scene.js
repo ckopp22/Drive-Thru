@@ -1175,6 +1175,7 @@ export function buildWorld() {
           else { p.x += dx / d * step; p.z += dz / d * step; moving = true; hv.stall = 0; }
         } else if ((hv.t -= dt) <= 0) { hv.state = 'wait'; hv.t = .3 + Math.random() * 1.2; }
         helperObs.x = p.x; helperObs.z = p.z;
+        if (hv.state === 'stay') face = SPOTS[hv.key].face;
         if (face !== null) helper.group.rotation.y = turn(helper.group.rotation.y, face, 8 * dt);
         if (hv.pop > 0) hv.pop = Math.max(0, hv.pop - dt);
         helper.group.scale.setScalar(1 - hv.pop * 1.6);
