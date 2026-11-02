@@ -80,7 +80,7 @@ export const SHOPS = [
       hospital: true, patMult: 1.3, gapMult: 1.6,
       kinds: [[1, ['medicine']], [3, ['medicine', 'bill']], [5, ['medicine', 'bill', 'bandage']], [7, ['medicine', 'bill', 'bandage', 'id']]],
       queue: [[1, 1], [4, 2]],
-      registerWave: 7, jam: 12 // from this wave: a second bill machine, and a stamped bill left 12 s jams its machine
+      helperWave: 8, registerWave: 7, jam: 12 // from this wave: a second bill machine, and a stamped bill left 12 s jams its machine
     },
     foods: {}, layout: {},
     // Where the worker stands for each tappable spot.

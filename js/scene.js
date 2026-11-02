@@ -997,6 +997,13 @@ export function buildWorld() {
     npc.group.rotation.y = Math.PI;
     scene.add(npc.group);
   }
+  // Endless "helper": wanders from machine to machine, stands at one for a few seconds and blocks it, then ambles on.
+  const helper = buildWorker(0xff9f1c);
+  helper.group.visible = false;
+  scene.add(helper.group);
+  const helperObs = { x: 99, z: 99, r: .55 };
+  OBSTACLES.push(helperObs);
+  const hv = { stops: null, state: 'wait', key: null, t: 1.5, pop: 0, shoo: 0, stall: 0 };
 
   let binT = 0, friesPop = 0, friesHit = null;
   // Black splash when something is thrown away: little dark chunks fly out of the bin and shrink away.
@@ -1033,6 +1040,20 @@ export function buildWorld() {
         else if (!on && i >= 0) hits.splice(i, 1);
       });
     },
+    // Endless mode: the helper joins (stops = machine keys it visits) or leaves (null).
+    setHelper(stops) {
+      const was = !!hv.stops;
+      hv.stops = stops;
+      helper.group.visible = !!stops;
+      if (stops && !was) {
+        helper.group.position.set(0, 0, 2.6);
+        Object.assign(hv, { state: 'wait', key: null, t: 1.5, pop: reducedMotion() ? 0 : .5 });
+      }
+      if (!stops) { helperObs.x = helperObs.z = 99; hv.key = null; }
+    },
+    // True while the helper is standing at this machine (taps on it do nothing).
+    helperBlocks(key) { return hv.state === 'stay' && hv.key === key; },
+    helperShoo() { hv.shoo = .4; },
     // Endless mode: the fryer (fries/tea kettle) appears at a later wave, popping in when `pop` is set.
     setFries(on, pop) {
       if (!machines.fries) return;
@@ -1128,6 +1149,36 @@ export function buildWorld() {
         npc.arms[0].rotation.x = moving ? sw * .6 : -.9 + Math.sin(t * 4) * .2;
         npc.arms[1].rotation.x = moving ? -sw * .6 : -.9 - Math.sin(t * 4) * .2;
         npc.body.position.y = moving ? Math.abs(sw) * .08 : Math.abs(Math.sin(t * 2)) * .02;
+      }
+      if (hv.stops) {
+        const p = helper.group.position, wp = worker.group.position;
+        let moving = false, face = null;
+        if (hv.state === 'wait') {
+          if ((hv.t -= dt) <= 0) {
+            const ok = hv.stops.filter(k => SPOTS[k] && k !== hv.key && worker.target !== k && !(worker.at === k && Math.hypot(wp.x - SPOTS[k].x, wp.z - SPOTS[k].z) < 1));
+            if (ok.length) { hv.key = ok[Math.floor(Math.random() * ok.length)]; hv.state = 'walk'; hv.stall = 0; }
+            else hv.t = .5;
+          }
+        } else if (hv.state === 'walk') {
+          const s = SPOTS[hv.key], dx = s.x - p.x, dz = s.z - p.z, d = Math.hypot(dx, dz), step = 1 * dt;
+          face = Math.atan2(dx, dz);
+          if (worker.target === hv.key || Math.hypot(wp.x - s.x, wp.z - s.z) < .7 && d < 1.2) { hv.state = 'wait'; hv.t = .4; } // the player got there first
+          else if (d <= step) { p.x = s.x; p.z = s.z; hv.state = 'stay'; hv.t = 2; face = s.face; }
+          else if (Math.hypot(p.x + dx / d * step - wp.x, p.z + dz / d * step - wp.z) < .8) { if ((hv.stall += dt) > 1.5) { hv.state = 'wait'; hv.t = .3; } } // don't walk into the player
+          else { p.x += dx / d * step; p.z += dz / d * step; moving = true; hv.stall = 0; }
+        } else if ((hv.t -= dt) <= 0) { hv.state = 'wait'; hv.t = .3 + Math.random() * 1.2; }
+        helperObs.x = p.x; helperObs.z = p.z;
+        if (face !== null) helper.group.rotation.y = turn(helper.group.rotation.y, face, 8 * dt);
+        if (hv.pop > 0) hv.pop = Math.max(0, hv.pop - dt);
+        helper.group.scale.setScalar(1 - hv.pop * 1.6);
+        if (hv.shoo > 0) hv.shoo = Math.max(0, hv.shoo - dt);
+        const busy = hv.state === 'stay', sw = moving ? Math.sin(t * 6) : 0;
+        helper.legs[0].rotation.x = sw * .7;
+        helper.legs[1].rotation.x = -sw * .7;
+        const wave = hv.shoo > 0 ? Math.sin(t * 30) * .5 : 0;
+        helper.arms[0].rotation.x = busy ? -1.3 + Math.sin(t * 9) * .4 + wave : moving ? sw * .6 : 0;
+        helper.arms[1].rotation.x = busy ? -1.3 - Math.sin(t * 9) * .4 - wave : moving ? -sw * .6 : 0;
+        helper.body.position.y = moving ? Math.abs(sw) * .08 : 0;
       }
       Object.values(viz).forEach(v => v.update(t));
       for (let i = splash.length - 1; i >= 0; i--) {

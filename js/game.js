@@ -352,8 +352,14 @@ export function startGame(root, level, levels, cb, opts = {}) {
 
   // Endless: apply a wave's settings to the live cfg (orders and the logic read it as they go).
   const lopts = { burn: cfg.burn, trays: cfg.trays };
+  function helperStops() {
+    const sh = activeShop();
+    if (sh.hospital) return ['medicine', 'bandage', 'register', ...(cfg.extra ? ['register2'] : [])];
+    if (sh.pizza) return ['dough', ...cfg.toppings, 'burger', ...(cfg.extra ? ['burger2'] : [])];
+    return ['soda', 'burger', 'fries', ...(cfg.extra ? ['burger2', 'fries2'] : []), ...(sh.cups ? ['cabinet'] : [])];
+  }
   function setWave(w, announce) {
-    const hadFries = cfg.items.includes('fries'), hadExtra = !!cfg.extra, hadBurn = cfg.burn > 0, hadKinds = (cfg.kinds || []).length, hadTops = (cfg.toppings || []).length;
+    const hadHelper = !!cfg.helper, hadFries = cfg.items.includes('fries'), hadExtra = !!cfg.extra, hadBurn = cfg.burn > 0, hadKinds = (cfg.kinds || []).length, hadTops = (cfg.toppings || []).length;
     wave = w;
     Object.assign(cfg, endlessCfg(w, over));
     lopts.burn = cfg.burn;
@@ -361,8 +367,9 @@ export function startGame(root, level, levels, cb, opts = {}) {
     if (activeShop().pizza) world.setFixtures(['dough', ...cfg.toppings]);
     world.setFries(cfg.items.includes('fries'), announce && !hadFries);
     audio.setMusicRate(endlessMusicRate(w));
+    world.setHelper(cfg.helper ? helperStops() : null);
     if (!announce) return;
-    const news = [!hadFries && cfg.items.includes('fries') && '🍟 Fries!', !hadExtra && cfg.extra && (activeShop().hospital ? '2nd bill machine! Bills can jam' : '🍳 2nd grill & fryer!'), !hadBurn && cfg.burn && '🔥 Food burns!', (cfg.kinds || []).length > hadKinds && 'New patient task!', (cfg.toppings || []).length > hadTops && 'New topping!'].filter(Boolean).join(' ');
+    const news = [!hadFries && cfg.items.includes('fries') && '🍟 Fries!', !hadExtra && cfg.extra && (activeShop().hospital ? '2nd bill machine! Bills can jam' : '🍳 2nd grill & fryer!'), !hadBurn && cfg.burn && '🔥 Food burns!', !hadHelper && cfg.helper && '🧑‍🍳 A "helper" is in your way!', (cfg.kinds || []).length > hadKinds && 'New patient task!', (cfg.toppings || []).length > hadTops && 'New topping!'].filter(Boolean).join(' ');
     if (news) banner(`⬆️ ${news}`, 'wave');
     audio.playSfx('waveUp');
   }
@@ -480,6 +487,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     if (paused || ended || dying) return;
     const k = world.pick(e.clientX, e.clientY);
     if (!k || (ITEMS.includes(k) && !(STATIONS[k].type ? cfg.extra : cfg.items.includes(k)))) return;
+    if (world.helperBlocks(k)) { world.helperShoo(); audio.playSfx('tap'); return; }
     logic.tap(k);
     if (ITEMS.includes(k)) endHint('make');
   });
