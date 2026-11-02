@@ -133,6 +133,11 @@ export function createLogic(world, hooks, opts = {}) {
         t.tops = [];
         worker.kick();
         hooks.sfx('pickup');
+      } else if (!carried && (h || '').startsWith('plate:') && !t.dough) { // set a picked-up pizza back down on an empty table
+        t.dough = true;
+        t.tops = h.slice(6).split('+').filter(Boolean);
+        hands.length = 0;
+        hooks.sfx('place');
       } else return hooks.shake(key);
       setHeld();
       world.setTable(key, t);
