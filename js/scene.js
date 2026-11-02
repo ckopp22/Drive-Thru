@@ -998,19 +998,22 @@ export function buildWorld() {
     scene.add(npc.group);
   }
   // Endless "helper": wanders from machine to machine, stands at one for a few seconds and blocks it, then ambles on.
-  const helper = buildWorker(0xff9f1c);
-  helper.group.visible = false;
-  scene.add(helper.group);
-  const helperObs = { x: 99, z: 99, r: .55 };
-  OBSTACLES.push(helperObs);
-  const hv = { stops: null, state: 'wait', key: null, t: 1.5, pop: 0, shoo: 0, stall: 0, cl: 0 };
-  // The mess he makes at a machine: grey puffs, squiggles and dust swirling around him.
-  const cloud = new THREE.Group();
-  cloud.visible = false;
-  scene.add(cloud);
-  const puffs = Array.from({ length: 6 }, (_, i) => part(G('Icosahedron', .2 + (i % 3) * .04, 0), i % 2 ? 0x9aa0a6 : 0xb4b9be, 0, 0, 0, cloud));
-  const squigs = Array.from({ length: 3 }, () => part(G('Torus', .14, .03, 5, 10, Math.PI * 1.5), 0x4a4f55, 0, 0, 0, cloud));
-  const specks = Array.from({ length: 8 }, () => part(G('Octahedron', .05), 0xcdc2ad, 0, 0, 0, cloud));
+  const helpers = [0xff9f1c, 0x7b5cff].map(shirt => {
+    const helper = buildWorker(shirt);
+    helper.group.visible = false;
+    scene.add(helper.group);
+    const helperObs = { x: 99, z: 99, r: .55 };
+    OBSTACLES.push(helperObs);
+    const hv = { stops: null, state: 'wait', key: null, t: 1.5, pop: 0, shoo: 0, stall: 0, cl: 0 };
+    // The mess he makes at a machine: grey puffs, squiggles and dust swirling around him.
+    const cloud = new THREE.Group();
+    cloud.visible = false;
+    scene.add(cloud);
+    const puffs = Array.from({ length: 6 }, (_, i) => part(G('Icosahedron', .2 + (i % 3) * .04, 0), i % 2 ? 0x9aa0a6 : 0xb4b9be, 0, 0, 0, cloud));
+    const squigs = Array.from({ length: 3 }, () => part(G('Torus', .14, .03, 5, 10, Math.PI * 1.5), 0x4a4f55, 0, 0, 0, cloud));
+    const specks = Array.from({ length: 8 }, () => part(G('Octahedron', .05), 0xcdc2ad, 0, 0, 0, cloud));
+    return { helper, helperObs, hv, cloud, puffs, squigs, specks };
+  });
 
   let binT = 0, friesPop = 0, friesHit = null;
   // Black splash when something is thrown away: little dark chunks fly out of the bin and shrink away.
@@ -1047,20 +1050,22 @@ export function buildWorld() {
         else if (!on && i >= 0) hits.splice(i, 1);
       });
     },
-    // Endless mode: the helper joins (stops = machine keys it visits) or leaves (null).
-    setHelper(stops) {
-      const was = !!hv.stops;
-      hv.stops = stops;
-      helper.group.visible = !!stops;
-      if (stops && !was) {
-        helper.group.position.set(0, 0, 2.6);
-        Object.assign(hv, { state: 'wait', key: null, t: 1.5, pop: reducedMotion() ? 0 : .5 });
-      }
-      if (!stops) { helperObs.x = helperObs.z = 99; hv.key = null; }
+    // Endless mode: n helpers join (stops = machine keys they visit, or a function returning them) or leave (null).
+    setHelper(stops, n = 1) {
+      helpers.forEach((H, i) => {
+        const on = stops && i < n, was = !!H.hv.stops;
+        H.hv.stops = on ? stops : null;
+        H.helper.group.visible = !!on;
+        if (on && !was) {
+          H.helper.group.position.set(i ? 1.2 : -1.2, 0, 2.6);
+          Object.assign(H.hv, { state: 'wait', key: null, t: 1.5 + i * 2, pop: reducedMotion() ? 0 : .5 });
+        }
+        if (!on) { H.helperObs.x = H.helperObs.z = 99; H.hv.key = null; }
+      });
     },
-    // True while the helper is standing at this machine (taps on it do nothing).
-    helperBlocks(key) { return hv.state === 'stay' && hv.key === key; },
-    helperShoo() { hv.shoo = .4; },
+    // True while a helper is standing at this machine (taps on it do nothing).
+    helperBlocks(key) { return helpers.some(H => H.hv.state === 'stay' && H.hv.key === key); },
+    helperShoo(key) { const H = helpers.find(h => h.hv.state === 'stay' && h.hv.key === key); if (H) H.hv.shoo = .4; },
     // Endless mode: the fryer (fries/tea kettle) appears at a later wave, popping in when `pop` is set.
     setFries(on, pop) {
       if (!machines.fries) return;
@@ -1157,12 +1162,14 @@ export function buildWorld() {
         npc.arms[1].rotation.x = moving ? -sw * .6 : -.9 - Math.sin(t * 4) * .2;
         npc.body.position.y = moving ? Math.abs(sw) * .08 : Math.abs(Math.sin(t * 2)) * .02;
       }
-      if (hv.stops) {
+      for (const H of helpers) {
+        const { helper, helperObs, hv, cloud, puffs, squigs, specks } = H;
+        if (!hv.stops) continue;
         const p = helper.group.position, wp = worker.group.position;
         let moving = false, face = null;
         if (hv.state === 'wait') {
           if ((hv.t -= dt) <= 0) {
-            const ok = (typeof hv.stops === 'function' ? hv.stops() : hv.stops).filter(k => SPOTS[k] && k !== hv.key && worker.target !== k && !(worker.at === k && Math.hypot(wp.x - SPOTS[k].x, wp.z - SPOTS[k].z) < 1));
+            const ok = (typeof hv.stops === 'function' ? hv.stops() : hv.stops).filter(k => SPOTS[k] && k !== hv.key && !helpers.some(o => o !== H && o.hv.stops && o.hv.key === k && o.hv.state !== 'wait') && worker.target !== k && !(worker.at === k && Math.hypot(wp.x - SPOTS[k].x, wp.z - SPOTS[k].z) < 1));
             if (ok.length) { hv.key = ok[Math.floor(Math.random() * ok.length)]; hv.state = 'walk'; hv.stall = 0; }
             else hv.t = .5;
           }

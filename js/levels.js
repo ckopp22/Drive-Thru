@@ -64,6 +64,7 @@ export const ENDLESS = {
   queue: [[6, 1], [10, 2]], // [fromWave, cars waiting behind the window car]; orders of waiting cars are visible
   extraWave: 8,   // second grill and fryer
   burnWave: 8, burn: 12, // food burns after `burn` s
+  helper2Gap: 5,  // waves after the first helper that a second joins
   helperWave: 9,  // the obstructing helper joins once everything above is in (a shop can override with `helperWave`)
   rows: [
     [1, 1, 38, 1, 2],
@@ -96,12 +97,13 @@ export function endlessCfg(wave, over = {}) {
   const extra = Math.max(0, wave - last[0]);
   const gapLo = Math.max(E.minGap[0], row[3] - extra * E.gapDecay[0]);
   const gapHi = Math.max(E.minGap[1], row[4] - extra * E.gapDecay[1]);
+  const hw = over.helperWave || E.helperWave;
   const cfg = {
     endless: true, wave, trays: E.trays, time: 0,
     queue: (E.queue.filter(r => r[0] <= wave).pop() || [0, 0])[1],
     items: wave >= E.friesWave ? ALL : SB,
     maxItems: row[1], doubles: wave >= E.doublesWave, extra: wave >= E.extraWave,
-    burn: wave >= E.burnWave ? E.burn : 0, helper: wave >= (over.helperWave || E.helperWave),
+    burn: wave >= E.burnWave ? E.burn : 0, helper: wave < hw ? 0 : wave < hw + E.helper2Gap ? 1 : 2,
     patience: endlessPatience(wave, over),
     gapRange: [gapLo, gapHi], gap: gapHi
   };
