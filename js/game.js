@@ -502,7 +502,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   const mopBar = document.createElement('div');
   mopBar.className = 'car-tag small';
   mopBar.hidden = true;
-  mopBar.innerHTML = '<div class="bubble">🧽</div><div class="pbar prog"><i></i></div>';
+  mopBar.innerHTML = `<div class="bubble"><img class="slot" src="${world.itemIcon('sponge')}" alt=""></div><div class="pbar prog"><i></i></div>`;
   overlay.appendChild(mopBar);
   const baseArrive = world.worker.onArrive;
   world.worker.onArrive = key => {

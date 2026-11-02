@@ -190,6 +190,12 @@ export function makeItem(type) {
     part(G('Icosahedron', .11, 0), 0x4a423d, .1, .3, .05, g);
     return g;
   }
+  if (type === 'sponge') { // the mop bar's icon: a yellow sponge with a green scrubber and a few holes
+    box(.34, .14, .24, 0xffd23f, 0, .07, 0, g);
+    box(.36, .05, .26, 0x4cb84c, 0, .165, 0, g);
+    [[-.08, .04], [.07, -.05], [.1, .06]].forEach(([x, z]) => box(.05, .03, .05, 0xd9a21b, x, .19, z, g));
+    return g;
+  }
   const id = activeShop().id;
   (id === 'pizza' ? pizzaItem : id === 'hospital' ? hospitalItem : id === 'coffee' ? coffeeItem : burgerItem)(type, g);
   return g;
