@@ -136,7 +136,7 @@ function howTo() {
 function levels() {
   const shop = curShop(), LEVELS = shop.levels, MAX = LEVELS.length;
   const { highestUnlocked, bestMoney, stars } = save.shop(shop.id);
-  const starRow = n => '★'.repeat(stars[n] || 0) + '☆'.repeat(3 - (stars[n] || 0));
+  const starRow = n => '★'.repeat(stars[n] || 0) + `<span class="off">${'★'.repeat(3 - (stars[n] || 0))}</span>`;
   const best = shop.endless ? save.endless(shop.id) : null;
   const s = el(`<h2>${shop.name}</h2><div class="grid${best ? ' has-endless' : ''}"></div><button class="btn" id="back">Back</button>`, 'screen levels');
   const grid = s.querySelector('.grid');
@@ -150,7 +150,7 @@ function levels() {
     b.innerHTML = locked
       ? `<span class="num">🔒</span><span class="sub">Level ${n}</span>`
       : done
-        ? `<span class="num">✓ ${n}</span><span class="sub">${starRow(n)}</span>`
+        ? `<span class="num">✓ ${n}</span><span class="sub starrow">${starRow(n)}</span>`
         : `<span class="num">${n}</span><span class="sub">Goal $${LEVELS[n - 1].goal}</span>`;
     if (!locked) b.addEventListener('click', () => go('gameplay', n));
     grid.appendChild(b);

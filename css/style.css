@@ -164,6 +164,8 @@ html, body {
 }
 .tile .num { font-size: 26px; line-height: 1; }
 .tile .sub { font-size: 14px; font-weight: 700; }
+.tile .starrow { font-size: 22px; line-height: 1; color: #ffc828; text-shadow: 0 1px 0 rgba(0,0,0,.35); }
+.tile .starrow .off { color: rgba(0,0,0,.22); text-shadow: none; }
 .tile.locked { background: #b9b9b9; color: #6b6b6b; box-shadow: 0 5px 0 #8f8f8f; pointer-events: none; }
 .tile.done { background: #bdf0cf; box-shadow: 0 5px 0 #7fc79b; }
 .tile.current {
