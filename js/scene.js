@@ -160,7 +160,7 @@ function hospitalItem(type, g) {
     g.add(pill);
   } else if (type === 'toy') { // teddy bear, sized up so its icon reads as large as the others
     const t = new THREE.Group();
-    t.scale.setScalar(1.7);
+    t.scale.setScalar(1.35);
     g.add(t);
     part(G('Sphere', .15, 8, 6), 0xa9743a, 0, .15, 0, t);
     part(G('Sphere', .11, 8, 6), 0xb98348, 0, .36, 0, t);
