@@ -423,6 +423,11 @@ export function startGame(root, level, levels, cb, opts = {}) {
       hintNow = null;
       audio.playSfx('angry');
       buzz(70);
+      const flash = document.createElement('div');
+      flash.className = 'angry-flash';
+      el.appendChild(flash);
+      flash.addEventListener('animationend', () => flash.remove());
+      if (!reduced) { el.classList.remove('screen-shake'); void el.offsetWidth; el.classList.add('screen-shake'); }
     }
   };
 

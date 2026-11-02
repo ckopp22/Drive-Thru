@@ -308,6 +308,9 @@ body:has(.screen.game.paused) #toggles { display: flex; }
 .act:active { transform: translateY(5px) scale(.92); box-shadow: 0 1px 0 var(--yellow-dark); transition-duration: .06s; }
 .act.on { background: var(--red); border-color: var(--yellow); box-shadow: 0 6px 0 var(--red-dark), 0 0 0 3px #fff; }
 .act.shake { animation: shake .3s; }
+.angry-flash { position: absolute; inset: 0; z-index: 55; background: rgba(230,57,70,.45); pointer-events: none; animation: angryFlash .45s ease-out forwards; }
+@keyframes angryFlash { from { opacity: 1; } to { opacity: 0; } }
+.screen-shake { animation: shake .4s; }
 @keyframes shake { 20% { transform: translateX(-7px); } 40% { transform: translateX(7px); } 60% { transform: translateX(-5px); } 80% { transform: translateX(5px); } }
 .btn.small { min-height: 44px; padding: 10px 14px; font-size: 14px; min-width: 0; }
 .test-row { display: flex; gap: 10px; margin-top: 6px; }
