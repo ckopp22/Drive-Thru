@@ -480,8 +480,8 @@ export function startGame(root, level, levels, cb, opts = {}) {
   }
 
   if (!endless && cfg.puddles) { puddleOn = true; world.setMop(true); }
-  // Sticky puddles: tap the mop by the bin and wait for the bar to clear them all; none appear for 20 s after.
-  const MOP_TIME = 2.2, PUDDLE_COOLDOWN = 20;
+  // Sticky puddles: tap the mop by the bin and wait for the bar to clear them all; none appear for 20 s after (5 s in levels).
+  const MOP_TIME = 2.2, PUDDLE_COOLDOWN = endless ? 20 : 5;
   const mopBar = document.createElement('div');
   mopBar.className = 'car-tag small';
   mopBar.hidden = true;
