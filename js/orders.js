@@ -219,7 +219,7 @@ export function createOrders(world, cfg, overlay, cb) {
       // The next car's bubble is a bit bigger and floats above the current order so it reads as "up next".
       const idx = lane.indexOf(c);
       c.tag.classList.toggle('next', idx === 1);
-      const want = idx === 1 ? 105 : idx === 2 ? 165 : idx % 2 === 1 ? 56 : 0;
+      const want = idx === 1 ? 105 : idx === 2 ? 400 : idx % 2 === 1 ? 56 : 0;
       c.lift = (c.lift || 0) + (want - (c.lift || 0)) * Math.min(1, dt * 10);
       let y = p.y - c.lift;
       if (idx === 2) { // the third order rides as high as it can, just under the pause button
