@@ -2,7 +2,7 @@ import { createWorld, reducedMotion } from './scene.js';
 import { STATIONS, WORKER, TUNING, ENDLESS, servedFor, waveFor, starGoals, endlessCfg, endlessPatience, endlessMusicRate } from './levels.js';
 import { createOrders } from './orders.js';
 import * as audio from './audio.js';
-import { activeShop, itemInfo, PIZZA_TOPS } from './shops.js';
+import { activeShop, itemInfo, ALL_TOPS } from './shops.js';
 import { createHospital } from './hospital.js';
 
 const HOSPITAL_HINT = {
@@ -26,7 +26,7 @@ export function createLogic(world, hooks, opts = {}) {
   const st = {};
   const pizza = !!activeShop().pizza; // dough -> table plate -> toppings -> oven
   const tables = [0, 1].map(() => ({ dough: false, tops: [] }));
-  const sig = t => PIZZA_TOPS.filter(x => t.tops.includes(x)).join('+');
+  const sig = t => ALL_TOPS.filter(x => t.tops.includes(x)).join('+');
   const cups = !!activeShop().cups; // drinks need a cup from the cabinet before a machine starts
   ITEMS.forEach(k => (st[k] = { state: 'idle', p: 0, t: 0 }));
   const hands = [];
@@ -46,7 +46,7 @@ export function createLogic(world, hooks, opts = {}) {
     const putBack = ITEMS.includes(key) && st[key].state === 'idle' && hands.includes(typeOf(key));
     const need = ITEMS.includes(key) && STATIONS[key].needs;
     const canStart = need ? hands.includes(need) : pizza ? (hands[0] || '').startsWith('plate:') : cups ? hands.includes('cup') : !busy();
-    if ((GRAB[key] || key === 'dough' || PIZZA_TOPS.includes(key)) && busy()) {
+    if ((GRAB[key] || key === 'dough' || ALL_TOPS.includes(key)) && busy()) {
       hooks.shake(key);
       return false;
     }
@@ -111,7 +111,7 @@ export function createLogic(world, hooks, opts = {}) {
         s.p = 0;
         hooks.sfx('start');
       }
-    } else if (key === 'dough' || PIZZA_TOPS.includes(key)) {
+    } else if (key === 'dough' || ALL_TOPS.includes(key)) {
       if (busy()) return hooks.shake(key);
       hands.push(key);
       setHeld();
@@ -123,7 +123,7 @@ export function createLogic(world, hooks, opts = {}) {
         t.dough = true;
         hands.length = 0;
         hooks.sfx('place');
-      } else if (!carried && PIZZA_TOPS.includes(h) && t.dough && !t.tops.includes(h)) {
+      } else if (!carried && ALL_TOPS.includes(h) && t.dough && !t.tops.includes(h)) {
         t.tops.push(h);
         hands.length = 0;
         hooks.sfx('place');

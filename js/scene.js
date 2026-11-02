@@ -109,7 +109,7 @@ function coffeeItem(type, g) {
   }
 }
 
-const TOP_COLOR = { sauce: 0xd62828, cheese: 0xffd23f, pepperoni: 0xb3262b, mushroom: 0xd9c2a0 };
+const TOP_COLOR = { sauce: 0xd62828, cheese: 0xffd23f, pepperoni: 0xb3262b, mushroom: 0xd9c2a0, ham: 0xf2a0a8, pickles: 0x6aa84f };
 function pizzaItem(type, g) {
   if (type === 'dough') {
     part(G('Sphere', .2, 10, 8), 0xf5e6c8, 0, .14, 0, g).scale.y = .7;
@@ -123,6 +123,8 @@ function pizzaItem(type, g) {
     if (tops.includes('sauce')) part(G('Cylinder', .22, .22, .012, 12), TOP_COLOR.sauce, 0, .086, 0, g);
     if (tops.includes('cheese')) part(G('Cylinder', .2, .2, .012, 12), TOP_COLOR.cheese, 0, .098, 0, g);
     if (tops.includes('pepperoni')) [[.1, .06], [-.1, .08], [.02, -.12], [-.12, -.07]].forEach(([x, z]) => part(G('Cylinder', .05, .05, .015, 8), TOP_COLOR.pepperoni, x, .112, z, g));
+    if (tops.includes('ham')) [[-.05, .12], [.12, .1], [-.13, -.02]].forEach(([x, z]) => box(.09, .012, .09, TOP_COLOR.ham, x, .112, z, g));
+    if (tops.includes('pickles')) [[.05, -.1], [-.1, -.1], [.1, .0]].forEach(([x, z]) => part(G('Cylinder', .035, .035, .014, 8), TOP_COLOR.pickles, x, .116, z, g));
     if (tops.includes('mushroom')) [[0, 0], [.14, -.05], [-.06, .14]].forEach(([x, z]) => part(G('Sphere', .045, 6, 4, 0, Math.PI * 2, 0, Math.PI / 2), TOP_COLOR.mushroom, x, .108, z, g));
   }
 }
@@ -668,6 +670,8 @@ const FIXTURE_BUILD = {
   sauce(g) { tub(g, TOP_COLOR.sauce); },
   cheese(g) { tub(g, TOP_COLOR.cheese); },
   pepperoni(g) { tub(g, TOP_COLOR.pepperoni); [[.1, .1], [-.12, -.08], [.12, -.12]].forEach(([x, z]) => part(G('Cylinder', .08, .08, .02, 8), 0x7a1a1a, x, 1.14, z, g)); },
+  ham(g) { tub(g, TOP_COLOR.ham); [[.1, .1], [-.12, -.08], [.12, -.12]].forEach(([x, z]) => box(.16, .02, .16, 0xd9707c, x, 1.14, z, g)); },
+  pickles(g) { tub(g, TOP_COLOR.pickles); [[.1, .1], [-.12, -.08], [.12, -.12]].forEach(([x, z]) => part(G('Cylinder', .07, .07, .03, 8), 0x3f7a2f, x, 1.14, z, g)); },
   mushroom(g) { tub(g, TOP_COLOR.mushroom); [[.1, .1], [-.12, -.08]].forEach(([x, z]) => part(G('Sphere', .09, 6, 4, 0, Math.PI * 2, 0, Math.PI / 2), 0xf2e6cf, x, 1.13, z, g)); },
   table(g) {
     box(1.0, .08, .8, 0xc9863f, 0, .72, 0, g);
@@ -788,7 +792,7 @@ function buildKitchen(scene, billboards, hits) {
   for (const f of activeShop().fixtures || []) {
     const g = new THREE.Group();
     g.position.set(f.x, 0, f.z);
-    if (f.kind !== 'table') g.rotation.y = f.x < 0 ? Math.PI / 2 : -Math.PI / 2;
+    if (f.kind !== 'table') g.rotation.y = f.rot !== undefined ? f.rot : f.x < 0 ? Math.PI / 2 : -Math.PI / 2;
     FIXTURE_BUILD[f.kind](g);
     scene.add(g);
     machines[f.key] = g;
