@@ -1004,20 +1004,14 @@ export function buildWorld() {
     scene.add(helper.group);
     const helperObs = { x: 99, z: 99, r: .55 };
     const hv = { stops: null, state: 'wait', key: null, t: 1.5, pop: 0, shoo: 0, stall: 0, cl: 0 };
-    // The mess he makes at a machine: grey puffs, squiggles and dust swirling around him.
-    const cloud = new THREE.Group();
-    cloud.visible = false;
-    scene.add(cloud);
-    const puffs = Array.from({ length: 6 }, (_, i) => part(G('Icosahedron', .2 + (i % 3) * .04, 0), i % 2 ? 0x9aa0a6 : 0xb4b9be, 0, 0, 0, cloud));
-    const squigs = Array.from({ length: 3 }, () => part(G('Torus', .14, .03, 5, 10, Math.PI * 1.5), 0x4a4f55, 0, 0, 0, cloud));
-    const specks = Array.from({ length: 8 }, () => part(G('Octahedron', .05), 0xcdc2ad, 0, 0, 0, cloud));
-    const mcloud = new THREE.Group(); // a smaller copy of the mess over the machine itself
+    // The mess he makes at a machine (or patient): grey puffs, squiggles and dust swirling over it.
+    const mcloud = new THREE.Group();
     mcloud.visible = false;
     scene.add(mcloud);
     const mpuffs = Array.from({ length: 4 }, (_, i) => part(G('Icosahedron', .16 + (i % 2) * .04, 0), i % 2 ? 0x9aa0a6 : 0xb4b9be, 0, 0, 0, mcloud));
     const msquigs = Array.from({ length: 2 }, () => part(G('Torus', .12, .03, 5, 10, Math.PI * 1.5), 0x4a4f55, 0, 0, 0, mcloud));
     const mspecks = Array.from({ length: 5 }, () => part(G('Octahedron', .05), 0xcdc2ad, 0, 0, 0, mcloud));
-    return { helper, helperObs, hv, cloud, puffs, squigs, specks, mcloud, mpuffs, msquigs, mspecks };
+    return { helper, helperObs, hv, mcloud, mpuffs, msquigs, mspecks };
   });
 
   let binT = 0, friesPop = 0, friesHit = null;
@@ -1168,7 +1162,7 @@ export function buildWorld() {
         npc.body.position.y = moving ? Math.abs(sw) * .08 : Math.abs(Math.sin(t * 2)) * .02;
       }
       for (const H of helpers) {
-        const { helper, helperObs, hv, cloud, puffs, squigs, specks, mcloud, mpuffs, msquigs, mspecks } = H;
+        const { helper, helperObs, hv, mcloud, mpuffs, msquigs, mspecks } = H;
         if (!hv.stops) continue;
         const p = helper.group.position, wp = worker.group.position;
         let moving = false, face = null;
@@ -1193,16 +1187,9 @@ export function buildWorld() {
         if (hv.shoo > 0) hv.shoo = Math.max(0, hv.shoo - dt);
         const busy = hv.state === 'stay';
         hv.cl = busy ? Math.min(1, hv.cl + dt * 5) : Math.max(0, hv.cl - dt * 8);
-        cloud.visible = hv.cl > 0;
-        if (cloud.visible) {
-          cloud.position.set(p.x, 0, p.z);
-          cloud.scale.setScalar(hv.cl);
-          puffs.forEach((m, i) => m.position.set(Math.cos(t * 2.2 + i * 1.05) * .5, .75 + Math.sin(t * 3 + i * 2) * .25, Math.sin(t * 2.6 + i * 1.7) * .45));
-          squigs.forEach((m, i) => { m.position.set(Math.cos(t * 1.7 + i * 2.1) * .6, 1.15 + Math.sin(t * 4 + i) * .2, Math.sin(t * 1.9 + i * 2.1) * .55); m.rotation.set(t * 5 + i, t * 3, t * 4 + i * 2); });
-          specks.forEach((m, i) => { m.position.set(Math.cos(t * 3.4 + i * .8) * .75, .3 + (t * .9 + i * .37) % 1.1, Math.sin(t * 3 + i * .8) * .7); m.rotation.y = t * 6 + i; });
-        }
-        const mp = hv.key && machines[hv.key] && machines[hv.key].position;
-        mcloud.visible = cloud.visible && !!mp;
+        // Over the machine, or over the patient (hospital) they are with.
+        const pat = hv.key && hv.key.startsWith('pat') && SPOTS[hv.key], mp = pat ? { x: Math.sign(pat.x) * 2, y: .4, z: pat.z } : hv.key && machines[hv.key] && machines[hv.key].position;
+        mcloud.visible = hv.cl > 0 && !!mp;
         if (mcloud.visible) {
           mcloud.position.set(mp.x, mp.y + .9, mp.z);
           mcloud.scale.setScalar(hv.cl);
