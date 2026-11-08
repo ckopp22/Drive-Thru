@@ -527,7 +527,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     puddleAge += dt;
     if (puddleCool > 0) { puddleCool -= dt; return; }
     if ((puddleT -= dt) <= 0) { // more puddles, more often, the longer it goes on
-      const pd = endless ? { max: Math.min(10, 2 + Math.floor(puddleAge / 25)), every: Math.max(2.5, 8 - puddleAge / 20) } : cfg.puddles;
+      const pd = endless ? { max: Math.min(10, 2 + Math.floor(puddleAge / 18)), every: Math.max(2.5, 8 - puddleAge / 14) } : cfg.puddles;
       if (world.puddleCount() < pd.max) world.spawnPuddle();
       puddleT = pd.every;
     }

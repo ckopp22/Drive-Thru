@@ -112,27 +112,26 @@ export const ENDLESS = {
   perWave: 1,        // each order is its own "wave" (difficulty step)
   early: [],
   lives: 3, firstCarDelay: 1, trays: 3,
-  friesWave: 3,   // fryer appears (items become ALL)
-  doublesWave: 5, // orders may repeat an item
-  queue: [[4, 1], [8, 2]], // [fromOrder, cars waiting behind the window car]; orders of waiting cars are visible
-  extraWave: 6,   // second grill and fryer
-  burnWave: 5, burn: 12, // food burns after `burn` s
-  helper2Gap: 4,  // orders after the first helper that a second joins
-  helperWave: 7,  // the obstructing helper joins once everything above is in (a shop can override with `helperWave`)
+  friesWave: 2,   // fryer appears (items become ALL)
+  doublesWave: 4, // orders may repeat an item
+  queue: [[3, 1], [6, 2]], // [fromOrder, cars waiting behind the window car]; orders of waiting cars are visible
+  extraWave: 5,   // second grill and fryer
+  burnWave: 4, burn: 12, // food burns after `burn` s
+  helper2Gap: 3,  // orders after the first helper that a second joins
+  helperWave: 5,  // the obstructing helper joins once everything above is in (a shop can override with `helperWave`)
   rows: [
     [1, 1, 38, 1, 2],
-    [2, 2, 36, 1, 2],
-    [3, 2, 34, 1.2, 2.4],
-    [4, 3, 32, 2, 3.4],
-    [5, 3, 30, 1.8, 3.2],
-    [6, 3, 28, 1.6, 3],
-    [8, 4, 26, 1.5, 2.8],
-    [10, 4, 24, 1.4, 2.6],
-    [12, 4, 22, 1.3, 2.4]
+    [2, 2, 34, 1, 2],
+    [3, 2, 30, 1.2, 2.4],
+    [4, 3, 27, 1.8, 3],
+    [5, 3, 24, 1.6, 2.8],
+    [6, 4, 22, 1.5, 2.6],
+    [8, 4, 20, 1.4, 2.4],
+    [10, 4, 18, 1.3, 2.2]
   ],
-  patDecay: 1, minPatience: 14,   // per order past the last row
-  gapDecay: [.05, .08], minGap: [.8, 1.6],
-  music: [[8, 1.06], [12, 1.12]]   // [fromOrder, music playback rate]
+  patDecay: 1.5, minPatience: 11,   // per order past the last row
+  gapDecay: [.08, .12], minGap: [.7, 1.4],
+  music: [[6, 1.06], [10, 1.12]]   // [fromOrder, music playback rate]
 };
 
 // Patience (s) at a wave start; `frac` (0-1) eases toward the next wave so it tightens with every order.
