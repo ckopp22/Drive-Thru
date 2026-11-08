@@ -14,53 +14,53 @@ export const LEVELS = [
   { time: 120, goal: 30, star2: 60, star3: 95, trays: 3, items: ALL, patience: 40, gap: 2.5, maxItems: 4, doubles: true,  queue: 1, burn: 0, notes: 'Larger orders' },
   { time: 120, goal: 30, star2: 78, star3: 145, trays: 3, items: ALL, patience: 40, gap: 2.5, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, notes: 'Food burns if left too long' },
   { time: 120, goal: 30, star2: 78, star3: 148, trays: 3, items: ALL, patience: 40, gap: 2,   maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, notes: 'Rush hour' },
-  { time: 120, goal: 30, star2: 78, star3: 150, trays: 3, items: ALL, patience: 40, gap: 2,   maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, notes: 'Final shift' },
+  { time: 135, goal: 30, star2: 78, star3: 150, trays: 3, items: ALL, patience: 40, gap: 2,   maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, notes: 'Final shift' },
   // Levels 11-13 add sticky puddles (see game.js puddleStep): up to `max` on the floor, a new one every `every` s; a mop by the bin clears them.
-  { time: 120, goal: 30, star2: 78, star3: 150, trays: 3, items: ALL, patience: 38, gap: 1.9, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 3, every: 8 }, notes: 'Sticky puddles' },
-  { time: 120, goal: 32, star2: 80, star3: 152, trays: 3, items: ALL, patience: 36, gap: 1.8, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 5, every: 6 }, notes: 'More puddles' },
-  { time: 120, goal: 34, star2: 82, star3: 154, trays: 3, items: ALL, patience: 34, gap: 1.7, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 7, every: 4.5 }, notes: 'Puddle flood' },
+  { time: 135, goal: 30, star2: 78, star3: 150, trays: 3, items: ALL, patience: 38, gap: 1.9, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 3, every: 8 }, notes: 'Sticky puddles' },
+  { time: 135, goal: 32, star2: 80, star3: 152, trays: 3, items: ALL, patience: 36, gap: 1.8, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 5, every: 6 }, notes: 'More puddles' },
+  { time: 135, goal: 34, star2: 82, star3: 154, trays: 3, items: ALL, patience: 34, gap: 1.7, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 7, every: 4.5 }, notes: 'Puddle flood' },
   // Levels 14-15 add the endless-style "helper" (cfg.helper = how many) that wanders between machines and gets in the way.
-  { time: 120, goal: 34, star2: 82, star3: 154, trays: 3, items: ALL, patience: 34, gap: 1.7, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 5, every: 6 }, helper: 1, notes: 'A helper gets in the way' },
-  { time: 120, goal: 36, star2: 84, star3: 156, trays: 3, items: ALL, patience: 32, gap: 1.6, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 7, every: 4.5 }, helper: 2, notes: 'Two helpers' }
+  { time: 135, goal: 34, star2: 82, star3: 154, trays: 3, items: ALL, patience: 34, gap: 1.7, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 5, every: 6 }, helper: 1, notes: 'A helper gets in the way' },
+  { time: 135, goal: 36, star2: 84, star3: 156, trays: 3, items: ALL, patience: 32, gap: 1.6, maxItems: 4, doubles: true,  queue: 2, extra: true, burn: 12, puddles: { max: 7, every: 4.5 }, helper: 2, notes: 'Two helpers' }
 ];
 
 // Burger Joint only (levels 16-20): the milkshake levels. 16-19 keep one helper and no puddles; 20 is the 3 minute finale with both back.
 const SH = [...ALL, 'shake'];
 export const SHAKE_LEVELS = [
-  { time: 120, goal: 30, star2: 70, star3: 130, trays: 3, items: SH, patience: 40, gap: 2.2, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Shakes: milk from the fridge, then stand at the mixer', intro: '🥛 New: Shake! Grab milk from the fridge, then stand at the mixer' },
-  { time: 120, goal: 32, star2: 72, star3: 134, trays: 3, items: SH, patience: 38, gap: 2.1, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Shake rush' },
-  { time: 120, goal: 34, star2: 74, star3: 138, trays: 3, items: SH, patience: 36, gap: 2,   maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Busier shakes' },
-  { time: 120, goal: 36, star2: 76, star3: 142, trays: 3, items: SH, patience: 34, gap: 1.9, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Shake crunch' },
+  { time: 135, goal: 30, star2: 70, star3: 130, trays: 3, items: SH, patience: 40, gap: 2.2, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Shakes: milk from the fridge, then stand at the mixer', intro: '🥛 New: Shake! Grab milk from the fridge, then stand at the mixer' },
+  { time: 135, goal: 32, star2: 72, star3: 134, trays: 3, items: SH, patience: 38, gap: 2.1, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Shake rush' },
+  { time: 135, goal: 34, star2: 74, star3: 138, trays: 3, items: SH, patience: 36, gap: 2,   maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Busier shakes' },
+  { time: 135, goal: 36, star2: 76, star3: 142, trays: 3, items: SH, patience: 34, gap: 1.9, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Shake crunch' },
   { time: 180, goal: 50, star2: 105, star3: 210, trays: 3, items: SH, patience: 32, gap: 1.8, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 2, puddles: { max: 7, every: 4.5 }, notes: 'Grand finale: puddles and two helpers' }
 ];
 
 // Coffee Shop only (levels 16-20): the donut levels. Same shape as the shake levels, with a little more patience for the extra walking.
 const CD = [...ALL, 'donut'];
 export const DONUT_LEVELS = [
-  { time: 120, goal: 30, star2: 70, star3: 130, trays: 3, items: CD, patience: 44, gap: 2.2, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Donuts: grab one from the table, then stand at the microwave', intro: '🍩 New: Donut! Grab one from the table, then stand at the microwave' },
-  { time: 120, goal: 32, star2: 72, star3: 134, trays: 3, items: CD, patience: 42, gap: 2.1, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Donut rush' },
-  { time: 120, goal: 34, star2: 74, star3: 138, trays: 3, items: CD, patience: 40, gap: 2,   maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Busier donuts' },
-  { time: 120, goal: 36, star2: 76, star3: 142, trays: 3, items: CD, patience: 38, gap: 1.9, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Donut crunch' },
+  { time: 135, goal: 30, star2: 70, star3: 130, trays: 3, items: CD, patience: 44, gap: 2.2, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Donuts: grab one from the table, then stand at the microwave', intro: '🍩 New: Donut! Grab one from the table, then stand at the microwave' },
+  { time: 135, goal: 32, star2: 72, star3: 134, trays: 3, items: CD, patience: 42, gap: 2.1, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Donut rush' },
+  { time: 135, goal: 34, star2: 74, star3: 138, trays: 3, items: CD, patience: 40, gap: 2,   maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Busier donuts' },
+  { time: 135, goal: 36, star2: 76, star3: 142, trays: 3, items: CD, patience: 38, gap: 1.9, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 1, notes: 'Donut crunch' },
   { time: 180, goal: 50, star2: 105, star3: 210, trays: 3, items: CD, patience: 36, gap: 1.8, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 2, puddles: { max: 7, every: 4.5 }, notes: 'Grand finale: puddles and two helpers' }
 ];
 
 // Pizza Place only (levels 16-20): 16 adds slices (cutting table), 17 pickles. `toppings` are filled in by shops.js. 18 and 19 only cut patience; 20 is the 3 minute finale.
 const PZ = { trays: 3, items: ['burger', 'slice'], gap: 2, maxItems: 3, doubles: false, queue: 2, extra: true, burn: 0 };
 export const PIZZA_LEVELS = [
-  { ...PZ, time: 120, goal: 30, star2: 70, star3: 130, patience: 60, helper: 1, maxToppings: 4, extraTops: [], notes: 'Slices', intro: '🔪 New: Slices! Take a baked cheese pizza to the cutting table and stand there to cut it' },
-  { ...PZ, time: 120, goal: 32, star2: 72, star3: 134, patience: 56, helper: 1, maxToppings: 5, extraTops: ['pickles'], notes: 'Pickles', intro: '🥒 New topping: Pickles! The table is bottom right, by the mop' },
-  { ...PZ, time: 120, goal: 34, star2: 74, star3: 138, patience: 48, helper: 1, maxToppings: 5, extraTops: ['pickles'], notes: 'Less patient customers' },
-  { ...PZ, time: 120, goal: 36, star2: 76, star3: 142, patience: 40, helper: 1, maxToppings: 5, extraTops: ['pickles'], notes: 'Even less patient' },
+  { ...PZ, time: 135, goal: 30, star2: 70, star3: 130, patience: 60, helper: 1, maxToppings: 4, extraTops: [], notes: 'Slices', intro: '🔪 New: Slices! Take a baked cheese pizza to the cutting table and stand there to cut it' },
+  { ...PZ, time: 135, goal: 32, star2: 72, star3: 134, patience: 56, helper: 1, maxToppings: 5, extraTops: ['pickles'], notes: 'Pickles', intro: '🥒 New topping: Pickles! The table is bottom right, by the mop' },
+  { ...PZ, time: 135, goal: 34, star2: 74, star3: 138, patience: 48, helper: 1, maxToppings: 5, extraTops: ['pickles'], notes: 'Less patient customers' },
+  { ...PZ, time: 135, goal: 36, star2: 76, star3: 142, patience: 40, helper: 1, maxToppings: 5, extraTops: ['pickles'], notes: 'Even less patient' },
   { ...PZ, time: 180, goal: 50, star2: 105, star3: 210, patience: 36, helper: 2, puddles: { max: 7, every: 4.5 }, maxToppings: 5, extraTops: ['pickles'], notes: 'Grand finale: puddles and two helpers' }
 ];
 
 // Hospital only (levels 16-20): patients that want a toy from the toy chest. Each level cuts patience; 20 is the 3 minute finale.
 const HP = { trays: 0, items: [], extra: false, burn: 0, queue: 2, gap: 3.2, maxItems: 1, doubles: false, kinds: ['medicine', 'bill', 'bandage', 'id', 'toy'] };
 export const HOSPITAL_LEVELS = [
-  { ...HP, time: 120, goal: 30, star2: 70, star3: 130, patience: 52, helper: 1, notes: 'Toy patients', intro: '🧸 New: Toy patients! Tap the toy chest, wait for the bar, then bring the toy' },
-  { ...HP, time: 120, goal: 32, star2: 72, star3: 134, patience: 48, helper: 1, notes: 'Less patient' },
-  { ...HP, time: 120, goal: 34, star2: 74, star3: 138, patience: 44, helper: 1, notes: 'Even less patient' },
-  { ...HP, time: 120, goal: 36, star2: 76, star3: 142, patience: 40, helper: 1, notes: 'Impatient crowd' },
+  { ...HP, time: 135, goal: 30, star2: 70, star3: 130, patience: 52, helper: 1, notes: 'Toy patients', intro: '🧸 New: Toy patients! Tap the toy chest, wait for the bar, then bring the toy' },
+  { ...HP, time: 135, goal: 32, star2: 72, star3: 134, patience: 48, helper: 1, notes: 'Less patient' },
+  { ...HP, time: 135, goal: 34, star2: 74, star3: 138, patience: 44, helper: 1, notes: 'Even less patient' },
+  { ...HP, time: 135, goal: 36, star2: 76, star3: 142, patience: 40, helper: 1, notes: 'Impatient crowd' },
   { ...HP, time: 180, goal: 50, star2: 105, star3: 210, patience: 36, gap: 3, helper: 2, puddles: { max: 7, every: 4.5 }, notes: 'Grand finale: puddles and two helpers' }
 ];
 
