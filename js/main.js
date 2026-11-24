@@ -14,6 +14,9 @@ document.addEventListener('pointerdown', audio.unlock);
 audio.initToggles();
 go('menu');
 
+const splash = document.getElementById('splash');
+if (splash) setTimeout(() => { splash.classList.add('hide'); setTimeout(() => splash.remove(), 600); }, 1800);
+
 if ('serviceWorker' in navigator) {
   let updating = false;
   // A new version is installed and waiting: offer a banner; tapping it activates it and reloads.

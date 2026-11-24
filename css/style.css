@@ -488,3 +488,7 @@ img.slot { width: 56px; height: 56px; display: block; }
   html, body { position: absolute; top: 0; left: 0; bottom: auto; right: auto; height: var(--full-h, 100dvh); overflow: visible; }
   #app, .screen { height: var(--full-h, 100dvh); }
 }
+
+#splash { position: fixed; inset: 0; z-index: 9999; background: #fff; display: flex; align-items: center; justify-content: center; transition: opacity .5s; }
+#splash img { width: min(70vw, 360px); height: auto; }
+#splash.hide { opacity: 0; pointer-events: none; }
