@@ -63,6 +63,7 @@ function syncMusic() {
   const want = tapped && musicOn() && !stopped();
   clearTimeout(musicStopT);
   if (want) {
+    if (!music.getAttribute('src')) music.src = MUSIC_SRC; // reload after being unloaded in the background
     music.play().catch(() => {});
     musicBus.gain.setTargetAtTime(ducked ? DUCK_VOL : MUSIC_VOL, ctx.currentTime, .15);
   } else {
@@ -78,6 +79,11 @@ function apply() {
   if (stopped()) {
     music.pause();
     ctx.suspend().catch(() => {});
+    if (hidden) { // unload the track so iOS drops the lock-screen / Now Playing widget
+      music.removeAttribute('src');
+      music.load();
+      try { if (navigator.mediaSession) { navigator.mediaSession.metadata = null; navigator.mediaSession.playbackState = 'none'; } } catch (e) {}
+    }
   } else {
     if (ctx.state !== 'running') ctx.resume().catch(() => {});
     syncMusic(); // play() right here so it still counts as part of the tap (iOS)
@@ -94,6 +100,8 @@ export function unlock() {
 
 if (typeof document !== 'undefined') {
   document.addEventListener('visibilitychange', () => { hidden = document.hidden; apply(); });
+  window.addEventListener('pagehide', () => { hidden = true; apply(); });
+  window.addEventListener('pageshow', () => { hidden = document.hidden; apply(); });
 }
 
 export function setGamePaused(on) {
