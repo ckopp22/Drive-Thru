@@ -90,6 +90,32 @@ export const SHOPS = [
       blend2: { x: 2.55, z: 3 }, fax: { x: -2.55, z: 3 }
     },
     colors: { wall: 0xeef6fa, trim: 0x2c8fd6, tileA: '#ffffff', tileB: '#cfe8f3' }
+  },
+  {
+    id: 'sushi', name: 'Sushi', icon: '🍣', menuItem: 'burger',
+    // Burger Joint layout. Item slots: soda = soda bottle, fries = pot of rice (ingredient only), burger = fish sushi, vroll = veggie sushi.
+    // Rice burns on every level; sushi needs rice plus fish or veggies, so customers wait longer. 16-20 use the shake levels' timing.
+    levels: [...LEVELS, ...SHAKE_LEVELS].map(({ intro, puddles, ...l }, i) => ({
+      ...l, items: ['soda', 'burger', 'vroll'], burn: 12, patience: Math.round(l.patience * 1.5),
+      ...(i === 0 ? { intro: '🍣 Cook rice, take it to the sushi board, then add fish or veggies' } : {})
+    })),
+    endless: { patMult: 1.5, burn: 12, itemRows: [[1, ['soda', 'burger', 'vroll']]] },
+    combo: { burger: { base: 'fries', with: { rawfish: 'burger', veg: 'vroll' } } },
+    noBurn: ['burger'], noTray: ['fries'],
+    times: { burger: 3.5 }, // rolling sushi is quick; the rice is the slow part
+    keepShown: ['fries'], // the rice pot is on the cooker while it cooks
+    foods: {
+      soda:   { icon: '🍾', machine: 'soda cooler', price: 2, cy: .05,  surf: [.45, .56] },
+      burger: { icon: '🍣', machine: 'sushi board', price: 7, cy: -.18, surf: [0, .9] },
+      vroll:  { icon: '🥒', machine: 'sushi board', price: 6, cy: -.18, surf: [0, .9] },
+      fries:  { icon: '🍚', machine: 'rice cooker', price: 0, cy: -.08, surf: [0, .85] }
+    },
+    layout: {
+      vegfridge: { x: 2.55, z: 3 }, fishfridge: { x: -2.55, z: 2.9 },
+      soda: { x: -2.55, z: -1.2 }, burger: { x: 2.55, z: -1.2 }, fries: { x: -2.55, z: 1.6 },
+      burger2: { x: 2.55, z: .4 }, fries2: { x: -2.55, z: .2 }, bin: { x: 2.6, z: 1.6 }
+    },
+    colors: { wall: 0xf4ead5, trim: 0xb3262b, tileA: '#f7efdc', tileB: '#c9a66b' }
   }
 ];
 

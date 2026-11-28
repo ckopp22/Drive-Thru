@@ -13,13 +13,16 @@ const typeOf = k => STATIONS[k].type || k; // item a station makes (extra machin
 // hooks: { sfx(name), shake(key), send(items) -> bool }
 // opts.burn: seconds a finished food item may wait before it burns (0 = never).
 // Walk-up supplies: tap one to grab its item (hands must be empty).
-const GRAB = { cabinet: 'cup', fridge: 'milk', donuts: 'rawdonut', doughfridge: 'rawmix' };
+const GRAB = { cabinet: 'cup', fridge: 'milk', donuts: 'rawdonut', doughfridge: 'rawmix', fishfridge: 'rawfish', vegfridge: 'veg' };
 export function createLogic(world, hooks, opts = {}) {
   const worker = world.worker;
   const st = {};
   const cups = !!activeShop().cups; // drinks need a cup from the cabinet before a machine starts
   const needOf = k => (activeShop().needs || {})[typeOf(k)] || STATIONS[k].needs;
   const altOf = k => (activeShop().alt || {})[typeOf(k)]; // a second recipe on the same machine
+  const comboOf = k => (activeShop().combo || {})[typeOf(k)]; // a machine that needs a base plus one topping (either order)
+  const noBurn = activeShop().noBurn || [];
+  const burns = k => STATIONS[k].burns && !noBurn.includes(typeOf(k));
   ITEMS.forEach(k => (st[k] = { state: 'idle', p: 0, t: 0 }));
   const hands = [];
   const trays = Array.from({ length: opts.trays || 3 }, () => []);
@@ -35,6 +38,15 @@ export function createLogic(world, hooks, opts = {}) {
   function tap(key) {
     hooks.sfx('tap');
     // An idle machine accepts the item you took from it back (set it down); otherwise busy hands can't use a machine.
+    const combo = ITEMS.includes(key) && comboOf(key);
+    if (combo && st[key].state === 'idle') {
+      const s = st[key], h = hands[0];
+      const ok = !carried && (h ? (h === combo.base ? !s.base : combo.with[h] ? !s.top : Object.values(combo.with).includes(h) && !s.base && !s.top) : s.base || s.top);
+      if (!ok) { hooks.shake(key); return false; }
+      active = key;
+      worker.walkTo(key);
+      return true;
+    }
     const alt = ITEMS.includes(key) && altOf(key);
     const putBack = ITEMS.includes(key) && st[key].state === 'idle' && (hands.includes(typeOf(key)) || (!!alt && hands.includes(alt.item)));
     const need = ITEMS.includes(key) && needOf(key);
@@ -75,6 +87,8 @@ export function createLogic(world, hooks, opts = {}) {
         setHeld();
         worker.kick();
         hooks.sfx('pickup');
+      } else if (s.state === 'idle' && comboOf(key)) {
+        combine(key, s, comboOf(key));
       } else if (s.state === 'idle') {
         const alt = altOf(key), back = hands.find(h => h === typeOf(key) || (alt && h === alt.item));
         if (back) {
@@ -124,7 +138,7 @@ export function createLogic(world, hooks, opts = {}) {
         worker.setHeld([]);
         hooks.sfx('place');
       } else if (hands.length) {
-        if (['cup', 'milk', 'rawdonut', 'rawmix', 'mix', 'blend', 'burnt'].includes(hands[0]) || tray.length >= WORKER.trayCap || away[i]) return;
+        if (['cup', 'milk', 'rawdonut', 'rawmix', 'mix', 'blend', 'rawfish', 'veg', 'burnt', ...(activeShop().noTray || [])].includes(hands[0]) || tray.length >= WORKER.trayCap || away[i]) return;
         tray.push(hands.shift());
         setHeld();
         world.setTray(i, tray);
@@ -153,24 +167,53 @@ export function createLogic(world, hooks, opts = {}) {
   }
   worker.onArrive = arrive;
 
+  // Put the base or a topping on the board (empty hands take it back); once both are there it starts making.
+  function combine(key, s, c) {
+    const h = hands[0], done = Object.values(c.with).includes(h);
+    if (carried) return hooks.shake(key);
+    if (h === c.base && !s.base) s.base = h;
+    else if (c.with[h] && !s.top) s.top = h;
+    else if (done && !s.base && !s.top) { s.item = h; s.state = 'ready'; world.viz[key].setType(h); }
+    else if (!h && (s.base || s.top)) {
+      const part = s.top || s.base;
+      if (s.top) s.top = null; else s.base = null;
+      hands.push(part);
+      setHeld();
+      world.viz[key].stage(s.base);
+      worker.kick();
+      return hooks.sfx('pickup');
+    } else return hooks.shake(key);
+    hands.length = 0;
+    setHeld();
+    if (s.base && s.top) {
+      s.item = c.with[s.top];
+      s.base = s.top = null;
+      s.state = 'making';
+      s.p = 0;
+      world.viz[key].setType(s.item);
+    }
+    world.viz[key].stage(s.top || s.base);
+    hooks.sfx(s.state === 'making' ? 'start' : 'place');
+  }
+
   function update(dt) {
     worker.update(dt);
     for (const k of ITEMS) {
       const s = st[k];
       if (!world.viz[k]) continue;
       if (s.state === 'making') {
-        if (!STATIONS[k].stand || worker.at === k) s.p = Math.min(1, s.p + dt / STATIONS[k].time); // the shake only mixes while you stand at it
+        if (!STATIONS[k].stand || worker.at === k) s.p = Math.min(1, s.p + dt / ((activeShop().times || {})[typeOf(k)] || STATIONS[k].time)); // the shake only mixes while you stand at it
         if (s.p >= 1) {
           s.state = 'ready';
           s.t = 0;
           hooks.sfx('ready');
           world.viz[k].ping();
         }
-      } else if (s.state === 'ready' && opts.burn && STATIONS[k].burns && (s.t += dt) >= opts.burn) {
+      } else if (s.state === 'ready' && opts.burn && burns(k) && (s.t += dt) >= opts.burn) {
         s.state = 'burnt';
         hooks.sfx('burn');
       }
-      world.viz[k].set(s.state, s.p, s.state === 'ready' && opts.burn && STATIONS[k].burns ? s.t / opts.burn : 0);
+      world.viz[k].set(s.state, s.p, s.state === 'ready' && opts.burn && burns(k) ? s.t / opts.burn : 0);
     }
   }
 
@@ -226,8 +269,9 @@ export function startGame(root, level, levels, cb, opts = {}) {
   const world = createWorld(el.querySelector('canvas'));
   world.setTrayCount(cfg.trays);
   world.setExtra(!!cfg.extra);
-  world.setShake(['shake', 'donut'].some(k => cfg.items.includes(k)) || (!!activeShop().needs && cfg.items.includes('fries')) || (!!activeShop().alt && cfg.items.includes('soda')));
-  if (endless && !cfg.items.includes('fries')) world.setFries(false);
+  const showFries = () => !!activeShop().combo || cfg.items.includes('fries'); // the sushi shop's rice cookers are always there
+  world.setShake(!!activeShop().combo || ['shake', 'donut'].some(k => cfg.items.includes(k)) || (!!activeShop().needs && cfg.items.includes('fries')) || (!!activeShop().alt && cfg.items.includes('soda')));
+  if (endless && !showFries()) world.setFries(false);
   const overlay = el.querySelector('.overlay');
   const btns = [...el.querySelectorAll('.act')];
   const minis = btns.map(b => b.querySelector('.mini'));
@@ -331,7 +375,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   const lopts = { burn: cfg.burn, trays: cfg.trays };
   function helperStops() {
     const sh = activeShop();
-    return ['soda', 'choco', 'burger', 'fries', 'fax', ...(cfg.items.includes('shake') ? ['shake', 'fridge'] : []), ...(cfg.items.includes('donut') ? ['donut', 'donuts'] : []), ...(cfg.extra ? ['burger2', 'fries2'] : []), ...(sh.cups ? ['cabinet'] : []), ...(sh.needs && cfg.items.includes('fries') ? ['mix', 'doughfridge'] : []), ...(sh.alt && cfg.items.includes('soda') ? ['blend', 'blend2'] : [])].filter(k => sh.layout[k]);
+    return ['soda', 'choco', 'burger', 'fries', 'fax', ...(cfg.items.includes('shake') ? ['shake', 'fridge'] : []), ...(cfg.items.includes('donut') ? ['donut', 'donuts'] : []), ...(cfg.extra ? ['burger2', 'fries2'] : []), ...(sh.cups ? ['cabinet'] : []), ...(sh.needs && cfg.items.includes('fries') ? ['mix', 'doughfridge'] : []), ...(sh.alt && cfg.items.includes('soda') ? ['blend', 'blend2'] : []), ...(sh.combo ? ['fishfridge', 'vegfridge'] : [])].filter(k => sh.layout[k]);
   }
   // Food shops: helpers sometimes grab a machine's ready (or burnt) food and bin it.
   function helperLoot() {
@@ -353,7 +397,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     Object.assign(cfg, endlessCfg(w, over));
     lopts.burn = cfg.burn;
     world.setExtra(!!cfg.extra);
-    world.setFries(cfg.items.includes('fries'), announce && !hadFries);
+    world.setFries(showFries(), announce && !hadFries);
     if (activeShop().needs) world.setShake(cfg.items.includes('fries'));
     if (activeShop().alt) world.setShake(cfg.items.includes('soda'));
     audio.setMusicRate(endlessMusicRate(w));
@@ -361,7 +405,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     if (puddleOn !== hadMop) { world.setMop(puddleOn); puddleT = 3; }
     world.setHelper(cfg.helper ? helperStops() : null, cfg.helper, helperLoot());
     if (!announce) return;
-    const news = [!hadFries && cfg.items.includes('fries') && (activeShop().needs ? '🍩 Donuts! Mix dough first' : '🍟 Fries!'), !hadExtra && cfg.extra && (activeShop().alt ? '2nd medicine & bandage machines!' : '🍳 2nd grill & fryer!'), activeShop().alt && !hadLiquid && cfg.items.includes('soda') && '🧪 Liquid medicine! Use the mixer', !hadBurn && cfg.burn && (activeShop().alt ? false : '🔥 Food burns!'), puddleOn && !hadMop && '🧽 Sticky puddles! Mop by the bin', cfg.helper > hadHelper && (hadHelper ? '🧑‍🍳 Another "helper"!' : '🧑‍🍳 A "helper" is in your way!')].filter(Boolean).join(' ');
+    const news = [!hadFries && cfg.items.includes('fries') && (activeShop().needs ? '🍩 Donuts! Mix dough first' : '🍟 Fries!'), !hadExtra && cfg.extra && (activeShop().alt ? '2nd medicine & bandage machines!' : activeShop().combo ? '2nd rice cooker & sushi board!' : '🍳 2nd grill & fryer!'), activeShop().alt && !hadLiquid && cfg.items.includes('soda') && '🧪 Liquid medicine! Use the mixer', !hadBurn && cfg.burn && (activeShop().alt ? false : '🔥 Food burns!'), puddleOn && !hadMop && '🧽 Sticky puddles! Mop by the bin', cfg.helper > hadHelper && (hadHelper ? '🧑‍🍳 Another "helper"!' : '🧑‍🍳 A "helper" is in your way!')].filter(Boolean).join(' ');
     if (news) banner(`⬆️ ${news}`, 'wave');
     audio.playSfx('waveUp');
   }
@@ -401,7 +445,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   hintEl.addEventListener('pointerdown', () => { hintNow = null; hintEl.hidden = true; });
 
   const ordersCb = {
-    onArrive: slots => showHint('make', activeShop().alt && slots[0] === 'soda' ? 'Mixer → take the mix to the medicine machine' : activeShop().needs && slots[0] === 'fries' ? 'Dough from the fridge → mixer → donut maker' : `${activeShop().cups ? 'Grab a cup 🥛 from the cabinet, then tap' : 'Tap'} the ${MACHINE[slots[0]]} <img class="inline-icon" src="${world.itemIcon(slots[0])}" alt=""> to make it`),
+    onArrive: slots => showHint('make', activeShop().combo && slots[0] !== 'soda' ? 'Cook rice, take it to the sushi board, add fish or veggies' : activeShop().alt && slots[0] === 'soda' ? 'Mixer → take the mix to the medicine machine' : activeShop().needs && slots[0] === 'fries' ? 'Dough from the fridge → mixer → donut maker' : `${activeShop().cups ? 'Grab a cup 🥛 from the cabinet, then tap' : 'Tap'} the ${MACHINE[slots[0]]} <img class="inline-icon" src="${world.itemIcon(slots[0])}" alt=""> to make it`),
     onSend: ({ total, pos }) => {
       money += total;
       endHint('send');
@@ -505,7 +549,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     e.preventDefault();
     if (paused || ended || dying) return;
     const k = world.pick(e.clientX, e.clientY);
-    if (!k || (ITEMS.includes(k) && !(STATIONS[k].type && k !== 'blend2' ? cfg.extra : cfg.items.includes(k === 'mix' ? 'fries' : typeOf(k) === 'blend' ? 'soda' : k)))) return;
+    if (!k || (ITEMS.includes(k) && !(STATIONS[k].type && k !== 'blend2' ? cfg.extra : (!!activeShop().combo && (k === 'burger' || k === 'fries')) || cfg.items.includes(k === 'mix' ? 'fries' : typeOf(k) === 'blend' ? 'soda' : k)))) return;
     if (world.helperBlocks(k)) { world.helperShoo(k); audio.playSfx('tap'); world.worker.walkTo(world.helperWaitSpot(k)); return; } // queue up behind the helper; tap again once it leaves
     if (k === 'mop') {
       audio.playSfx('tap');
