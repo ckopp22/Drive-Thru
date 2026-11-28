@@ -1,4 +1,4 @@
-import { LEVELS, SHAKE_LEVELS, DONUT_LEVELS, PIZZA_LEVELS, HOSPITAL_LEVELS } from './levels.js';
+import { LEVELS, SHAKE_LEVELS, DONUT_LEVELS, HOSPITAL_LEVELS } from './levels.js';
 
 export const PIZZA_TOPS = ['sauce', 'cheese', 'pepperoni', 'mushroom'];
 export const ALL_TOPS = [...PIZZA_TOPS, 'pickles']; // level 17+ adds pickles (order = pizza signature order)
@@ -48,38 +48,27 @@ export const SHOPS = [
     colors: { wall: 0xf3e5d0, trim: 0x2f7d5b, tileA: '#f3e3cc', tileB: '#c8a27a' }
   },
   {
-    id: 'pizza', name: 'Pizza Place', icon: '🍕', menuItem: 'pizza:sauce+cheese',
-    pizza: true, // dough -> table plate -> toppings -> oven -> tray
-    // Endless mode: pizzas only (the oven slot), toppings and topping count grow with the waves, second oven from wave 4.
-    endless: {
-      patMult: 1.5, gapMult: 1.6, items: ['burger'], extraWave: 3, maxItemsCap: 3,
-      toppings: [[1, ['sauce', 'cheese']], [2, ['sauce', 'cheese', 'pepperoni']], [3, PIZZA_TOPS]],
-      maxToppings: [[1, 2], [2, 3], [3, 4]]
+    id: 'bakery', name: 'Bakery', icon: '🧁', menuItem: 'burger',
+    // Burger Joint curve with no puddles; donut levels get more patience for the fridge and mixer walk. 16-20 use the shake levels' timing.
+    levels: [...LEVELS, ...SHAKE_LEVELS].map(({ intro, puddles, ...l }, i) => ({
+      ...l, items: l.items.filter(t => t !== 'shake'),
+      patience: l.items.includes('fries') ? Math.round(l.patience * 1.3) : l.patience,
+      ...(i === 2 ? { intro: '🍩 New: Donuts! Grab dough from the fridge, stand at the mixer, then fill the donut maker' } : {})
+    })),
+    endless: { patMult: 1.3 },
+    needs: { fries: 'mix' }, // the donut maker needs mixed dough
+    foods: {
+      soda:   { icon: '🥛', machine: 'milk machine', price: 2, cy: .05,  surf: [.45, .56] },
+      burger: { icon: '🍰', machine: 'cake oven',    price: 4, cy: -.06, surf: [0, .9] },
+      fries:  { icon: '🍩', machine: 'donut maker',  price: 5, cy: -.12, surf: [0, .85] },
+      mix:    { icon: '🥣', machine: 'mixer',        price: 0, cy: -.1,  surf: [0, .95] }
     },
-    // Same level curve as the burger joint, re-skinned: 1-3 trays like the burger joint, toppings unlock with the levels, second oven from level 4.
-    levels: LEVELS.map((l, i) => ({
-      ...l, items: ['burger'], extra: i >= 3, queue: i >= 7 ? 2 : 1, patience: Math.round(l.patience * 1.5),
-      toppings: i < 2 ? ['sauce', 'cheese'] : i < 4 ? ['sauce', 'cheese', 'pepperoni'] : PIZZA_TOPS,
-      maxToppings: [2, 2, 3, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4][i],
-      maxItems: [1, 1, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3][i],
-      doubles: false
-    })).concat(PIZZA_LEVELS.map(({ extraTops, ...l }) => ({ ...l, toppings: [...PIZZA_TOPS, ...extraTops] }))),
-    foods: {},
-    spots: { slice: { x: -1.4, z: 2.6, face: 0 } }, // the cutting table stands on the bottom edge
-    layout: { slice: { x: -1.4, z: 3.3, rot: Math.PI }, burger: { x: 2.55, z: -1.6 }, burger2: { x: 2.55, z: -.1 }, bin: { x: 2.6, z: 2.7 }, mop: { x: 0, z: 3.4 } },
-    // Walk-up fixtures: key, kind (model), position; tables stand in the room and give their own walk spot.
-    fixtures: [
-      { key: 'dough', kind: 'dough', x: -2.55, z: -1.5 },
-      { key: 'sauce', kind: 'sauce', x: -2.55, z: -.2 },
-      { key: 'cheese', kind: 'cheese', x: -2.55, z: 1.1 },
-      { key: 'pepperoni', kind: 'pepperoni', x: -2.55, z: 2.4 },
-      { key: 'mushroom', kind: 'mushroom', x: 2.55, z: 1.4 },
-      // Bottom edge, right of the mop (level 17): faces up the room. The cutting table (level 16) is the `slice` machine on the left.
-      { key: 'pickles', kind: 'pickles', x: 1.4, z: 3.3, rot: Math.PI, spot: { x: 1.4, z: 2.6, face: 0 } },
-      { key: 'table0', kind: 'table', x: -.8, z: .9, spot: { x: -.8, z: 1.75, face: Math.PI } },
-      { key: 'table1', kind: 'table', x: .8, z: .9, spot: { x: .8, z: 1.75, face: Math.PI } }
-    ],
-    colors: { wall: 0xf6d9b0, trim: 0xd62828, tileA: '#ffffff', tileB: '#e0524a' }
+    layout: {
+      mix: { x: 2.55, z: 3 }, doughfridge: { x: -2.55, z: 2.9 },
+      soda: { x: -2.55, z: -1.2 }, burger: { x: 2.55, z: -1.2 }, fries: { x: -2.55, z: 1.6 },
+      burger2: { x: 2.55, z: .4 }, fries2: { x: -2.55, z: .2 }, bin: { x: 2.6, z: 1.6 }
+    },
+    colors: { wall: 0xffe3ec, trim: 0xc2577a, tileA: '#fff4f0', tileB: '#f2b5c4' }
   },
   {
     id: 'hospital', name: 'Hospital', icon: '🏥', menuItem: 'medicine',

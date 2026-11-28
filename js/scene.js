@@ -183,6 +183,27 @@ function hospitalItem(type, g) {
   }
 }
 
+function bakeryItem(type, g) {
+  if (type === 'soda') { // glass of milk
+    part(G('Cylinder', .13, .1, .32, 10), 0xbfe3f5, 0, .16, 0, g);
+    part(G('Cylinder', .135, .125, .1, 10), 0xffffff, 0, .31, 0, g);
+  } else if (type === 'burger') { // frosted cake with a cherry
+    part(G('Cylinder', .22, .22, .16, 12), 0xe0a050, 0, .08, 0, g);
+    part(G('Cylinder', .23, .23, .07, 12), 0xf7a8c4, 0, .19, 0, g);
+    part(G('Sphere', .055, 8, 6), 0xe63946, 0, .27, 0, g);
+  } else if (type === 'fries') { // pink frosted donut with sprinkles
+    part(G('Torus', .13, .08, 8, 14), 0xe0a050, 0, .08, 0, g).rotation.x = Math.PI / 2;
+    part(G('Torus', .13, .065, 8, 14), 0xf06fa0, 0, .12, 0, g).rotation.x = Math.PI / 2;
+    [[.13, 0, 0xffffff], [-.12, .05, 0xffd23f], [0, .13, 0x4cb8ff], [.02, -.13, 0x4cb84c]].forEach(([x, z, c]) => box(.05, .02, .02, c, x, .19, z, g));
+  } else if (type === 'rawmix') { // ball of unmixed dough on a paper
+    box(.34, .02, .34, 0xffffff, 0, .01, 0, g);
+    part(G('Sphere', .15, 8, 6), 0xf1dcae, 0, .13, 0, g).scale.y = .8;
+  } else { // 'mix': a bowl of mixed dough
+    part(G('Cylinder', .22, .13, .17, 12), 0x4cb8ff, 0, .085, 0, g);
+    part(G('Sphere', .18, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), 0xffe9b8, 0, .16, 0, g).scale.y = .6;
+  }
+}
+
 export function makeItem(type) {
   const g = new THREE.Group();
   if (type === 'burnt') { // a charred lump, carried to the bin
@@ -204,7 +225,7 @@ export function makeItem(type) {
     return g;
   }
   const id = activeShop().id;
-  (id === 'pizza' ? pizzaItem : id === 'hospital' ? hospitalItem : id === 'coffee' ? coffeeItem : burgerItem)(type, g);
+  (id === 'pizza' ? pizzaItem : id === 'hospital' ? hospitalItem : id === 'coffee' ? coffeeItem : id === 'bakery' ? bakeryItem : burgerItem)(type, g);
   return g;
 }
 
@@ -550,6 +571,47 @@ const MACHINE_BUILD = {
       box(.4, .3, .02, 0x4cb8ff, -.15, 1.25, .45, g);
     }
   },
+  bakery: {
+    soda(g) { // milk machine
+      box(1.1, 1.8, .9, 0xf2f6f9, 0, .9, 0, g);
+      box(1.1, .2, .9, 0x4cb8ff, 0, 1.9, 0, g);
+      box(.9, .7, .05, 0x4cb8ff, 0, 1.3, .47, g);
+      box(.3, .35, .06, 0xffffff, 0, 1.3, .5, g);
+      box(.18, .2, .2, 0x9a9a9a, 0, .78, .5, g);
+      box(.6, .06, .35, 0x9a9a9a, 0, .5, .45, g);
+    },
+    burger(g) { // cake oven
+      box(1.4, .85, 1.0, 0xc2577a, 0, .425, 0, g);
+      box(.9, .4, .04, 0x3a2a2a, 0, .4, .51, g);
+      box(.8, .05, .06, 0xdddddd, 0, .68, .53, g);
+      box(1.2, .03, .8, 0x3a3a3f, 0, .865, 0, g);
+      box(1.4, 1.0, .1, 0xf2e3d0, 0, 1.35, -.45, g);
+      [-.35, 0, .35].forEach(x => part(G('Cylinder', .07, .07, .05, 8), 0xffc828, x, 1.65, -.38, g).rotation.x = Math.PI / 2);
+    },
+    fries(g) { // donut maker
+      box(1.2, .8, 1.0, 0x8fd6c4, 0, .4, 0, g);
+      box(1.0, .04, .8, 0xe8a23a, 0, .82, 0, g);
+      box(.08, .9, .08, 0x9a9a9a, -.45, 1.25, -.35, g);
+      part(G('Cylinder', .22, .08, .35, 10), 0xdddddd, -.45, 1.75, -.35, g);
+      part(G('Torus', .13, .06, 8, 14), 0xf06fa0, 0, .5, .53, g);
+    },
+    mix(g) { // dough mixer
+      box(1.1, .75, .9, 0xe63946, 0, .375, 0, g);
+      box(1.1, .1, .9, 0xffffff, 0, .8, 0, g);
+      box(.2, .8, .2, 0xe63946, 0, 1.2, -.3, g);
+      box(.3, .22, .65, 0xe63946, 0, 1.65, -.08, g);
+      part(G('Cylinder', .03, .03, .45, 6), 0xcccccc, 0, 1.35, .15, g);
+      part(G('Torus', .09, .02, 6, 10), 0xcccccc, 0, 1.13, .15, g);
+    },
+    doughfridge(g) { // dough fridge
+      box(1.0, 1.7, .8, 0xfff4e0, 0, .85, 0, g);
+      box(.96, .8, .04, 0xf2e3c4, 0, 1.25, .42, g);
+      box(.96, .8, .04, 0xf2e3c4, 0, .45, .42, g);
+      box(.05, .5, .05, 0x555d66, .38, 1.25, .46, g);
+      box(.05, .5, .05, 0x555d66, .38, .45, .46, g);
+      part(G('Sphere', .17, 8, 6), 0xf1dcae, -.15, 1.25, .45, g).scale.z = .3;
+    }
+  },
   pizza: {
     slice(g) { // cutting table with a board and a pizza cutter
       box(1.2, .08, .8, 0xa9743a, 0, .76, 0, g);
@@ -825,7 +887,7 @@ function buildKitchen(scene, billboards, hits) {
   ];
   if (L.fries2) extraHits.push(hit('fries2', 1.1, .9, 1.3, L.fries2.x, .45, L.fries2.z));
   // Special-item stations (Burger Joint shake: mixer + fridge; Coffee Shop donut: microwave + table), toggled by world.setShake.
-  const BONUS = { slice: [1.3, 1.0, 1.0, .5], shake: [1.2, 1.2, 1.2, .7], fridge: [1.1, 1.9, 1.0, .95], donut: [1.2, 1.2, 1.2, .7], donuts: [1.1, 1.0, 1.1, .5] };
+  const BONUS = { slice: [1.3, 1.0, 1.0, .5], shake: [1.2, 1.2, 1.2, .7], fridge: [1.1, 1.9, 1.0, .95], donut: [1.2, 1.2, 1.2, .7], donuts: [1.1, 1.0, 1.1, .5], mix: [1.2, 1.2, 1.2, .7], doughfridge: [1.1, 1.9, 1.0, .95] };
   const bonusKeys = Object.keys(BONUS).filter(k => L[k]);
   const shakeHits = bonusKeys.map(k => hit(k, BONUS[k][0], BONUS[k][1], BONUS[k][2], L[k].x, BONUS[k][3], L[k].z));
   shakeHits.forEach(h => hits.splice(hits.indexOf(h), 1));
@@ -859,9 +921,9 @@ function buildKitchen(scene, billboards, hits) {
   }
 
   const viz = {};
-  for (const k of ['soda', 'burger', 'fries', 'burger2', 'fries2', 'shake', 'donut', 'slice']) if (L[k]) viz[k] = makeStationViz(STATIONS[k].type || k, L[k].x, L[k].z, billboards);
+  for (const k of ['soda', 'burger', 'fries', 'burger2', 'fries2', 'shake', 'donut', 'slice', 'mix']) if (L[k]) viz[k] = makeStationViz(STATIONS[k].type || k, L[k].x, L[k].z, billboards);
   for (const k in viz) scene.add(viz[k].root);
-  for (const k of ['shake', 'donut', 'slice']) if (viz[k]) viz[k].root.visible = false;
+  for (const k of ['shake', 'donut', 'slice', 'mix']) if (viz[k]) viz[k].root.visible = false;
   return { viz, lid, trays, machines, signs, trayHits, extraHits, shakeHits, fixtures, tablePlates };
 }
 
@@ -1081,7 +1143,7 @@ export function buildWorld() {
     const sd = f.x < 0 ? -1 : 1;
     SPOTS[f.key] = f.spot || { x: sd * 1.9, z: f.z, face: sd * Math.PI / 2 };
   }
-  for (const k of ['soda', 'burger', 'fries', 'burger2', 'fries2', 'bin', 'cabinet', 'shake', 'fridge', 'donut', 'donuts']) {
+  for (const k of ['soda', 'burger', 'fries', 'burger2', 'fries2', 'bin', 'cabinet', 'shake', 'fridge', 'donut', 'donuts', 'mix', 'doughfridge']) {
     if (!L[k]) continue;
     const sd = L[k].x < 0 ? -1 : 1;
     SPOTS[k === 'bin' ? 'trash' : k] = { x: sd * 1.9, z: L[k].z, face: sd * Math.PI / 2 };
@@ -1255,7 +1317,7 @@ export function buildWorld() {
     mopPos: mop.position,
     // Level setup: show the milkshake mixer and milk fridge and make them tappable (or hide them).
     setShake(on) {
-      for (const k of ['shake', 'fridge', 'donut', 'donuts', 'slice', 'toy']) if (machines[k]) { machines[k].visible = on; if (viz[k]) viz[k].root.visible = on; }
+      for (const k of ['shake', 'fridge', 'donut', 'donuts', 'slice', 'toy', 'mix', 'doughfridge']) if (machines[k]) { machines[k].visible = on; if (viz[k]) viz[k].root.visible = on; }
       shakeHits.forEach(h => {
         const i = hits.indexOf(h);
         if (on && i < 0) hits.push(h);

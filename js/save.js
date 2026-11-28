@@ -37,6 +37,8 @@ function load() {
       // Saves from before shops existed kept Burger Joint progress at the top level.
       const shops = isObj(raw.shops) ? raw.shops : { burger: { highestUnlocked: raw.highestUnlocked, bestMoney: raw.bestMoney, stars: raw.stars } };
       d.shops = Object.fromEntries(Object.entries(shops).map(([id, p]) => [id, cleanShop(p)]));
+      if (d.shops.pizza && !d.shops.bakery) d.shops.bakery = d.shops.pizza; // the Bakery replaced the Pizza Place
+      if (d.shop === 'pizza') d.shop = 'bakery';
       if (!d.shops.burger) d.shops.burger = freshShop();
     }
   } catch (e) {}
