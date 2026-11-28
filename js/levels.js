@@ -83,7 +83,9 @@ export const STATIONS = {
   mix:     { time: 3.5, needs: 'rawmix' },
   choco:   { time: 3.5 }, // Bakery chocolate milk
   // Hospital: the mixing machine makes the base for liquid medicine.
-  blend:   { time: 5 }
+  blend:   { time: 5 },
+  blend2:  { time: 5, type: 'blend' }, // second mixer, there whenever liquid medicine is
+  fax:     { time: 5 } // Hospital paperwork
 };
 export const WORKER = { speed: 6, maxHeld: 1, bobRate: 14, trayCap: 4 };
 

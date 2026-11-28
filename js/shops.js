@@ -71,21 +71,23 @@ export const SHOPS = [
     // Burger Joint layout. Item slots: burger = pills, fries = bandage, soda = liquid medicine (made on the medicine machine from a mix).
     // Everything burns on every level. Liquid levels get more patience for the extra step. 16-20 use the shake levels' timing.
     levels: [...LEVELS, ...SHAKE_LEVELS].map(({ intro, puddles, ...l }, i) => ({
-      ...l, items: i < 2 ? ['burger', 'fries'] : ['burger', 'fries', 'soda'], burn: 12,
+      ...l, items: i < 2 ? ['burger', 'fries', 'fax'] : ['burger', 'fries', 'soda', 'fax'], burn: 12,
       patience: i < 2 ? l.patience : Math.round(l.patience * 1.3),
       ...(i === 2 ? { intro: '🧪 New: Liquid medicine! Run the mixer, then take the mix to the medicine machine' } : {})
     })),
-    endless: { patMult: 1.3, burn: 12, itemRows: [[1, ['burger', 'fries']], [3, ['burger', 'fries', 'soda']]] },
+    endless: { patMult: 1.3, burn: 12, itemRows: [[1, ['burger', 'fries', 'fax']], [3, ['burger', 'fries', 'soda', 'fax']]] },
     alt: { burger: { needs: 'blend', item: 'soda' } }, // holding a mix, the medicine machine makes the liquid instead
     foods: {
       burger: { icon: '💊', machine: 'medicine machine', price: 4, cy: -.2,  surf: [0, .9] },
       fries:  { icon: '🩹', machine: 'bandage machine',  price: 3, cy: -.15, surf: [0, .85] },
       soda:   { icon: '🧴', machine: 'medicine machine', price: 6, cy: -.06, surf: [0, .9] },
+      fax:    { icon: '📄', machine: 'fax machine',      price: 3, cy: 0,    surf: [0, .95] },
       blend:  { icon: '🧪', machine: 'mixing machine',   price: 0, cy: -.08, surf: [0, .95] }
     },
     layout: {
       blend: { x: -2.55, z: -1.2 }, burger: { x: 2.55, z: -1.2 }, fries: { x: -2.55, z: 1.6 },
-      burger2: { x: 2.55, z: .4 }, fries2: { x: -2.55, z: .2 }, bin: { x: 2.6, z: 1.6 }
+      burger2: { x: 2.55, z: .4 }, fries2: { x: -2.55, z: .2 }, bin: { x: 2.6, z: 1.6 },
+      blend2: { x: 2.55, z: 3 }, fax: { x: -2.55, z: 3 }
     },
     colors: { wall: 0xeef6fa, trim: 0x2c8fd6, tileA: '#ffffff', tileB: '#cfe8f3' }
   }

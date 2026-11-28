@@ -115,6 +115,10 @@ function hospitalItem(type, g) {
     part(G('Cylinder', .07, .07, .1, 8), 0xe63946, 0, .35, 0, g);
     box(.1, .03, .02, 0xe63946, 0, .14, .145, g);
     box(.03, .09, .02, 0xe63946, 0, .14, .145, g);
+  } else if (type === 'fax') { // printed sheet of paper
+    box(.3, .02, .38, 0xffffff, 0, .02, 0, g);
+    [-.1, -.02, .06].forEach(z => box(.2, .005, .025, 0x555d66, 0, .035, z, g));
+    box(.08, .005, .06, 0xe63946, .06, .035, .13, g);
   } else if (type === 'blend') { // flask of green mix
     part(G('Cylinder', .07, .2, .22, 10), 0x4cd964, 0, .11, 0, g);
     part(G('Cylinder', .065, .07, .14, 8), 0xdff6ff, 0, .29, 0, g);
@@ -579,6 +583,14 @@ const MACHINE_BUILD = {
     }
   },
   hospital: {
+    fax(g) { // fax machine on a desk
+      box(1.1, .7, .9, 0x8b5a2b, 0, .35, 0, g);
+      box(.9, .25, .7, 0xc9ced4, 0, .83, 0, g);
+      box(.6, .5, .06, 0xffffff, .05, 1.15, -.3, g).rotation.x = -.35;
+      box(.22, .08, .55, 0x2f343a, -.35, .99, 0, g);
+      box(.25, .02, .14, 0x4aa8ff, .2, .96, .2, g);
+    },
+    blend2(g) { MACHINE_BUILD.hospital.blend(g); },
     burger(g) { // medicine machine
       box(1.4, .85, 1.0, 0xffffff, 0, .425, 0, g);
       box(1.2, .03, .8, 0x2c8fd6, 0, .865, 0, g);
@@ -740,6 +752,7 @@ function buildKitchen(scene, billboards, hits) {
   scene.add(bin);
 
   if (L.soda) hit('soda', 1.6, 2.3, 1.8, L.soda.x - side('soda') * .1, 1.1, L.soda.z);
+  if (L.fax) { mk('fax', MB.fax); hit('fax', 1.2, 1.5, 1.3, L.fax.x, .75, L.fax.z); }
   if (L.choco) { mk('choco', MB.choco); hit('choco', 1.3, 1.9, 1.5, L.choco.x, .95, L.choco.z); }
   hit('burger', 1.3, 1.9, 1.6, L.burger.x, .95, L.burger.z);
   if (L.fries) hit('fries', 1.1, .9, 1.3, L.fries.x, .45, L.fries.z);
@@ -768,7 +781,7 @@ function buildKitchen(scene, billboards, hits) {
   ];
   if (L.fries2) extraHits.push(hit('fries2', 1.1, .9, 1.3, L.fries2.x, .45, L.fries2.z));
   // Special-item stations (Burger Joint shake: mixer + fridge; Coffee Shop donut: microwave + table), toggled by world.setShake.
-  const BONUS = { shake: [1.2, 1.2, 1.2, .7], fridge: [1.1, 1.9, 1.0, .95], donut: [1.2, 1.2, 1.2, .7], donuts: [1.1, 1.0, 1.1, .5], mix: [1.2, 1.2, 1.2, .7], doughfridge: [1.1, 1.9, 1.0, .95], blend: [1.2, 1.2, 1.2, .7] };
+  const BONUS = { shake: [1.2, 1.2, 1.2, .7], fridge: [1.1, 1.9, 1.0, .95], donut: [1.2, 1.2, 1.2, .7], donuts: [1.1, 1.0, 1.1, .5], mix: [1.2, 1.2, 1.2, .7], doughfridge: [1.1, 1.9, 1.0, .95], blend: [1.2, 1.2, 1.2, .7], blend2: [1.2, 1.2, 1.2, .7] };
   const bonusKeys = Object.keys(BONUS).filter(k => L[k]);
   const shakeHits = bonusKeys.map(k => hit(k, BONUS[k][0], BONUS[k][1], BONUS[k][2], L[k].x, BONUS[k][3], L[k].z));
   shakeHits.forEach(h => hits.splice(hits.indexOf(h), 1));
@@ -783,9 +796,9 @@ function buildKitchen(scene, billboards, hits) {
   }
 
   const viz = {};
-  for (const k of ['soda', 'choco', 'burger', 'fries', 'burger2', 'fries2', 'shake', 'donut', 'mix', 'blend']) if (L[k]) viz[k] = makeStationViz(STATIONS[k].type || k, L[k].x, L[k].z, billboards);
+  for (const k of ['soda', 'choco', 'burger', 'fries', 'burger2', 'fries2', 'shake', 'donut', 'mix', 'blend', 'blend2', 'fax']) if (L[k]) viz[k] = makeStationViz(STATIONS[k].type || k, L[k].x, L[k].z, billboards);
   for (const k in viz) scene.add(viz[k].root);
-  for (const k of ['shake', 'donut', 'mix', 'blend']) if (viz[k]) viz[k].root.visible = false;
+  for (const k of ['shake', 'donut', 'mix', 'blend', 'blend2']) if (viz[k]) viz[k].root.visible = false;
   return { viz, lid, trays, machines, signs, trayHits, extraHits, shakeHits };
 }
 
@@ -997,7 +1010,7 @@ export function fitCamera(camera, aspect) {
 
 export function buildWorld() {
   const L = activeShop().layout;
-  for (const k of ['soda', 'choco', 'burger', 'fries', 'burger2', 'fries2', 'bin', 'cabinet', 'shake', 'fridge', 'donut', 'donuts', 'mix', 'doughfridge', 'blend']) {
+  for (const k of ['soda', 'choco', 'burger', 'fries', 'burger2', 'fries2', 'bin', 'cabinet', 'shake', 'fridge', 'donut', 'donuts', 'mix', 'doughfridge', 'blend', 'blend2', 'fax']) {
     if (!L[k]) continue;
     const sd = L[k].x < 0 ? -1 : 1;
     SPOTS[k === 'bin' ? 'trash' : k] = { x: sd * 1.9, z: L[k].z, face: sd * Math.PI / 2 };
@@ -1156,7 +1169,7 @@ export function buildWorld() {
     mopPos: mop.position,
     // Level setup: show the milkshake mixer and milk fridge and make them tappable (or hide them).
     setShake(on) {
-      for (const k of ['shake', 'fridge', 'donut', 'donuts', 'mix', 'doughfridge', 'blend']) if (machines[k]) { machines[k].visible = on; if (viz[k]) viz[k].root.visible = on; }
+      for (const k of ['shake', 'fridge', 'donut', 'donuts', 'mix', 'doughfridge', 'blend', 'blend2']) if (machines[k]) { machines[k].visible = on; if (viz[k]) viz[k].root.visible = on; }
       shakeHits.forEach(h => {
         const i = hits.indexOf(h);
         if (on && i < 0) hits.push(h);

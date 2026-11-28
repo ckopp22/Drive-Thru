@@ -3,7 +3,7 @@ import { makeCar, setBrake, reducedMotion, CAR_VARIANTS, CAR_COLORS, LANE_Z } fr
 import { TUNING } from './levels.js';
 import { itemInfo } from './shops.js';
 
-const ORDER = ['soda', 'choco', 'burger', 'fries'];
+const ORDER = ['soda', 'choco', 'burger', 'fries', 'fax'];
 const START_X = -7.5, END_X = 8, SPACING = 2.4;
 const TAG_Y = 1.0; // anchor height above the lane for the order bubble
 const reduced = reducedMotion();
