@@ -44,26 +44,6 @@ export const DONUT_LEVELS = [
   { time: 180, goal: 50, star2: 105, star3: 210, trays: 3, items: CD, patience: 36, gap: 1.8, maxItems: 4, doubles: true, queue: 2, extra: true, burn: 12, helper: 2, puddles: { max: 7, every: 4.5 }, notes: 'Grand finale: puddles and two helpers' }
 ];
 
-// Pizza Place only (levels 16-20): 16 adds slices (cutting table), 17 pickles. `toppings` are filled in by shops.js. 18 and 19 only cut patience; 20 is the 3 minute finale.
-const PZ = { trays: 3, items: ['burger', 'slice'], gap: 2, maxItems: 3, doubles: false, queue: 2, extra: true, burn: 0 };
-export const PIZZA_LEVELS = [
-  { ...PZ, time: 135, goal: 30, star2: 70, star3: 130, patience: 60, helper: 1, maxToppings: 4, extraTops: [], notes: 'Slices', intro: '🔪 New: Slices! Take a baked cheese pizza to the cutting table and stand there to cut it' },
-  { ...PZ, time: 150, goal: 32, star2: 72, star3: 134, patience: 56, helper: 1, maxToppings: 5, extraTops: ['pickles'], notes: 'Pickles', intro: '🥒 New topping: Pickles! The table is bottom right' },
-  { ...PZ, time: 150, goal: 34, star2: 74, star3: 138, patience: 48, helper: 1, maxToppings: 5, extraTops: ['pickles'], notes: 'Less patient customers' },
-  { ...PZ, time: 150, goal: 36, star2: 76, star3: 142, patience: 40, helper: 1, maxToppings: 5, extraTops: ['pickles'], notes: 'Even less patient' },
-  { ...PZ, time: 180, goal: 50, star2: 105, star3: 210, patience: 36, helper: 2, puddles: { max: 7, every: 4.5 }, maxToppings: 5, extraTops: ['pickles'], notes: 'Grand finale: puddles and two helpers' }
-];
-
-// Hospital only (levels 16-20): patients that want a toy from the toy chest. Each level cuts patience; 20 is the 3 minute finale.
-const HP = { trays: 0, items: [], extra: false, burn: 0, queue: 2, gap: 3.2, maxItems: 1, doubles: false, kinds: ['medicine', 'bill', 'bandage', 'id', 'toy'] };
-export const HOSPITAL_LEVELS = [
-  { ...HP, time: 135, goal: 30, star2: 70, star3: 130, patience: 52, helper: 1, notes: 'Toy patients', intro: '🧸 New: Toy patients! Tap the toy chest, wait for the bar, then bring the toy' },
-  { ...HP, time: 150, goal: 32, star2: 72, star3: 134, patience: 48, helper: 1, notes: 'Less patient' },
-  { ...HP, time: 150, goal: 34, star2: 74, star3: 138, patience: 44, helper: 1, notes: 'Even less patient' },
-  { ...HP, time: 150, goal: 36, star2: 76, star3: 142, patience: 40, helper: 1, notes: 'Impatient crowd' },
-  { ...HP, time: 180, goal: 50, star2: 105, star3: 210, patience: 36, gap: 3, helper: 2, puddles: { max: 7, every: 4.5 }, notes: 'Grand finale: puddles and two helpers' }
-];
-
 // Stars: 1 star = reach the goal (passes the level), 2 and 3 stars at these multiples of the goal.
 export const STAR_MULT = [1, 1.4, 1.8];
 // Tuned with tools/sim.mjs: 1 star (the goal) is easy for a slow/young player, 2 stars needs a decent player, 3 stars a near-expert one.
@@ -102,9 +82,7 @@ export const STATIONS = {
   // Bakery: dough from the fridge, mixed while the worker stands at the mixer, then fed to the donut maker.
   mix:     { time: 3.5, needs: 'rawmix', stand: true },
   // Hospital: the mixing machine makes the base for liquid medicine.
-  blend:   { time: 5 },
-  // Pizza Place levels 16+: the cutting table turns a baked cheese pizza into a slice while the worker stands at it.
-  slice:   { time: 3, needs: 'pizza:sauce+cheese', stand: true }
+  blend:   { time: 5 }
 };
 export const WORKER = { speed: 6, maxHeld: 1, bobRate: 14, trayCap: 4 };
 
@@ -122,7 +100,7 @@ export const ENDLESS = {
   extraWave: 5,   // second grill and fryer
   burnWave: 4, burn: 12, // food burns after `burn` s
   helper2Gap: 3,  // orders after the first helper that a second joins
-  helperWave: 5,  // the obstructing helper joins once everything above is in (a shop can override with `helperWave`)
+  helperWave: 5,  // the obstructing helper joins once everything above is in
   rows: [
     [1, 1, 38, 1, 2],
     [2, 2, 34, 1, 2],
@@ -152,31 +130,19 @@ export function endlessCfg(wave, over = {}) {
   const extra = Math.max(0, wave - last[0]);
   const gapLo = Math.max(E.minGap[0], row[3] - extra * E.gapDecay[0]);
   const gapHi = Math.max(E.minGap[1], row[4] - extra * E.gapDecay[1]);
-  const hw = over.helperWave || E.helperWave;
   const cfg = {
     endless: true, wave, trays: E.trays, time: 0,
     queue: (E.queue.filter(r => r[0] <= wave).pop() || [0, 0])[1],
     items: wave >= E.friesWave ? ALL : SB,
     maxItems: row[1], doubles: wave >= E.doublesWave, extra: wave >= E.extraWave,
-    burn: wave >= E.burnWave ? E.burn : 0, helper: wave < hw ? 0 : wave < hw + E.helper2Gap ? 1 : 2,
+    burn: wave >= E.burnWave ? E.burn : 0, helper: wave < E.helperWave ? 0 : wave < E.helperWave + E.helper2Gap ? 1 : 2,
     patience: endlessPatience(wave, over),
     gapRange: [gapLo, gapHi], gap: gapHi
   };
   // Per-shop overrides. Row lists are [fromWave, value] pairs.
-  const at = rows => rows.filter(r => r[0] <= wave).pop()[1], g = over.gapMult || 1;
-  if (g !== 1) Object.assign(cfg, { gapRange: [gapLo * g, gapHi * g], gap: gapHi * g });
-  if (over.items) cfg.items = over.items;
+  const at = rows => rows.filter(r => r[0] <= wave).pop()[1];
   if (over.itemRows) cfg.items = at(over.itemRows);
   if (over.burn) cfg.burn = over.burn;
-  if (over.extraWave) cfg.extra = wave >= over.extraWave;
-  if (over.maxItemsCap) cfg.maxItems = Math.min(cfg.maxItems, over.maxItemsCap);
-  if (over.toppings) Object.assign(cfg, { toppings: at(over.toppings), maxToppings: at(over.maxToppings) }); // pizza
-  if (over.hospital) { // patients: tasks (kinds) and line length ramp instead of items; no trays, food or burning
-    Object.assign(cfg, {
-      trays: 0, items: [], extra: wave >= over.registerWave, burn: 0, jam: wave >= over.registerWave ? over.jam : 0, maxItems: 1, doubles: false,
-      kinds: at(over.kinds), queue: at(over.queue)
-    });
-  }
   return cfg;
 }
 export const endlessMusicRate = wave => (ENDLESS.music.filter(r => r[0] <= wave).pop() || [0, 1])[1];

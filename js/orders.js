@@ -1,7 +1,7 @@
 import * as THREE from '../lib/three.module.min.js';
 import { makeCar, setBrake, reducedMotion, CAR_VARIANTS, CAR_COLORS, LANE_Z } from './scene.js';
 import { TUNING } from './levels.js';
-import { activeShop, itemInfo } from './shops.js';
+import { itemInfo } from './shops.js';
 
 const ORDER = ['soda', 'burger', 'fries'];
 const START_X = -7.5, END_X = 8, SPACING = 2.4;
@@ -13,15 +13,6 @@ const rnd = n => Math.floor(Math.random() * n);
 
 // Order = list of item slots, e.g. ['soda', 'burger', 'burger'].
 export function makeOrder(cfg) {
-  if (activeShop().pizza) {
-    // Each pizza is a random non-empty set of the level's toppings, written as a sorted signature.
-    return Array.from({ length: 1 + rnd(cfg.maxItems) }, () => {
-      if (cfg.items.includes('slice') && Math.random() < .35) return 'slice'; // a single cheese slice, cut at the cutting table
-      const pool = cfg.toppings.slice(), tops = [];
-      for (let n = 1 + rnd(Math.min(cfg.maxToppings, pool.length)); n > 0; n--) tops.push(pool.splice(rnd(pool.length), 1)[0]);
-      return 'pizza:' + cfg.toppings.filter(t => tops.includes(t)).join('+');
-    }).sort();
-  }
   const size = 1 + rnd(cfg.maxItems);
   const slots = [];
   while (slots.length < size) {

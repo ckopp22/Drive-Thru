@@ -1,6 +1,6 @@
 import * as THREE from '../lib/three.module.min.js';
 import { WORKER, STATIONS } from './levels.js';
-import { activeShop, itemInfo, PIZZA_TOPS, useShop, PAT_ZS } from './shops.js';
+import { activeShop, itemInfo, useShop } from './shops.js';
 
 // World layout. x: right, y: up, z: toward the camera (bottom of screen).
 // Room x -3..3, z -3.5..3.5, open toward the camera. Back wall (top of screen) has the window; the lane runs along x beyond it.
@@ -28,9 +28,6 @@ const FIT_POINTS = [
   [-3.2, 0, 3.5], [3.2, 0, 3.5], [-3.2, 2, 3.5], [3.2, 2, 3.5],
   [-EQUIP_X, 3.6, -1.2], [EQUIP_X, 3.6, -1.2], [-EQUIP_X, 3.6, 1.6]
 ].map(p => new THREE.Vector3(...p));
-// The hospital room runs 1.5 further toward the player (room for the bin at the bottom centre), so the camera frames that too.
-const HOSPITAL_EXT = 1.5;
-const FIT_HOSPITAL = FIT_POINTS.map(p => (p.z === 3.5 ? new THREE.Vector3(p.x, p.y, 3.5 + HOSPITAL_EXT) : p));
 
 const mats = new Map();
 const geos = new Map();
@@ -109,31 +106,7 @@ function coffeeItem(type, g) {
   }
 }
 
-const TOP_COLOR = { sauce: 0xd62828, cheese: 0xffd23f, pepperoni: 0xb3262b, mushroom: 0xd9c2a0, pickles: 0x6aa84f };
-function pizzaItem(type, g) {
-  if (type === 'slice') { // one wedge of cheese pizza
-    part(G('Cylinder', .34, .34, .05, 12, 1, false, 0, Math.PI / 3), 0xd9a04a, 0, .03, 0, g);
-    part(G('Cylinder', .31, .31, .015, 12, 1, false, 0, Math.PI / 3), TOP_COLOR.sauce, 0, .06, 0, g);
-    part(G('Cylinder', .26, .26, .02, 12, 1, false, 0, Math.PI / 3), TOP_COLOR.cheese, 0, .075, 0, g);
-    g.rotation.y = Math.PI / 6;
-  } else if (type === 'dough') {
-    part(G('Sphere', .2, 10, 8), 0xf5e6c8, 0, .14, 0, g).scale.y = .7;
-  } else if (TOP_COLOR[type]) { // a bowl of one topping
-    part(G('Cylinder', .16, .12, .12, 8), 0x9aa0a6, 0, .06, 0, g);
-    part(G('Cylinder', .14, .14, .02, 8), TOP_COLOR[type], 0, .125, 0, g);
-  } else { // 'plate:...' = raw pizza on a plate, 'pizza:...' = baked
-    const cooked = type.startsWith('pizza:'), tops = type.slice(type.indexOf(':') + 1).split('+').filter(Boolean);
-    part(G('Cylinder', .3, .3, .03, 12), 0xffffff, 0, .015, 0, g);
-    part(G('Cylinder', .26, .26, .05, 12), cooked ? 0xd9a04a : 0xf2dcae, 0, .055, 0, g);
-    if (tops.includes('sauce')) part(G('Cylinder', .22, .22, .012, 12), TOP_COLOR.sauce, 0, .086, 0, g);
-    if (tops.includes('cheese')) part(G('Cylinder', .2, .2, .012, 12), TOP_COLOR.cheese, 0, .098, 0, g);
-    if (tops.includes('pepperoni')) [[.1, .06], [-.1, .08], [.02, -.12], [-.12, -.07]].forEach(([x, z]) => part(G('Cylinder', .05, .05, .015, 8), TOP_COLOR.pepperoni, x, .112, z, g));
-    if (tops.includes('pickles')) [[.05, -.1], [-.1, -.1], [.1, .0]].forEach(([x, z]) => part(G('Cylinder', .035, .035, .014, 8), TOP_COLOR.pickles, x, .116, z, g));
-    if (tops.includes('mushroom')) [[0, 0], [.14, -.05], [-.06, .14]].forEach(([x, z]) => part(G('Sphere', .045, 6, 4, 0, Math.PI * 2, 0, Math.PI / 2), TOP_COLOR.mushroom, x, .108, z, g));
-  }
-}
-
-// Hospital: a bill paper (unstamped / stamped), a medicine bottle and a bandage roll.
+// Hospital: pills, a bandage roll, a bottle of liquid medicine and the mixer's flask.
 function hospitalItem(type, g) {
   if (type === 'burger') type = 'medicine';
   if (type === 'soda') { // bottle of liquid medicine
@@ -146,18 +119,6 @@ function hospitalItem(type, g) {
     part(G('Cylinder', .07, .2, .22, 10), 0x4cd964, 0, .11, 0, g);
     part(G('Cylinder', .065, .07, .14, 8), 0xdff6ff, 0, .29, 0, g);
     part(G('Cylinder', .085, .085, .03, 8), 0x9aa0a6, 0, .37, 0, g);
-  } else if (type === 'bill' || type === 'billok') {
-    box(.3, .02, .38, 0xffffff, 0, .02, 0, g);
-    [-.1, 0, .1].forEach(z => box(.2, .005, .02, 0x9aa0a6, 0, .035, z, g));
-    if (type === 'billok') { // big green check mark on the paper
-      const seg = (x1, z1, x2, z2) => {
-        const len = Math.hypot(x2 - x1, z2 - z1);
-        const m = box(len + .03, .014, .045, 0x2ecc59, (x1 + x2) / 2, .04, (z1 + z2) / 2, g);
-        m.rotation.y = -Math.atan2(z2 - z1, x2 - x1);
-      };
-      seg(-.1, .02, -.04, .14);
-      seg(-.04, .14, .1, -.12);
-    }
   } else if (type === 'medicine') {
     // Capsule pill lying on its side: red half and white half with rounded ends.
     const pill = new THREE.Group();
@@ -169,24 +130,6 @@ function hospitalItem(type, g) {
     }
     pill.position.y = .12;
     g.add(pill);
-  } else if (type === 'toy') { // teddy bear, sized up so its icon reads as large as the others
-    const t = new THREE.Group();
-    t.scale.setScalar(1.35);
-    g.add(t);
-    part(G('Sphere', .15, 8, 6), 0xa9743a, 0, .15, 0, t);
-    part(G('Sphere', .11, 8, 6), 0xb98348, 0, .36, 0, t);
-    [-.09, .09].forEach(x => part(G('Sphere', .045, 6, 5), 0xa9743a, x, .45, 0, t));
-    part(G('Sphere', .05, 6, 5), 0xf0d9b5, 0, .34, .09, t);
-    [-.05, .05].forEach(x => part(G('Sphere', .018, 4, 4), 0x222222, x, .39, .09, t));
-  } else if (type === 'id') { // camera for the ID photo
-    box(.4, .22, .22, 0x2f343a, 0, .11, 0, g);
-    box(.4, .06, .22, 0xc9ced4, 0, .25, 0, g); // silver top plate
-    box(.1, .05, .06, 0xffe08a, -.12, .31, .04, g); // flash
-    box(.07, .04, .07, 0xe63946, .13, .30, 0, g); // shutter button
-    const lens = part(G('Cylinder', .1, .1, .1, 10), 0x1b1e22, 0, .12, .15, g);
-    lens.rotation.x = Math.PI / 2;
-    const glass = part(G('Cylinder', .065, .065, .03, 10), 0x4aa8ff, 0, .12, .205, g);
-    glass.rotation.x = Math.PI / 2;
   } else { // bandage roll
     part(G('Cylinder', .21, .21, .15, 10), 0xf5e6c8, 0, .075, 0, g); // sized up so its icon reads as large as the others
     part(G('Cylinder', .09, .09, .165, 8), 0xffffff, 0, .075, 0, g);
@@ -236,7 +179,7 @@ export function makeItem(type) {
     return g;
   }
   const id = activeShop().id;
-  (id === 'pizza' ? pizzaItem : id === 'hospital' ? hospitalItem : id === 'coffee' ? coffeeItem : id === 'bakery' ? bakeryItem : burgerItem)(type, g);
+  (id === 'hospital' ? hospitalItem : id === 'coffee' ? coffeeItem : id === 'bakery' ? bakeryItem : burgerItem)(type, g);
   return g;
 }
 
@@ -458,7 +401,7 @@ function makeStationViz(type, x, z, billboards) {
   let pinged = false, pingAt = 0;
   return {
     root,
-    // Show a different item on this machine (the oven bakes whatever pizza was put in).
+    // Show a different item on this machine (the medicine machine makes pills or liquid).
     setType(t) {
       const dark = m => { m.traverse(o => { if (o.isMesh) o.material = M(0x26221f); }); return m; };
       const info = itemInfo(t);
@@ -647,23 +590,6 @@ const MACHINE_BUILD = {
       part(G('Cylinder', .12, .12, .04, 8), 0x4cd964, 0, 1.1, .1, g);
     }
   },
-  pizza: {
-    slice(g) { // cutting table with a board and a pizza cutter
-      box(1.2, .08, .8, 0xa9743a, 0, .76, 0, g);
-      [[-.5, -.3], [.5, -.3], [-.5, .3], [.5, .3]].forEach(([x, z]) => box(.08, .74, .08, 0x5c4033, x, .37, z, g));
-      box(.9, .04, .6, 0xe8d3a8, 0, .82, 0, g);
-      part(G('Cylinder', .1, .1, .02, 10), 0xcfd4d9, .25, .86, .05, g).rotation.z = Math.PI / 2;
-      box(.04, .03, .3, 0x333333, .25, .88, -.15, g);
-    },
-    burger(g) { // brick pizza oven
-      box(1.4, .75, 1.0, 0xa8553a, 0, .375, 0, g);
-      box(1.4, .12, 1.0, 0x3a3a3f, 0, .81, 0, g);
-      box(1.2, .02, .8, 0xff7a2f, 0, .88, 0, g);
-      box(1.4, 1.0, .1, 0x7a3b28, 0, 1.3, -.45, g);
-      box(.9, .4, .04, 0x1f1f23, 0, .4, .51, g);
-      box(.3, .3, .3, 0x7a3b28, .45, 1.5, -.3, g);
-    }
-  },
   coffee: {
     soda(g) { // espresso machine (hot coffee)
       box(1.1, 1.8, .9, 0x6b4226, 0, .9, 0, g);
@@ -731,98 +657,6 @@ function labelPlane(text, bg, w = .8) {
   return new THREE.Mesh(new THREE.PlaneGeometry(w, w / 4), new THREE.MeshBasicMaterial({ map: t }));
 }
 
-// Hospital: a counter down each side (patients line up outside them), cabinets and a register on the back counter.
-const BIN_Z = 4.4;
-function buildHospital(scene, hit, hits) {
-  const machines = {};
-  [-1, 1].forEach(sd => {
-    box(.6, 1.0, 3.6, 0xdfe9ef, sd * 1.55, .5, 1.1, scene);
-    box(.7, .06, 3.7, 0xffffff, sd * 1.55, 1.03, 1.1, scene);
-    box(.62, .1, 3.62, 0x2c8fd6, sd * 1.55, .85, 1.1, scene);
-    box(.7, .02, 4.2, 0xcfe8f3, sd * 2.35, .01, 1.4, scene); // where the line stands
-  });
-  PAT_ZS.forEach((z, i) => { // every place in each patient line can be tapped
-    hit('patL' + i, 1.8, 1.8, 1.2, -2.0, .9, z);
-    hit('patR' + i, 1.8, 1.8, 1.2, 2.0, .9, z);
-  });
-  const cabinet = (key, x, body, label, bg, build) => {
-    const g = new THREE.Group();
-    g.position.set(x, 1.05, -3.05);
-    box(.85, .9, .5, body, 0, .45, 0, g);
-    box(.85, .06, .56, 0xffffff, 0, .93, 0, g);
-    const l = labelPlane(label, bg);
-    l.position.set(0, .72, .26);
-    g.add(l);
-    build(g);
-    scene.add(g);
-    machines[key] = g;
-    return hit(key, 1.0, 1.0, .7, x, 1.55, -3.05);
-  };
-  cabinet('medicine', -1.1, 0xf2f6f9, 'MEDICINE', '#2c8fd6', g => {
-    box(.3, .08, .02, 0xe63946, 0, .4, .26, g);
-    box(.08, .3, .02, 0xe63946, 0, .4, .26, g);
-  });
-  cabinet('bandage', 0, 0xf4efe0, 'BANDAGES', '#e63946', g => {
-    [-.2, 0, .2].forEach(x => part(G('Cylinder', .08, .08, .12, 8), 0xf5e6c8, x, .5, .26, g).rotation.x = Math.PI / 2);
-  });
-  // Toy chest (levels 16+), shown by world.setShake.
-  const toyG = new THREE.Group(); // a wooden chest on the floor, bottom left of the bin
-  toyG.position.set(-1.3, 0, BIN_Z);
-  box(.9, .45, .6, 0xa9743a, 0, .225, 0, toyG);
-  box(.94, .12, .64, 0x7a4f26, 0, .51, 0, toyG);
-  [-.3, .3].forEach(x => box(.1, .5, .66, 0xf2a33a, x, .25, 0, toyG));
-  const toyLabel = labelPlane('TOYS', '#f2a33a', .6);
-  toyLabel.position.set(0, .28, .31);
-  toyG.add(toyLabel);
-  part(G('Sphere', .12, 8, 6), 0xb98348, .05, .66, 0, toyG);
-  toyG.visible = false;
-  scene.add(toyG);
-  machines.toy = toyG;
-  const toyHit = hit('toy', 1.1, .9, .8, -1.3, .45, BIN_Z);
-  hits.splice(hits.indexOf(toyHit), 1);
-  const registerLook = g => {
-    box(.5, .3, .05, 0x1f2933, 0, .4, .27, g);
-    box(.4, .2, .02, 0x9be7ff, 0, .4, .3, g);
-  };
-  cabinet('register', 1.1, 0x555d66, 'PAY HERE', '#2ecc59', registerLook);
-  // Second bill machine, shown by world.setExtra (endless wave 7+).
-  const register2Hit = cabinet('register2', 2.2, 0x555d66, 'PAY HERE', '#2ecc59', registerLook);
-  machines.register2.visible = false;
-  // trash bin (bottom centre)
-  const bin = new THREE.Group();
-  bin.position.set(0, 0, BIN_Z);
-  part(G('Cylinder', .38, .3, .75, 8), 0x6f7782, 0, .375, 0, bin);
-  const lid = part(G('Cylinder', .42, .42, .08, 8), 0x3f454d, 0, .78, 0, bin);
-  scene.add(bin);
-  hit('trash', 1.1, 1.1, 1.1, 0, .55, BIN_Z);
-  return { viz: {}, lid, trays: [], machines, signs: [], trayHits: [], extraHits: [register2Hit], shakeHits: [toyHit], fixtures: {}, tablePlates: {} };
-}
-
-const tub = (g, color) => {
-  box(1.0, .8, 1.0, 0x8b5a2b, 0, .4, 0, g);
-  box(1.05, .06, 1.05, 0xf2f2f2, 0, .83, 0, g);
-  part(G('Cylinder', .38, .32, .26, 10), 0x9aa0a6, 0, .99, 0, g);
-  part(G('Cylinder', .34, .34, .02, 10), color, 0, 1.12, 0, g);
-};
-// Walk-up fixtures of the pizza shop (local +z faces the room).
-const FIXTURE_BUILD = {
-  dough(g) {
-    box(1.0, .8, 1.0, 0x8b5a2b, 0, .4, 0, g);
-    box(1.05, .06, 1.05, 0xf2f2f2, 0, .83, 0, g);
-    part(G('Sphere', .3, 10, 8), 0xf5e6c8, -.1, 1.05, .1, g).scale.y = .7;
-    box(.3, .45, .25, 0xffffff, .3, 1.1, -.25, g);
-  },
-  sauce(g) { tub(g, TOP_COLOR.sauce); },
-  cheese(g) { tub(g, TOP_COLOR.cheese); },
-  pepperoni(g) { tub(g, TOP_COLOR.pepperoni); [[.1, .1], [-.12, -.08], [.12, -.12]].forEach(([x, z]) => part(G('Cylinder', .08, .08, .02, 8), 0x7a1a1a, x, 1.14, z, g)); },
-  pickles(g) { tub(g, TOP_COLOR.pickles); [[.1, .1], [-.12, -.08], [.12, -.12]].forEach(([x, z]) => part(G('Cylinder', .07, .07, .03, 8), 0x3f7a2f, x, 1.14, z, g)); },
-  mushroom(g) { tub(g, TOP_COLOR.mushroom); [[.1, .1], [-.12, -.08]].forEach(([x, z]) => part(G('Sphere', .09, 6, 4, 0, Math.PI * 2, 0, Math.PI / 2), 0xf2e6cf, x, 1.13, z, g)); },
-  table(g) {
-    box(1.0, .08, .8, 0xc9863f, 0, .72, 0, g);
-    [[-.42, -.32], [.42, -.32], [-.42, .32], [.42, .32]].forEach(([x, z]) => box(.08, .7, .08, 0x8b5a2b, x, .35, z, g));
-  }
-};
-
 function buildKitchen(scene, billboards, hits) {
   // Invisible tap targets: a key, size and centre.
   const hit = (key, w, h, d, x, y, z) => {
@@ -838,17 +672,16 @@ function buildKitchen(scene, billboards, hits) {
   scene.add(part(G('Plane', 80, 80), 0x7ed957, 0, -.02, 0).rotateX(-Math.PI / 2));
 
   // floor
-  const ext = activeShop().hospital ? HOSPITAL_EXT : 0; // hospital: the room extends toward the player
-  const floor = new THREE.Mesh(G('Box', 6, .2, 7 + ext), new THREE.MeshLambertMaterial({ map: checker }));
-  floor.position.set(0, -.1, ext / 2);
+  const floor = new THREE.Mesh(G('Box', 6, .2, 7), new THREE.MeshLambertMaterial({ map: checker }));
+  floor.position.set(0, -.1, 0);
   scene.add(floor);
 
   const { wall: wallC, trim: trimC } = activeShop().colors;
   // side walls (cutaway height so equipment stays visible)
-  box(.3, 2.0, 7.3 + ext, wallC, -3.15, 1.0, ext / 2, scene);
-  box(.3, 2.0, 7.3 + ext, wallC, 3.15, 1.0, ext / 2, scene);
-  box(.34, .16, 7.3 + ext, trimC, -3.15, 2.0, ext / 2, scene);
-  box(.34, .16, 7.3 + ext, trimC, 3.15, 2.0, ext / 2, scene);
+  box(.3, 2.0, 7.3, wallC, -3.15, 1.0, 0, scene);
+  box(.3, 2.0, 7.3, wallC, 3.15, 1.0, 0, scene);
+  box(.34, .16, 7.3, trimC, -3.15, 2.0, 0, scene);
+  box(.34, .16, 7.3, trimC, 3.15, 2.0, 0, scene);
 
   // back wall with window opening (x -1.6..1.6, y 1.0..1.9)
   const wz = -3.5;
@@ -871,7 +704,6 @@ function buildKitchen(scene, billboards, hits) {
   box(18, .02, 2.4, 0x555a64, 0, .01, -6.0, scene);
   for (let x = -8; x <= 8; x += 2) box(.8, .025, .12, 0xffc828, x, .022, -6.0, scene);
 
-  if (activeShop().hospital) return buildHospital(scene, hit, hits);
 
   // Machines sit on the left or right wall by the sign of their layout x; they face the room.
   const L = activeShop().layout, MB = MACHINE_BUILD[activeShop().id];
@@ -922,7 +754,7 @@ function buildKitchen(scene, billboards, hits) {
   ];
   if (L.fries2) extraHits.push(hit('fries2', 1.1, .9, 1.3, L.fries2.x, .45, L.fries2.z));
   // Special-item stations (Burger Joint shake: mixer + fridge; Coffee Shop donut: microwave + table), toggled by world.setShake.
-  const BONUS = { slice: [1.3, 1.0, 1.0, .5], shake: [1.2, 1.2, 1.2, .7], fridge: [1.1, 1.9, 1.0, .95], donut: [1.2, 1.2, 1.2, .7], donuts: [1.1, 1.0, 1.1, .5], mix: [1.2, 1.2, 1.2, .7], doughfridge: [1.1, 1.9, 1.0, .95], blend: [1.2, 1.2, 1.2, .7] };
+  const BONUS = { shake: [1.2, 1.2, 1.2, .7], fridge: [1.1, 1.9, 1.0, .95], donut: [1.2, 1.2, 1.2, .7], donuts: [1.1, 1.0, 1.1, .5], mix: [1.2, 1.2, 1.2, .7], doughfridge: [1.1, 1.9, 1.0, .95], blend: [1.2, 1.2, 1.2, .7] };
   const bonusKeys = Object.keys(BONUS).filter(k => L[k]);
   const shakeHits = bonusKeys.map(k => hit(k, BONUS[k][0], BONUS[k][1], BONUS[k][2], L[k].x, BONUS[k][3], L[k].z));
   shakeHits.forEach(h => hits.splice(hits.indexOf(h), 1));
@@ -931,35 +763,16 @@ function buildKitchen(scene, billboards, hits) {
   if (soda) machines.soda = soda;
   if (fryer) machines.fries = fryer;
   if (fryer2) machines.fries2 = fryer2;
-  // Pizza shop fixtures: ingredient stations (on a wall) and tables (in the room).
-  const fixtures = {}, tablePlates = {};
-  for (const f of activeShop().fixtures || []) {
-    const g = new THREE.Group();
-    g.position.set(f.x, 0, f.z);
-    if (f.kind !== 'table') g.rotation.y = f.rot !== undefined ? f.rot : f.x < 0 ? Math.PI / 2 : -Math.PI / 2;
-    FIXTURE_BUILD[f.kind](g);
-    scene.add(g);
-    machines[f.key] = g;
-    const hs = f.kind === 'table' ? hit(f.key, 1.1, .85, .9, f.x, .45, f.z) : hit(f.key, 1.1, 1.3, 1.1, f.x, .65, f.z);
-    fixtures[f.key] = { g, hit: hs };
-    if (f.kind === 'table') {
-      const pl = new THREE.Group();
-      pl.position.set(f.x, .76, f.z);
-      pl.scale.setScalar(1.3);
-      scene.add(pl);
-      tablePlates[f.key] = pl;
-    }
-  }
   if (L.cabinet) {
     machines.cabinet = mk('cabinet', MB.cabinet);
     hit('cabinet', 1.0, 1.9, 1.3, L.cabinet.x, .95, L.cabinet.z);
   }
 
   const viz = {};
-  for (const k of ['soda', 'burger', 'fries', 'burger2', 'fries2', 'shake', 'donut', 'slice', 'mix', 'blend']) if (L[k]) viz[k] = makeStationViz(STATIONS[k].type || k, L[k].x, L[k].z, billboards);
+  for (const k of ['soda', 'burger', 'fries', 'burger2', 'fries2', 'shake', 'donut', 'mix', 'blend']) if (L[k]) viz[k] = makeStationViz(STATIONS[k].type || k, L[k].x, L[k].z, billboards);
   for (const k in viz) scene.add(viz[k].root);
-  for (const k of ['shake', 'donut', 'slice', 'mix', 'blend']) if (viz[k]) viz[k].root.visible = false;
-  return { viz, lid, trays, machines, signs, trayHits, extraHits, shakeHits, fixtures, tablePlates };
+  for (const k of ['shake', 'donut', 'mix', 'blend']) if (viz[k]) viz[k].root.visible = false;
+  return { viz, lid, trays, machines, signs, trayHits, extraHits, shakeHits };
 }
 
 function checkerTexture(a, b) {
@@ -1026,11 +839,6 @@ function steer(px, pz, tx, tz) {
     return [o.x - uz * k, o.z + ux * k];
   }
   return [tx, tz];
-}
-
-// A person for the hospital lines: the worker model in a coloured top. { group, body, legs, arms }
-export function makePatient(shirt) {
-  return buildWorker(shirt);
 }
 
 function turn(cur, want, maxStep) {
@@ -1148,7 +956,7 @@ export function fitCamera(camera, aspect) {
       camera.updateMatrixWorld(true);
       camera.updateProjectionMatrix();
       let x0 = 9, x1 = -9, y0 = 9, y1 = -9;
-      for (const p of activeShop().hospital ? FIT_HOSPITAL : FIT_POINTS) {
+      for (const p of FIT_POINTS) {
         v.copy(p).project(camera);
         x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x);
         y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y);
@@ -1173,11 +981,6 @@ export function fitCamera(camera, aspect) {
 
 export function buildWorld() {
   const L = activeShop().layout;
-  Object.assign(SPOTS, activeShop().spots || {});
-  for (const f of activeShop().fixtures || []) {
-    const sd = f.x < 0 ? -1 : 1;
-    SPOTS[f.key] = f.spot || { x: sd * 1.9, z: f.z, face: sd * Math.PI / 2 };
-  }
   for (const k of ['soda', 'burger', 'fries', 'burger2', 'fries2', 'bin', 'cabinet', 'shake', 'fridge', 'donut', 'donuts', 'mix', 'doughfridge', 'blend']) {
     if (!L[k]) continue;
     const sd = L[k].x < 0 ? -1 : 1;
@@ -1193,7 +996,7 @@ export function buildWorld() {
   const camera = new THREE.PerspectiveCamera(FOV, .5, 1, 200);
   const billboards = [];
   const hits = [];
-  const { viz, lid, trays, machines, signs, trayHits, extraHits, shakeHits, fixtures, tablePlates } = buildKitchen(scene, billboards, hits);
+  const { viz, lid, trays, machines, signs, trayHits, extraHits, shakeHits } = buildKitchen(scene, billboards, hits);
   const worker = makeWorker();
   scene.add(worker.group);
   const npcCfg = activeShop().npc;
@@ -1214,7 +1017,7 @@ export function buildWorld() {
     scene.add(helper.group);
     const helperObs = { x: 99, z: 99, r: .55 };
     const hv = { stops: null, state: 'wait', key: null, t: 1.5, pop: 0, shoo: 0, stall: 0, cl: 0 };
-    // The mess he makes at a machine (or patient): grey puffs, squiggles and dust swirling over it.
+    // The mess he makes at a machine : grey puffs, squiggles and dust swirling over it.
     const mcloud = new THREE.Group();
     mcloud.visible = false;
     scene.add(mcloud);
@@ -1244,7 +1047,7 @@ export function buildWorld() {
   }
   // Sticky puddles (endless): they slow the worker; the mop beside the bin cleans them all up.
   const L0 = activeShop().layout || {};
-  const mopOff = L0.mop ? [0, 0] : activeShop().hospital ? [1.1, 0] : L.shake && L.shake.x * binPos.x > 0 ? [-Math.sign(binPos.x) * .9, 0] : [0, binPos.z + 1 > 3.5 ? -1 : 1]; // beside the bin, toward the room, when the mixer takes the spot below it
+  const mopOff = L0.mop ? [0, 0] : L.shake && L.shake.x * binPos.x > 0 ? [-Math.sign(binPos.x) * .9, 0] : [0, binPos.z + 1 > 3.5 ? -1 : 1]; // beside the bin, toward the room, when the mixer takes the spot below it
   const mop = new THREE.Group();
   mop.position.set(L0.mop ? L0.mop.x : binPos.x + mopOff[0], 0, L0.mop ? L0.mop.z : binPos.z + mopOff[1]);
   mop.visible = false;
@@ -1284,7 +1087,7 @@ export function buildWorld() {
     },
     // Level setup: show the extra grill and fryer and make them tappable (or hide them).
     setExtra(on) {
-      for (const k of ['burger2', 'fries2', 'register2']) if (machines[k]) { machines[k].visible = on; if (viz[k]) viz[k].root.visible = on; }
+      for (const k of ['burger2', 'fries2']) if (machines[k]) { machines[k].visible = on; if (viz[k]) viz[k].root.visible = on; }
       extraHits.forEach(h => {
         const i = hits.indexOf(h);
         if (on && i < 0) hits.push(h);
@@ -1328,21 +1131,6 @@ export function buildWorld() {
       friesPop = on && pop && !reducedMotion() ? .45 : 0;
       machines.fries.scale.setScalar(on ? (friesPop ? .01 : 1) : 1);
     },
-    // Pizza shop: show only the ingredient stations this level uses (tables always stay).
-    setFixtures(keys) {
-      for (const k in fixtures) {
-        const on = k.startsWith('table') || keys.includes(k), i = hits.indexOf(fixtures[k].hit);
-        fixtures[k].g.visible = on;
-        if (on && i < 0) hits.push(fixtures[k].hit);
-        else if (!on && i >= 0) hits.splice(i, 1);
-      }
-    },
-    // The plate on table k: dough plus the toppings added so far (or nothing).
-    setTable(k, t) {
-      const pl = tablePlates[k];
-      for (let j = pl.children.length - 1; j >= 0; j--) pl.remove(pl.children[j]);
-      if (t.dough) pl.add(makeItem('plate:' + t.tops.join('+')));
-    },
     // A tray picked up by the worker leaves its slot until it is set down or thrown out.
     setTrayVisible(i, on) { trays[i].visible = on; },
     wobble(key) { wob[key] = .3; },
@@ -1352,7 +1140,7 @@ export function buildWorld() {
     mopPos: mop.position,
     // Level setup: show the milkshake mixer and milk fridge and make them tappable (or hide them).
     setShake(on) {
-      for (const k of ['shake', 'fridge', 'donut', 'donuts', 'slice', 'toy', 'mix', 'doughfridge', 'blend']) if (machines[k]) { machines[k].visible = on; if (viz[k]) viz[k].root.visible = on; }
+      for (const k of ['shake', 'fridge', 'donut', 'donuts', 'mix', 'doughfridge', 'blend']) if (machines[k]) { machines[k].visible = on; if (viz[k]) viz[k].root.visible = on; }
       shakeHits.forEach(h => {
         const i = hits.indexOf(h);
         if (on && i < 0) hits.push(h);
@@ -1370,9 +1158,9 @@ export function buildWorld() {
     },
     // Drops a puddle somewhere on the floor, away from the bin, mop and other puddles. Returns false if no free spot was found.
     spawnPuddle() {
-      const hosp = activeShop().hospital, live = livePuddles();
+      const live = livePuddles();
       for (let i = 0; i < 14; i++) {
-        const x = (hosp ? 1 : 1.5) * (Math.random() * 2 - 1), z = (hosp ? -1 : -1.2) + Math.random() * (hosp ? 4.2 : 4.2);
+        const x = 1.5 * (Math.random() * 2 - 1), z = -1.2 + Math.random() * 4.2;
         if ([SPOTS.mop, SPOTS.trash].some(q => Math.hypot(q.x - x, q.z - z) < 1) || live.some(m => Math.hypot(m.position.x - x, m.position.z - z) < .9)) continue;
         const m = new THREE.Mesh(puddleGeo, puddleMat);
         m.position.set(x, .035, z);
@@ -1482,8 +1270,8 @@ export function buildWorld() {
         if (hv.shoo > 0) hv.shoo = Math.max(0, hv.shoo - dt);
         const busy = hv.state === 'stay';
         hv.cl = busy ? Math.min(1, hv.cl + dt * 5) : Math.max(0, hv.cl - dt * 8);
-        // Over the machine, or over the patient (hospital) they are with.
-        const pat = hv.key && hv.key.startsWith('pat') && SPOTS[hv.key], mp = pat ? { x: Math.sign(pat.x) * 2, y: .4, z: pat.z } : hv.key && machines[hv.key] && machines[hv.key].position;
+        // Over the machine they are at.
+        const mp = hv.key && machines[hv.key] && machines[hv.key].position;
         mcloud.visible = hv.cl > 0 && !!mp;
         if (mcloud.visible) {
           mcloud.position.set(mp.x, mp.y + .9, mp.z);
@@ -1582,7 +1370,7 @@ export function createWorld(canvas) {
     item.position.y = -.3;
     sc.add(item);
     // Foods use their tuned centre; other carried things (cup, dough, plate, burnt lump) are centred by their size.
-    const fi = activeShop(), known = fi.foods[type] || (fi.pizza && type.startsWith('pizza:'));
+    const fi = activeShop(), known = fi.foods[type];
     sc.updateMatrixWorld(true);
     const pitch = 1.0, cy = known ? itemInfo(type).cy : new THREE.Box3().setFromObject(item).getCenter(new THREE.Vector3()).y;
     const cam = new THREE.OrthographicCamera(-.5, .5, .5, -.5, .1, 20);
@@ -1636,7 +1424,6 @@ export function createMenuScene(canvas, shop) {
   world.resize();
   world.setTrayCount(shop.levels && shop.levels[0].trays ? Math.min(3, shop.levels[0].trays) : 1);
   world.setExtra(false);
-  if (shop.pizza) world.setFixtures(['dough', ...PIZZA_TOPS]);
   const cars = [];
   let raf = 0, last = performance.now(), acc = 0, t = 0, carT = 0, walkT = 0, side = 0;
   const reduced = reducedMotion();

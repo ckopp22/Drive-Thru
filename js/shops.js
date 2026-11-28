@@ -1,11 +1,5 @@
 import { LEVELS, SHAKE_LEVELS, DONUT_LEVELS } from './levels.js';
 
-export const PIZZA_TOPS = ['sauce', 'cheese', 'pepperoni', 'mushroom'];
-export const ALL_TOPS = [...PIZZA_TOPS, 'pickles']; // level 17+ adds pickles (order = pizza signature order)
-
-// Hospital: z of each place in a patient line (front first). Every place is tappable: spots patL0..2 / patR0..2.
-export const PAT_ZS = [-.5, 1.3, 3.1];
-
 // Restaurants in unlock order. Beating every level of one unlocks the next. `levels: null` = content not built yet.
 // Station slots are fixed (soda / burger / fries = drink, cooked item, fried item); each shop re-skins them:
 //   foods[slot]: icon, machine name, price, cy (glow offset behind the item), surf [x toward room, y] where the finished item sits on its machine.
@@ -102,13 +96,8 @@ let active = SHOPS[0];
 export const useShop = s => { active = s; };
 export const activeShop = () => active;
 
-// Display info for an item type: shops list theirs in `foods`; pizza shop types are 'pizza:sauce+cheese' style signatures.
+// Display info for an item type (shops list theirs in `foods`).
 export const itemInfo = type => {
   if (active.foods[type]) return active.foods[type];
-  if (active.pizza) {
-    if (type === 'slice') return { icon: '🍕', machine: 'cutting table', price: 3, cy: -.1, surf: [0, .95] };
-    const n = type.startsWith('pizza:') ? type.slice(6).split('+').filter(Boolean).length : 0;
-    return { icon: '🍕', machine: 'oven', price: 3 + 2 * n, cy: -.22, surf: [0, .9] };
-  }
   return { icon: '?', machine: '', price: 0, cy: 0, surf: [0, .9] };
 };

@@ -1,4 +1,4 @@
-const CACHE = 'drive-thru-v108';
+const CACHE = 'drive-thru-v109';
 const ASSETS = [
   './',
   './index.html',
@@ -14,7 +14,6 @@ const ASSETS = [
   './js/save.js',
   './js/levels.js',
   './js/shops.js',
-  './js/hospital.js',
   './icons/kopp-studios-logo.png',
   './icons/icon-180.png',
   './icons/icon-192.png',
