@@ -1,4 +1,4 @@
-import { LEVELS, SHAKE_LEVELS, DONUT_LEVELS, HOSPITAL_LEVELS } from './levels.js';
+import { LEVELS, SHAKE_LEVELS, DONUT_LEVELS } from './levels.js';
 
 export const PIZZA_TOPS = ['sauce', 'cheese', 'pepperoni', 'mushroom'];
 export const ALL_TOPS = [...PIZZA_TOPS, 'pickles']; // level 17+ adds pickles (order = pizza signature order)
@@ -71,29 +71,26 @@ export const SHOPS = [
     colors: { wall: 0xffe3ec, trim: 0xc2577a, tileA: '#fff4f0', tileB: '#f2b5c4' }
   },
   {
-    id: 'hospital', name: 'Hospital', icon: '🏥', menuItem: 'medicine',
-    hospital: true, // patients line up at two counters; each needs one task
-    // Endless mode: same wave/patience ramp as the other shops; tasks and line length grow with the waves ([fromWave, value]).
-    endless: {
-      hospital: true, patMult: 1.3, gapMult: 1.6,
-      kinds: [[1, ['medicine']], [2, ['medicine', 'bill']], [3, ['medicine', 'bill', 'bandage']], [5, ['medicine', 'bill', 'bandage', 'id']]],
-      queue: [[1, 1], [2, 2]],
-      helperWave: 5, registerWave: 4, jam: 12 // from this wave: a second bill machine, and a stamped bill left 12 s jams its machine
+    id: 'hospital', name: 'Hospital', icon: '🏥', menuItem: 'burger',
+    // Burger Joint layout. Item slots: burger = pills, fries = bandage, soda = liquid medicine (made on the medicine machine from a mix).
+    // Everything burns on every level. Liquid levels get more patience for the extra step. 16-20 use the shake levels' timing.
+    levels: [...LEVELS, ...SHAKE_LEVELS].map(({ intro, puddles, ...l }, i) => ({
+      ...l, items: i < 2 ? ['burger', 'fries'] : ['burger', 'fries', 'soda'], burn: 12,
+      patience: i < 2 ? l.patience : Math.round(l.patience * 1.3),
+      ...(i === 2 ? { intro: '🧪 New: Liquid medicine! Run the mixer, then take the mix to the medicine machine' } : {})
+    })),
+    endless: { patMult: 1.3, burn: 12, itemRows: [[1, ['burger', 'fries']], [3, ['burger', 'fries', 'soda']]] },
+    alt: { burger: { needs: 'blend', item: 'soda' } }, // holding a mix, the medicine machine makes the liquid instead
+    foods: {
+      burger: { icon: '💊', machine: 'medicine machine', price: 4, cy: -.2,  surf: [0, .9] },
+      fries:  { icon: '🩹', machine: 'bandage machine',  price: 3, cy: -.15, surf: [0, .85] },
+      soda:   { icon: '🧴', machine: 'medicine machine', price: 6, cy: -.06, surf: [0, .9] },
+      blend:  { icon: '🧪', machine: 'mixing machine',   price: 0, cy: -.08, surf: [0, .95] }
     },
-    foods: {}, layout: {},
-    // Where the worker stands for each tappable spot.
-    spots: {
-      ...Object.fromEntries(PAT_ZS.flatMap((z, i) => [['patL' + i, { x: -.85, z, face: -Math.PI / 2 }], ['patR' + i, { x: .85, z, face: Math.PI / 2 }]])),
-      medicine: { x: -1.1, z: -2.1, face: Math.PI }, bandage: { x: 0, z: -2.1, face: Math.PI },
-      toy: { x: -1.3, z: 3.6, face: 0 }, register: { x: 1.1, z: -2.1, face: Math.PI }, register2: { x: 2.2, z: -2.1, face: Math.PI }, trash: { x: 0, z: 3.6, face: 0 }
+    layout: {
+      blend: { x: -2.55, z: -1.2 }, burger: { x: 2.55, z: -1.2 }, fries: { x: -2.55, z: 1.6 },
+      burger2: { x: 2.55, z: .4 }, fries2: { x: -2.55, z: .2 }, bin: { x: 2.6, z: 1.6 }
     },
-    // Same level curve as the burger joint; tasks unlock with the levels, 1-2 patients waiting per side.
-    levels: LEVELS.map((l, i) => ({
-      ...l, trays: 0, items: [], extra: false, burn: 0, queue: i >= 3 || i === 0 ? 2 : 1,
-      patience: Math.round(l.patience * 1.3), gap: i === 0 ? 3.5 : l.gap * 1.6, maxItems: 1, doubles: false,
-      ...(i === 0 ? { workerSpeed: 3.5, goal: 40, star2: 52, star3: 64 } : {}),
-      kinds: i === 0 ? ['medicine'] : i === 1 ? ['medicine', 'bill'] : i === 2 ? ['medicine', 'bill', 'bandage'] : ['medicine', 'bill', 'bandage', 'id']
-    })).concat(HOSPITAL_LEVELS),
     colors: { wall: 0xeef6fa, trim: 0x2c8fd6, tileA: '#ffffff', tileB: '#cfe8f3' }
   }
 ];

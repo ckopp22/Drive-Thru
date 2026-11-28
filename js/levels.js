@@ -101,6 +101,8 @@ export const STATIONS = {
   donut:   { time: 5, needs: 'rawdonut', stand: true },
   // Bakery: dough from the fridge, mixed while the worker stands at the mixer, then fed to the donut maker.
   mix:     { time: 3.5, needs: 'rawmix', stand: true },
+  // Hospital: the mixing machine makes the base for liquid medicine.
+  blend:   { time: 5 },
   // Pizza Place levels 16+: the cutting table turns a baked cheese pizza into a slice while the worker stands at it.
   slice:   { time: 3, needs: 'pizza:sauce+cheese', stand: true }
 };
@@ -164,6 +166,8 @@ export function endlessCfg(wave, over = {}) {
   const at = rows => rows.filter(r => r[0] <= wave).pop()[1], g = over.gapMult || 1;
   if (g !== 1) Object.assign(cfg, { gapRange: [gapLo * g, gapHi * g], gap: gapHi * g });
   if (over.items) cfg.items = over.items;
+  if (over.itemRows) cfg.items = at(over.itemRows);
+  if (over.burn) cfg.burn = over.burn;
   if (over.extraWave) cfg.extra = wave >= over.extraWave;
   if (over.maxItemsCap) cfg.maxItems = Math.min(cfg.maxItems, over.maxItemsCap);
   if (over.toppings) Object.assign(cfg, { toppings: at(over.toppings), maxToppings: at(over.maxToppings) }); // pizza
