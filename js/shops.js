@@ -15,6 +15,7 @@ export const SHOPS = [
   {
     id: 'burger', name: 'Burger Joint', icon: '🍔', menuItem: 'burger', levels: [...LEVELS, ...SHAKE_LEVELS],
     endless: {}, // endless mode overrides (see levels.js ENDLESS); shops without this have no endless tile
+    puddles: true, // sticky floor puddles (and the mop); only this shop has them
     foods: {
       soda:   { icon: '🥤', machine: 'soda machine', price: 2, cy: .05,  surf: [.45, .56] },
       burger: { icon: '🍔', machine: 'grill',        price: 4, cy: -.09, surf: [0, .9] },

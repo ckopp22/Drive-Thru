@@ -48,7 +48,7 @@ export const DONUT_LEVELS = [
 const PZ = { trays: 3, items: ['burger', 'slice'], gap: 2, maxItems: 3, doubles: false, queue: 2, extra: true, burn: 0 };
 export const PIZZA_LEVELS = [
   { ...PZ, time: 135, goal: 30, star2: 70, star3: 130, patience: 60, helper: 1, maxToppings: 4, extraTops: [], notes: 'Slices', intro: '🔪 New: Slices! Take a baked cheese pizza to the cutting table and stand there to cut it' },
-  { ...PZ, time: 150, goal: 32, star2: 72, star3: 134, patience: 56, helper: 1, maxToppings: 5, extraTops: ['pickles'], notes: 'Pickles', intro: '🥒 New topping: Pickles! The table is bottom right, by the mop' },
+  { ...PZ, time: 150, goal: 32, star2: 72, star3: 134, patience: 56, helper: 1, maxToppings: 5, extraTops: ['pickles'], notes: 'Pickles', intro: '🥒 New topping: Pickles! The table is bottom right' },
   { ...PZ, time: 150, goal: 34, star2: 74, star3: 138, patience: 48, helper: 1, maxToppings: 5, extraTops: ['pickles'], notes: 'Less patient customers' },
   { ...PZ, time: 150, goal: 36, star2: 76, star3: 142, patience: 40, helper: 1, maxToppings: 5, extraTops: ['pickles'], notes: 'Even less patient' },
   { ...PZ, time: 180, goal: 50, star2: 105, star3: 210, patience: 36, helper: 2, puddles: { max: 7, every: 4.5 }, maxToppings: 5, extraTops: ['pickles'], notes: 'Grand finale: puddles and two helpers' }

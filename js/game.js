@@ -398,7 +398,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     if (activeShop().pizza) world.setFixtures(['dough', ...cfg.toppings]);
     world.setFries(cfg.items.includes('fries'), announce && !hadFries);
     audio.setMusicRate(endlessMusicRate(w));
-    puddleOn = cfg.helper >= 2;
+    puddleOn = cfg.helper >= 2 && !!activeShop().puddles;
     if (puddleOn !== hadMop) { world.setMop(puddleOn); puddleT = 3; }
     world.setHelper(cfg.helper ? helperStops() : null, cfg.helper, helperLoot());
     if (!announce) return;
@@ -494,7 +494,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     }, lopts);
   }
 
-  if (!endless && cfg.puddles) { puddleOn = true; world.setMop(true); }
+  if (!endless && cfg.puddles && activeShop().puddles) { puddleOn = true; world.setMop(true); }
   if (cfg.intro) banner(cfg.intro, 'wave');
   if (!endless && cfg.helper) world.setHelper(helperStops(), cfg.helper, helperLoot());
   // Sticky puddles: tap the mop by the bin and wait for the bar to clear them all; none appear for 20 s after (5 s in levels).
@@ -645,7 +645,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
       if (!dying) { checkWave(); puddleStep(step); }
       if (over_) finish();
     } else {
-      if (cfg.puddles) puddleStep(step);
+      if (cfg.puddles && activeShop().puddles) puddleStep(step);
       if (timeLeft <= 0) { timeLeft = 0; finish(); }
     }
   }
