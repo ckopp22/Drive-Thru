@@ -45,22 +45,24 @@ export const SHOPS = [
     id: 'bakery', name: 'Bakery', icon: '🧁', menuItem: 'burger',
     // Burger Joint curve with no puddles; donut levels get more patience for the fridge and mixer walk. 16-20 use the shake levels' timing.
     levels: [...LEVELS, ...SHAKE_LEVELS].map(({ intro, puddles, ...l }, i) => ({
-      ...l, items: l.items.filter(t => t !== 'shake'),
+      ...l, items: [...l.items.filter(t => t !== 'shake'), 'choco'],
       patience: l.items.includes('fries') ? Math.round(l.patience * 1.3) : l.patience,
-      ...(i === 2 ? { intro: '🍩 New: Donuts! Grab dough from the fridge, stand at the mixer, then fill the donut maker' } : {})
+      ...(i === 2 ? { intro: '🍩 New: Donuts! Grab dough from the fridge, run the mixer, then fill the donut maker' } : {})
     })),
-    endless: { patMult: 1.3 },
+    endless: { patMult: 1.3, itemRows: [[1, ['soda', 'burger', 'choco']], [2, ['soda', 'burger', 'fries', 'choco']]] },
+    ext: 1, // the room runs this much further toward the player
     needs: { fries: 'mix' }, // the donut maker needs mixed dough
     foods: {
       soda:   { icon: '🥛', machine: 'milk machine', price: 2, cy: .05,  surf: [.45, .56] },
       burger: { icon: '🍰', machine: 'cake oven',    price: 4, cy: -.06, surf: [0, .9] },
       fries:  { icon: '🍩', machine: 'donut maker',  price: 5, cy: -.12, surf: [0, .85] },
+      choco:  { icon: '🍫', machine: 'chocolate milk machine', price: 3, cy: .05, surf: [0, .9] },
       mix:    { icon: '🥣', machine: 'mixer',        price: 0, cy: -.1,  surf: [0, .95] }
     },
     layout: {
-      mix: { x: 2.55, z: 3 }, doughfridge: { x: -2.55, z: 2.9 },
-      soda: { x: -2.55, z: -1.2 }, burger: { x: 2.55, z: -1.2 }, fries: { x: -2.55, z: 1.6 },
-      burger2: { x: 2.55, z: .4 }, fries2: { x: -2.55, z: .2 }, bin: { x: 2.6, z: 1.6 }
+      mix: { x: 2.55, z: 3.9 }, doughfridge: { x: -2.55, z: 3.2 },
+      soda: { x: -2.55, z: -1.2 }, choco: { x: 2.55, z: -1.9 }, burger: { x: 2.55, z: -.3 }, fries: { x: -2.55, z: 1.6 },
+      burger2: { x: 2.55, z: 1.3 }, fries2: { x: -2.55, z: .2 }, bin: { x: 2.6, z: 2.7 }
     },
     colors: { wall: 0xffe3ec, trim: 0xc2577a, tileA: '#fff4f0', tileB: '#f2b5c4' }
   },

@@ -331,7 +331,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
   const lopts = { burn: cfg.burn, trays: cfg.trays };
   function helperStops() {
     const sh = activeShop();
-    return ['soda', 'burger', 'fries', ...(cfg.items.includes('shake') ? ['shake', 'fridge'] : []), ...(cfg.items.includes('donut') ? ['donut', 'donuts'] : []), ...(cfg.extra ? ['burger2', 'fries2'] : []), ...(sh.cups ? ['cabinet'] : []), ...(sh.needs && cfg.items.includes('fries') ? ['mix', 'doughfridge'] : []), ...(sh.alt && cfg.items.includes('soda') ? ['blend'] : [])].filter(k => sh.layout[k]);
+    return ['soda', 'choco', 'burger', 'fries', ...(cfg.items.includes('shake') ? ['shake', 'fridge'] : []), ...(cfg.items.includes('donut') ? ['donut', 'donuts'] : []), ...(cfg.extra ? ['burger2', 'fries2'] : []), ...(sh.cups ? ['cabinet'] : []), ...(sh.needs && cfg.items.includes('fries') ? ['mix', 'doughfridge'] : []), ...(sh.alt && cfg.items.includes('soda') ? ['blend'] : [])].filter(k => sh.layout[k]);
   }
   // Food shops: helpers sometimes grab a machine's ready (or burnt) food and bin it.
   function helperLoot() {
@@ -583,7 +583,7 @@ export function startGame(root, level, levels, cb, opts = {}) {
     logic.update(step);
     orders.update(step);
     if (world.worker.moving) audio.playSfx('walk');
-    for (const k of ITEMS) audio.setLoop('st' + k, logic.st[k].state === 'making' ? (k.startsWith('soda') || k === 'shake' || k === 'mix' || k === 'blend' || ['coffee', 'hospital'].includes(activeShop().id) ? 'fill' : 'sizzle') : null);
+    for (const k of ITEMS) audio.setLoop('st' + k, logic.st[k].state === 'making' ? (k.startsWith('soda') || k === 'choco' || k === 'shake' || k === 'mix' || k === 'blend' || ['coffee', 'hospital'].includes(activeShop().id) ? 'fill' : 'sizzle') : null);
     world.update(step, clock);
     if (logic.hands.length) { endHint('make'); showHint('tray', 'Tap a numbered tray to set it down'); }
     const m = logic.trays.findIndex(t => orders.matches(t));

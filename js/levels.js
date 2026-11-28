@@ -79,8 +79,9 @@ export const STATIONS = {
   shake:   { time: 5, needs: 'milk', stand: true },
   // Coffee Shop levels 16+: the donut needs a plain one from the table and the worker standing at the microwave; it never burns.
   donut:   { time: 5, needs: 'rawdonut', stand: true },
-  // Bakery: dough from the fridge, mixed while the worker stands at the mixer, then fed to the donut maker.
-  mix:     { time: 3.5, needs: 'rawmix', stand: true },
+  // Bakery: dough from the fridge, run through the mixer (it keeps going on its own), then fed to the donut maker.
+  mix:     { time: 3.5, needs: 'rawmix' },
+  choco:   { time: 3.5 }, // Bakery chocolate milk
   // Hospital: the mixing machine makes the base for liquid medicine.
   blend:   { time: 5 }
 };

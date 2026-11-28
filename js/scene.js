@@ -141,6 +141,10 @@ function bakeryItem(type, g) {
   if (type === 'soda') { // glass of milk
     part(G('Cylinder', .13, .1, .32, 10), 0xbfe3f5, 0, .16, 0, g);
     part(G('Cylinder', .135, .125, .1, 10), 0xffffff, 0, .31, 0, g);
+  } else if (type === 'choco') { // glass of chocolate milk with a straw
+    part(G('Cylinder', .13, .1, .32, 10), 0x8a5a36, 0, .16, 0, g);
+    part(G('Cylinder', .135, .125, .06, 10), 0xc99a6e, 0, .33, 0, g);
+    box(.03, .2, .03, 0xe63946, .05, .43, 0, g).rotation.z = -.2;
   } else if (type === 'burger') { // frosted cake with a cherry
     part(G('Cylinder', .22, .22, .16, 12), 0xe0a050, 0, .08, 0, g);
     part(G('Cylinder', .23, .23, .07, 12), 0xf7a8c4, 0, .19, 0, g);
@@ -526,6 +530,14 @@ const MACHINE_BUILD = {
     }
   },
   bakery: {
+    choco(g) { // chocolate milk machine
+      box(1.1, .75, .9, 0x6b4226, 0, .375, 0, g);
+      box(1.1, .1, .9, 0xf2e3c4, 0, .8, 0, g);
+      box(.8, .7, .5, 0x8a5a36, 0, 1.5, -.15, g);
+      box(.9, .12, .6, 0xf2e3c4, 0, 1.9, -.15, g);
+      box(.3, .3, .04, 0xffffff, 0, 1.55, .11, g);
+      box(.12, .16, .2, 0x9a9a9a, 0, 1.15, .15, g);
+    },
     soda(g) { // milk machine
       box(1.1, 1.8, .9, 0xf2f6f9, 0, .9, 0, g);
       box(1.1, .2, .9, 0x4cb8ff, 0, 1.9, 0, g);
@@ -672,16 +684,17 @@ function buildKitchen(scene, billboards, hits) {
   scene.add(part(G('Plane', 80, 80), 0x7ed957, 0, -.02, 0).rotateX(-Math.PI / 2));
 
   // floor
-  const floor = new THREE.Mesh(G('Box', 6, .2, 7), new THREE.MeshLambertMaterial({ map: checker }));
-  floor.position.set(0, -.1, 0);
+  const ext = activeShop().ext || 0;
+  const floor = new THREE.Mesh(G('Box', 6, .2, 7 + ext), new THREE.MeshLambertMaterial({ map: checker }));
+  floor.position.set(0, -.1, ext / 2);
   scene.add(floor);
 
   const { wall: wallC, trim: trimC } = activeShop().colors;
   // side walls (cutaway height so equipment stays visible)
-  box(.3, 2.0, 7.3, wallC, -3.15, 1.0, 0, scene);
-  box(.3, 2.0, 7.3, wallC, 3.15, 1.0, 0, scene);
-  box(.34, .16, 7.3, trimC, -3.15, 2.0, 0, scene);
-  box(.34, .16, 7.3, trimC, 3.15, 2.0, 0, scene);
+  box(.3, 2.0, 7.3 + ext, wallC, -3.15, 1.0, ext / 2, scene);
+  box(.3, 2.0, 7.3 + ext, wallC, 3.15, 1.0, ext / 2, scene);
+  box(.34, .16, 7.3 + ext, trimC, -3.15, 2.0, ext / 2, scene);
+  box(.34, .16, 7.3 + ext, trimC, 3.15, 2.0, ext / 2, scene);
 
   // back wall with window opening (x -1.6..1.6, y 1.0..1.9)
   const wz = -3.5;
@@ -727,6 +740,7 @@ function buildKitchen(scene, billboards, hits) {
   scene.add(bin);
 
   if (L.soda) hit('soda', 1.6, 2.3, 1.8, L.soda.x - side('soda') * .1, 1.1, L.soda.z);
+  if (L.choco) { mk('choco', MB.choco); hit('choco', 1.3, 1.9, 1.5, L.choco.x, .95, L.choco.z); }
   hit('burger', 1.3, 1.9, 1.6, L.burger.x, .95, L.burger.z);
   if (L.fries) hit('fries', 1.1, .9, 1.3, L.fries.x, .45, L.fries.z);
   hit('trash', 1.1, 1.1, 1.1, L.bin.x, .55, L.bin.z);
@@ -769,7 +783,7 @@ function buildKitchen(scene, billboards, hits) {
   }
 
   const viz = {};
-  for (const k of ['soda', 'burger', 'fries', 'burger2', 'fries2', 'shake', 'donut', 'mix', 'blend']) if (L[k]) viz[k] = makeStationViz(STATIONS[k].type || k, L[k].x, L[k].z, billboards);
+  for (const k of ['soda', 'choco', 'burger', 'fries', 'burger2', 'fries2', 'shake', 'donut', 'mix', 'blend']) if (L[k]) viz[k] = makeStationViz(STATIONS[k].type || k, L[k].x, L[k].z, billboards);
   for (const k in viz) scene.add(viz[k].root);
   for (const k of ['shake', 'donut', 'mix', 'blend']) if (viz[k]) viz[k].root.visible = false;
   return { viz, lid, trays, machines, signs, trayHits, extraHits, shakeHits };
@@ -956,7 +970,9 @@ export function fitCamera(camera, aspect) {
       camera.updateMatrixWorld(true);
       camera.updateProjectionMatrix();
       let x0 = 9, x1 = -9, y0 = 9, y1 = -9;
-      for (const p of FIT_POINTS) {
+      const ext = activeShop().ext || 0;
+      for (const q of FIT_POINTS) {
+        const p = q.z === 3.5 && ext ? new THREE.Vector3(q.x, q.y, q.z + ext) : q;
         v.copy(p).project(camera);
         x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x);
         y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y);
@@ -981,7 +997,7 @@ export function fitCamera(camera, aspect) {
 
 export function buildWorld() {
   const L = activeShop().layout;
-  for (const k of ['soda', 'burger', 'fries', 'burger2', 'fries2', 'bin', 'cabinet', 'shake', 'fridge', 'donut', 'donuts', 'mix', 'doughfridge', 'blend']) {
+  for (const k of ['soda', 'choco', 'burger', 'fries', 'burger2', 'fries2', 'bin', 'cabinet', 'shake', 'fridge', 'donut', 'donuts', 'mix', 'doughfridge', 'blend']) {
     if (!L[k]) continue;
     const sd = L[k].x < 0 ? -1 : 1;
     SPOTS[k === 'bin' ? 'trash' : k] = { x: sd * 1.9, z: L[k].z, face: sd * Math.PI / 2 };
