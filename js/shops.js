@@ -29,7 +29,7 @@ export const SHOPS = [
     colors: { wall: 0xfff1b8, trim: 0xe63946, tileA: '#fff6d6', tileB: '#f4c542' }
   },
   {
-    id: 'coffee', name: 'Coffee Shop', icon: '☕', menuItem: 'soda', levels: [...LEVELS.map(l => ({ ...l })), ...DONUT_LEVELS],
+    id: 'coffee', name: 'Coffee Shop', icon: '☕', menuItem: 'soda', levels: [...LEVELS, ...DONUT_LEVELS].map((l, i) => ({ ...l, time: l.time + (i === 19 ? 60 : 30) })),
     endless: { patMult: 1.2 }, // cups add walking, so a little more patience
     cups: true, // every drink needs a cup from the cabinet before a machine will start
     foods: {
